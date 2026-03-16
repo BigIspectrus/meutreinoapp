@@ -1,4 +1,6 @@
-# 🏋️ Treino App v5 — PWA
+# 🏋️ Treino App v6 — PWA
+
+V6 dia 16.03.26 às 20h27
 
 ## Como colocar no ar (GitHub Pages)
 
