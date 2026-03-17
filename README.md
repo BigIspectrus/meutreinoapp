@@ -1,4 +1,4 @@
-# 🏋️ Treino App v15 — PWA
+# 🏋️ Treino App v13 — PWA
 
 17/03/26 - 10h42
 
