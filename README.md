@@ -1,4 +1,6 @@
-# 🏋️ Treino App v5 — PWA
+# 🏋️ Treino App v15 — PWA
+
+17/03/26 - 10h42
 
 ## Como colocar no ar (GitHub Pages)
 
