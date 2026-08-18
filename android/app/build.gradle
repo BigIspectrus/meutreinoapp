@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId 'com.treinoapp.app'
-        minSdk 24
+        minSdk 26
         targetSdk 36
         versionCode 120000
         versionName '12.0.0'
