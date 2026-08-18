@@ -1,0 +1,29 @@
+# Dependências / builds
+node_modules/
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+
+# Artefatos gerados pelo build web
+web/vendor/
+web/native-bridge.js
+android/app/src/main/assets/public/
+
+# Assinatura: NUNCA versionar
+*.jks
+*.keystore
+*.p12
+*.pem
+*.key
+keystore.properties
+
+# IDE / sistema
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Temporários
+*.tmp
+*.log

@@ -1,0 +1,19 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widgetRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center_vertical"
+    android:padding="16dp"
+    android:background="@drawable/widget_background">
+
+    <TextView android:id="@+id/widgetTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="Próximo treino" android:textSize="12sp" android:textColor="#9BA3C7" />
+    <TextView android:id="@+id/widgetWorkout" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="4dp" android:text="Treino" android:textStyle="bold" android:textSize="20sp" android:textColor="#FFFFFF" android:maxLines="1" android:ellipsize="end" />
+    <TextView android:id="@+id/widgetMeta" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="4dp" android:text="0/4 treinos na semana" android:textSize="12sp" android:textColor="#B7BEDD" />
+    <TextView android:id="@+id/widgetButton" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_marginTop="12dp" android:paddingLeft="14dp" android:paddingRight="14dp" android:paddingTop="8dp" android:paddingBottom="8dp"
+        android:background="@drawable/widget_button_background" android:text="Iniciar treino" android:textStyle="bold" android:textColor="#FFFFFF" />
+</LinearLayout>

@@ -1,0 +1,101 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+    id 'org.jetbrains.kotlin.kapt'
+}
+
+def gitSha = (System.getenv('GITHUB_SHA') ?: 'local').take(40)
+def buildTime = System.getenv('BUILD_TIME') ?: 'local'
+
+android {
+    namespace 'com.treinoapp.app'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'com.treinoapp.app'
+        minSdk 24
+        targetSdk 36
+        versionCode 120000
+        versionName '12.0.0'
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+        vectorDrawables { useSupportLibrary true }
+        buildConfigField 'String', 'GIT_SHA', '"' + gitSha + '"'
+        buildConfigField 'String', 'BUILD_TIME', '"' + buildTime + '"'
+    }
+
+    flavorDimensions += 'channel'
+    productFlavors {
+        stable {
+            dimension 'channel'
+            applicationId 'com.treinoapp.app'
+            resValue 'string', 'app_name', 'TreinoApp'
+            buildConfigField 'String', 'CHANNEL', '"stable"'
+        }
+        beta {
+            dimension 'channel'
+            applicationId 'com.treinoapp.beta'
+            resValue 'string', 'app_name', 'TreinoApp Beta'
+            buildConfigField 'String', 'CHANNEL', '"beta"'
+            versionNameSuffix '-beta'
+        }
+    }
+
+    signingConfigs {
+        release {
+            def ks = System.getenv('TREINOAPP_KEYSTORE_PATH')
+            if (ks != null && file(ks).exists()) {
+                storeFile file(ks)
+                storePassword System.getenv('TREINOAPP_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('TREINOAPP_KEY_ALIAS')
+                keyPassword System.getenv('TREINOAPP_KEY_PASSWORD')
+            }
+        }
+    }
+
+    buildTypes {
+        debug {
+            applicationIdSuffix '.debug'
+            versionNameSuffix '-debug'
+        }
+        release {
+            minifyEnabled false
+            shrinkResources false
+            if (System.getenv('TREINOAPP_KEYSTORE_PATH')) signingConfig signingConfigs.release
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+    kotlinOptions { jvmTarget = '21' }
+    packaging { resources.excludes += ['/META-INF/{AL2.0,LGPL2.1}'] }
+}
+
+
+dependencies {
+    implementation project(':capacitor-android')
+    implementation 'androidx.core:core-ktx:1.17.0'
+    implementation 'androidx.appcompat:appcompat:1.7.1'
+    implementation 'androidx.activity:activity-ktx:1.11.0'
+    implementation 'androidx.health.connect:connect-client:1.1.0'
+    implementation 'androidx.room:room-runtime:2.8.4'
+    implementation 'androidx.room:room-ktx:2.8.4'
+    kapt 'androidx.room:room-compiler:2.8.4'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'
+    implementation 'androidx.work:work-runtime-ktx:2.11.2'
+    testImplementation 'junit:junit:4.13.2'
+}
+
+
+kapt {
+    arguments {
+        arg('room.schemaLocation', "$projectDir/schemas")
+        arg('room.incremental', 'true')
+    }
+}

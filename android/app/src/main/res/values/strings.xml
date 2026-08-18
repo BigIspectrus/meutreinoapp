@@ -1,0 +1,4 @@
+<resources>
+    <string name="widget_description">Próximo treino, progresso semanal e treino ativo</string>
+    <string name="health_permissions_description">O TreinoApp usa o Health Connect para associar sessões registradas no Galaxy Watch/Samsung Health, consultar frequência cardíaca, calorias e peso, e gravar sessões do TreinoApp quando não houver uma sessão equivalente.</string>
+</resources>

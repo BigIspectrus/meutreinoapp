@@ -1,0 +1,79 @@
+package com.treinoapp.app.nativebridge
+
+import android.content.Context
+import androidx.health.connect.client.permission.HealthPermission.Companion.PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND
+import androidx.work.CoroutineWorker
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.WorkerParameters
+import com.treinoapp.app.data.TreinoDatabase
+import java.util.concurrent.TimeUnit
+
+/**
+ * Procura automaticamente uma sessão do Samsung Health/Galaxy Watch que coincida
+ * com uma sessão finalizada no TreinoApp. Só associa sem intervenção quando a
+ * confiança é >= 85%. Casos ambíguos continuam pendentes para confirmação no app.
+ */
+class HealthSyncWorker(
+    appContext: Context,
+    workerParams: WorkerParameters,
+) : CoroutineWorker(appContext, workerParams) {
+    override suspend fun doWork(): Result {
+        val health = HealthConnectRepository(applicationContext)
+        if (!health.isAvailable() || !health.backgroundReadAvailable()) return Result.success()
+        val granted = runCatching { health.grantedPermissions() }.getOrElse { return Result.retry() }
+        if (!granted.containsAll(health.requiredPermissions) || PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND !in granted) {
+            return Result.success()
+        }
+
+        val dao = TreinoDatabase.get(applicationContext).workoutDao()
+        val minEnd = System.currentTimeMillis() - 7L * 24 * 60 * 60 * 1000
+        val pending = dao.pendingHealthSessions(minEnd)
+        for (session in pending) {
+            val match = runCatching { health.findBestExerciseMatch(session.startMs, session.endMs) }.getOrNull() ?: continue
+            if (match.found && match.confidence >= 0.85) {
+                dao.updateHealthLink(
+                    sessionId = session.sessionId,
+                    state = "linked",
+                    recordId = match.recordId,
+                    sourceApp = match.sourceApp,
+                    confidence = match.confidence,
+                    avgHr = match.avgHr,
+                    maxHr = match.maxHr,
+                    kcal = match.kcal,
+                )
+            }
+        }
+        return Result.success()
+    }
+}
+
+object HealthSyncScheduler {
+    private const val PERIODIC_NAME = "treinoapp-health-sync-periodic"
+    private const val SOON_NAME = "treinoapp-health-sync-soon"
+
+    fun ensurePeriodic(context: Context) {
+        val request = PeriodicWorkRequestBuilder<HealthSyncWorker>(15, TimeUnit.MINUTES)
+            .setInitialDelay(15, TimeUnit.MINUTES)
+            .build()
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+            PERIODIC_NAME,
+            ExistingPeriodicWorkPolicy.KEEP,
+            request,
+        )
+    }
+
+    fun scheduleSoon(context: Context) {
+        val request = OneTimeWorkRequestBuilder<HealthSyncWorker>()
+            .setInitialDelay(3, TimeUnit.MINUTES)
+            .build()
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            SOON_NAME,
+            ExistingWorkPolicy.REPLACE,
+            request,
+        )
+    }
+}

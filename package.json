@@ -1,0 +1,25 @@
+{
+  "name": "treinoapp-android",
+  "version": "12.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:web": "node scripts/build-web.mjs",
+    "cap:sync": "npm run android:prepare",
+    "android:open": "npm run cap:sync && npx cap open android",
+    "prepare:android": "npm run build:web && node scripts/copy-android-assets.mjs",
+    "validate": "python scripts/validate_project.py",
+    "android:prepare": "npm run build:web && node scripts/copy-android-assets.mjs"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.0",
+    "@capacitor/core": "8.5.0",
+    "chart.js": "4.5.0",
+    "jspdf": "2.5.1",
+    "qrcode-generator": "1.4.4"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.0",
+    "esbuild": "0.25.9"
+  }
+}

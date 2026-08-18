@@ -1,0 +1,50 @@
+name: TreinoApp Beta APK
+on:
+  push:
+    branches: [beta]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  beta-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - run: npm install --no-audit --no-fund
+      - run: npm run build:web
+      - run: python scripts/validate_project.py
+      - run: npm run prepare:android
+      - name: Restaurar chave de assinatura
+        shell: bash
+        env:
+          KEYSTORE_B64: ${{ secrets.TREINOAPP_KEYSTORE_BASE64 }}
+        run: |
+          test -n "$KEYSTORE_B64" || (echo 'Configure TREINOAPP_KEYSTORE_BASE64 nos Secrets' && exit 1)
+          echo "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/treinoapp-release.keystore"
+      - name: Compilar Beta assinado
+        working-directory: android
+        env:
+          TREINOAPP_KEYSTORE_PATH: ${{ runner.temp }}/treinoapp-release.keystore
+          TREINOAPP_KEYSTORE_PASSWORD: ${{ secrets.TREINOAPP_KEYSTORE_PASSWORD }}
+          TREINOAPP_KEY_ALIAS: ${{ secrets.TREINOAPP_KEY_ALIAS }}
+          TREINOAPP_KEY_PASSWORD: ${{ secrets.TREINOAPP_KEY_PASSWORD }}
+          GITHUB_SHA: ${{ github.sha }}
+          BUILD_TIME: ${{ github.event.head_commit.timestamp }}
+        run: gradle assembleBetaRelease bundleBetaRelease --stacktrace
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TreinoApp-Beta-${{ github.sha }}
+          path: |
+            android/app/build/outputs/apk/beta/release/*.apk
+            android/app/build/outputs/bundle/betaRelease/*.aab
