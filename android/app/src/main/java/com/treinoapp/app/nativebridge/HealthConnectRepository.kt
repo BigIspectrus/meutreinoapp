@@ -11,6 +11,7 @@ import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
 import androidx.health.connect.client.records.WeightRecord
 import androidx.health.connect.client.records.metadata.DataOrigin
+import androidx.health.connect.client.records.metadata.Device
 import androidx.health.connect.client.records.metadata.Metadata
 import androidx.health.connect.client.request.AggregateRequest
 import androidx.health.connect.client.request.ReadRecordsRequest
@@ -18,6 +19,7 @@ import androidx.health.connect.client.time.TimeRangeFilter
 import androidx.health.connect.client.units.Mass
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.ZoneId
 import kotlin.math.abs
 import kotlin.math.max
@@ -91,6 +93,40 @@ class HealthConnectRepository(private val context: Context) {
         val kcal: Double?,
     )
 
+
+    data class HealthProbe(
+        val available: Boolean,
+        val sdkStatus: Int,
+        val packageName: String,
+        val grantedPermissions: List<String>,
+        val readExerciseGranted: Boolean,
+        val writeExerciseGranted: Boolean,
+        val readHeartRateGranted: Boolean,
+        val readCaloriesGranted: Boolean,
+        val instant24Count: Int,
+        val instant7dCount: Int,
+        val local24Count: Int,
+        val samsung7dCount: Int,
+        val heartRate24Count: Int,
+        val calories24Count: Int,
+        val instant24Error: String?,
+        val instant7dError: String?,
+        val local24Error: String?,
+        val samsung7dError: String?,
+        val heartRateError: String?,
+        val caloriesError: String?,
+        val sampleSessions: List<ExerciseCandidate>,
+    )
+
+    data class WriteResult(
+        val written: Boolean,
+        val recordId: String? = null,
+        val reason: String? = null,
+        val errorClass: String? = null,
+    )
+
+    private data class CountResult(val count: Int, val error: String? = null)
+
     private fun sourceLabel(packageName: String): String = when (packageName) {
         "com.sec.android.app.shealth" -> "Samsung Health"
         "com.google.android.apps.fitness" -> "Google Fit"
@@ -104,14 +140,27 @@ class HealthConnectRepository(private val context: Context) {
      * que o Health Connect realmente entrega e só depois classificar a origem.
      */
     private suspend fun readExerciseRecords(start: Instant, end: Instant): List<ExerciseSessionRecord> {
-        val response = client().readRecords(
+        val hc = client()
+        val request = ReadRecordsRequest<ExerciseSessionRecord>(
+            timeRangeFilter = TimeRangeFilter.between(start, end),
+            ascendingOrder = true,
+            pageSize = 1000,
+        )
+        val all = hc.readRecords(request).records
+        if (all.isNotEmpty()) return all
+
+        // Fallback explícito para Samsung Health. Normalmente dataOriginFilter vazio
+        // deve retornar todas as origens; esta segunda leitura também serve para
+        // contornar/diagnosticar aparelhos em que o provider não entrega a origem
+        // Samsung na consulta ampla.
+        return hc.readRecords(
             ReadRecordsRequest<ExerciseSessionRecord>(
                 timeRangeFilter = TimeRangeFilter.between(start, end),
+                dataOriginFilter = setOf(DataOrigin("com.sec.android.app.shealth")),
                 ascendingOrder = true,
                 pageSize = 1000,
             )
-        )
-        return response.records
+        ).records
     }
 
     private data class Ranked(
@@ -223,6 +272,66 @@ class HealthConnectRepository(private val context: Context) {
         return out
     }
 
+    private fun Throwable.debugMessage(): String =
+        "${this::class.java.simpleName}: ${message ?: "sem mensagem"}"
+
+    suspend fun probeHealthConnect(): HealthProbe {
+        val status = HealthConnectClient.getSdkStatus(context)
+        val available = status == HealthConnectClient.SDK_AVAILABLE
+        if (!available) {
+            return HealthProbe(
+                available = false, sdkStatus = status, packageName = context.packageName,
+                grantedPermissions = emptyList(), readExerciseGranted = false, writeExerciseGranted = false,
+                readHeartRateGranted = false, readCaloriesGranted = false, instant24Count = 0, instant7dCount = 0,
+                local24Count = 0, samsung7dCount = 0, heartRate24Count = 0, calories24Count = 0, instant24Error = null,
+                instant7dError = null, local24Error = null, samsung7dError = null, heartRateError = null, caloriesError = null, sampleSessions = emptyList(),
+            )
+        }
+
+        val hc = client()
+        val granted = grantedPermissions()
+        val readExercise = HealthPermission.getReadPermission(ExerciseSessionRecord::class) in granted
+        val writeExercise = HealthPermission.getWritePermission(ExerciseSessionRecord::class) in granted
+        val readHr = HealthPermission.getReadPermission(HeartRateRecord::class) in granted
+        val readKcal = HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class) in granted
+        val now = Instant.now()
+
+        suspend fun exerciseCount(filter: TimeRangeFilter): CountResult = try {
+            CountResult(hc.readRecords(ReadRecordsRequest<ExerciseSessionRecord>(timeRangeFilter = filter, pageSize = 1000)).records.size)
+        } catch (t: Throwable) { CountResult(0, t.debugMessage()) }
+
+        val i24 = exerciseCount(TimeRangeFilter.between(now.minusSeconds(24L * 3600), now.plusSeconds(15L * 60)))
+        val i7d = exerciseCount(TimeRangeFilter.between(now.minusSeconds(7L * 24 * 3600), now.plusSeconds(15L * 60)))
+        val localNow = LocalDateTime.now()
+        val l24 = exerciseCount(TimeRangeFilter.between(localNow.minusHours(24), localNow.plusMinutes(15)))
+        val samsung7d = if (readExercise) try {
+            CountResult(hc.readRecords(ReadRecordsRequest<ExerciseSessionRecord>(
+                timeRangeFilter = TimeRangeFilter.between(now.minusSeconds(7L * 24 * 3600), now.plusSeconds(15L * 60)),
+                dataOriginFilter = setOf(DataOrigin("com.sec.android.app.shealth")),
+                pageSize = 1000,
+            )).records.size)
+        } catch (t: Throwable) { CountResult(0, t.debugMessage()) } else CountResult(0, "READ_EXERCISE não concedida")
+
+        val hr = if (readHr) try {
+            CountResult(hc.readRecords(ReadRecordsRequest<HeartRateRecord>(timeRangeFilter = TimeRangeFilter.between(now.minusSeconds(24L * 3600), now.plusSeconds(15L * 60)), pageSize = 1000)).records.size)
+        } catch (t: Throwable) { CountResult(0, t.debugMessage()) } else CountResult(0, "READ_HEART_RATE não concedida")
+
+        val kcal = if (readKcal) try {
+            CountResult(hc.readRecords(ReadRecordsRequest<TotalCaloriesBurnedRecord>(timeRangeFilter = TimeRangeFilter.between(now.minusSeconds(24L * 3600), now.plusSeconds(15L * 60)), pageSize = 1000)).records.size)
+        } catch (t: Throwable) { CountResult(0, t.debugMessage()) } else CountResult(0, "READ_TOTAL_CALORIES_BURNED não concedida")
+
+        val samples = if (readExercise) runCatching { listRecentExerciseSessions(168).take(10) }.getOrDefault(emptyList()) else emptyList()
+
+        return HealthProbe(
+            available = true, sdkStatus = status, packageName = context.packageName,
+            grantedPermissions = granted.sorted(), readExerciseGranted = readExercise, writeExerciseGranted = writeExercise,
+            readHeartRateGranted = readHr, readCaloriesGranted = readKcal, instant24Count = i24.count, instant7dCount = i7d.count,
+            local24Count = l24.count, samsung7dCount = samsung7d.count, heartRate24Count = hr.count, calories24Count = kcal.count,
+            instant24Error = i24.error, instant7dError = i7d.error, local24Error = l24.error, samsung7dError = samsung7d.error, heartRateError = hr.error, caloriesError = kcal.error,
+            sampleSessions = samples,
+        )
+    }
+
     private suspend fun aggregateMetrics(
         hc: HealthConnectClient,
         start: Instant,
@@ -263,28 +372,37 @@ class HealthConnectRepository(private val context: Context) {
         title: String,
         startMs: Long,
         endMs: Long,
-    ): String? {
-        if (!isAvailable()) return null
+    ): WriteResult {
+        if (!isAvailable()) return WriteResult(false, reason = "Health Connect indisponível")
         val granted = grantedPermissions()
-        if (!granted.contains(HealthPermission.getWritePermission(ExerciseSessionRecord::class))) return null
-        if (endMs <= startMs) return null
-        val start = Instant.ofEpochMilli(startMs)
-        val end = Instant.ofEpochMilli(endMs)
-        val zone = ZoneId.systemDefault()
-        val record = ExerciseSessionRecord(
-            startTime = start,
-            startZoneOffset = zone.rules.getOffset(start),
-            endTime = end,
-            endZoneOffset = zone.rules.getOffset(end),
-            exerciseType = ExerciseSessionRecord.EXERCISE_TYPE_STRENGTH_TRAINING,
-            title = title.take(100),
-            metadata = Metadata.manualEntry(
-                clientRecordId = "treinoapp:$sessionId",
-                clientRecordVersion = 1L,
-            ),
-        )
-        val response = client().insertRecords(listOf(record))
-        return response.recordIdsList.firstOrNull()
+        if (!granted.contains(HealthPermission.getWritePermission(ExerciseSessionRecord::class))) {
+            return WriteResult(false, reason = "WRITE_EXERCISE não concedida")
+        }
+        if (startMs <= 0L || endMs <= startMs) return WriteResult(false, reason = "Horários da sessão inválidos")
+        return try {
+            val start = Instant.ofEpochMilli(startMs)
+            val end = Instant.ofEpochMilli(endMs)
+            val zone = ZoneId.systemDefault()
+            val record = ExerciseSessionRecord(
+                startTime = start,
+                startZoneOffset = zone.rules.getOffset(start),
+                endTime = end,
+                endZoneOffset = zone.rules.getOffset(end),
+                exerciseType = ExerciseSessionRecord.EXERCISE_TYPE_STRENGTH_TRAINING,
+                title = title.take(100),
+                metadata = Metadata.activelyRecorded(
+                    device = Device(type = Device.TYPE_PHONE),
+                    clientRecordId = "treinoapp:$sessionId",
+                    clientRecordVersion = 2L,
+                ),
+            )
+            val response = client().insertRecords(listOf(record))
+            val id = response.recordIdsList.firstOrNull()
+            if (id != null) WriteResult(true, recordId = id)
+            else WriteResult(false, reason = "Health Connect não retornou ID após insertRecords")
+        } catch (t: Throwable) {
+            WriteResult(false, reason = t.message ?: "Falha desconhecida em insertRecords", errorClass = t::class.java.name)
+        }
     }
 
     data class WeightSyncResult(val latestKg: Double?, val latestDate: String?, val written: Int)

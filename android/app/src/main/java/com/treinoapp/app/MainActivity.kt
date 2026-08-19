@@ -75,6 +75,9 @@ class MainActivity : BridgeActivity() {
         if (Build.VERSION.SDK_INT >= 29 && checkSelfPermission(Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
             permissions += Manifest.permission.ACTIVITY_RECOGNITION
         }
+        if (Build.VERSION.SDK_INT <= 28 && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            permissions += Manifest.permission.WRITE_EXTERNAL_STORAGE
+        }
         if (permissions.isEmpty()) {
             call.resolve(com.getcapacitor.JSObject().apply {
                 put("granted", true); put("notifications", true); put("activityRecognition", true)

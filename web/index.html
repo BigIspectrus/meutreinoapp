@@ -740,7 +740,8 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="fecharModal('modalCompartilhar')" style="flex:1">Fechar</button>
-      <button class="btn btn-primary" onclick="baixarImagem()" style="flex:1">⬇️ Salvar Imagem</button>
+      <button class="btn btn-outline" onclick="compartilharImagemTreino()" style="flex:1">Compartilhar</button>
+      <button class="btn btn-primary" onclick="baixarImagem()" style="flex:1">Salvar na Galeria</button>
     </div>
   </div>
 </div>
@@ -1511,8 +1512,8 @@
 </div>
 
 <script>
-const APP_VERSION = '12.0.1';
-const APP_BUILD = '2026.08.18.4';
+const APP_VERSION = '12.0.2';
+const APP_BUILD = '2026.08.18.5';
 const DATA_SCHEMA_VERSION = 12;
 const GITHUB_REPO='BigIspectrus/meutreinoapp';
 const GITHUB_PAGES_BASE='https://bigispectrus.github.io/meutreinoapp';
@@ -3649,19 +3650,51 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.fill();
 }
 
-function baixarImagem() {
+async function baixarImagem() {
   const canvas = document.getElementById('shareCanvas');
+  const filename = `treino_${localDate(new Date())}.png`;
+  const dataUrl = canvas.toDataURL('image/png');
+  if(isNativeAndroid() && window.TreinoNativeBridge?.saveImageToGallery){
+    try{
+      const r = await window.TreinoNativeBridge.saveImageToGallery({fileName:filename,dataUrl});
+      toast(`Imagem salva na galeria${r?.location?' · '+r.location:''}`,'success');
+      haptic(80);
+      return;
+    }catch(e){
+      console.error('Falha ao salvar imagem nativa',e);
+      toast('Não foi possível salvar na galeria: '+String(e?.message||e),'error');
+      return;
+    }
+  }
   const a = document.createElement('a');
-  a.download = `treino_${localDate(new Date())}.png`;
-  a.href = canvas.toDataURL('image/png');
+  a.download = filename;
+  a.href = dataUrl;
+  document.body.appendChild(a);
   a.click();
-  toast('Imagem salva!','success');
+  a.remove();
+  toast('Download da imagem iniciado','success');
+}
+
+async function compartilharImagemTreino(){
+  const canvas=document.getElementById('shareCanvas');
+  const filename=`treino_${localDate(new Date())}.png`;
+  const dataUrl=canvas.toDataURL('image/png');
+  if(isNativeAndroid() && window.TreinoNativeBridge?.shareImage){
+    try{await window.TreinoNativeBridge.shareImage({fileName:filename,dataUrl,title:'Compartilhar resumo do treino'});return;}
+    catch(e){console.error('Falha ao compartilhar imagem nativa',e);toast('Não foi possível abrir o compartilhamento: '+String(e?.message||e),'error');return;}
+  }
+  try{
+    const blob=await new Promise((res,rej)=>canvas.toBlob(b=>b?res(b):rej(new Error('Falha ao gerar imagem')),'image/png'));
+    const file=new File([blob],filename,{type:'image/png'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({title:'Resumo do treino',files:[file]});return;}
+  }catch(e){if(e?.name==='AbortError')return;}
+  baixarImagem();
 }
 
 // ════════════════════════════════════════════════
 // EXPORTAR PDF
 // ════════════════════════════════════════════════
-function exportarPDF() {
+async function exportarPDF() {
   if(typeof window.jspdf === 'undefined') {
     toast('PDF ainda carregando, tente novamente em segundos','warn');
     return;
@@ -3736,8 +3769,21 @@ function exportarPDF() {
   doc.setFontSize(9); doc.setFont('helvetica','italic'); doc.setTextColor(120,130,168);
   doc.text('Exportado pelo TreinoApp — seu diário de treino pessoal', margin, 290);
 
-  doc.save(`historico_treino_${localDate(new Date())}.pdf`);
-  toast('PDF exportado!','success');
+  const pdfName=`historico_treino_${localDate(new Date())}.pdf`;
+  if(isNativeAndroid() && window.TreinoNativeBridge?.saveBase64File){
+    try{
+      const dataUrl=doc.output('datauristring');
+      const r=await window.TreinoNativeBridge.saveBase64File({fileName:pdfName,mimeType:'application/pdf',dataUrl});
+      toast(`PDF salvo${r?.location?' em '+r.location:''}`,'success');
+      return;
+    }catch(e){
+      console.error('Falha ao salvar PDF nativo',e);
+      toast('Não foi possível salvar o PDF: '+String(e?.message||e),'error');
+      return;
+    }
+  }
+  doc.save(pdfName);
+  toast('Download do PDF iniciado','success');
 }
 
 
@@ -4232,18 +4278,26 @@ function verificarBackupAuto() {
 }
 
 function gerarObjetoBackup(){return {app:'TreinoApp',appVersion:APP_VERSION,build:APP_BUILD,schemaVersion:DATA_SCHEMA_VERSION,exportedAt:new Date().toISOString(),pesoCorporal:localStorage.getItem('pesoCorporal'),historicoTreinoV3:localStorage.getItem('historicoTreinoV3'),exerciciosCustomizadosV3:localStorage.getItem('exerciciosCustomizadosV3'),treinosTemplates:localStorage.getItem('treinosTemplates'),temaPreferido:localStorage.getItem('temaPreferido'),userProfile:localStorage.getItem('userProfile'),treinoMetas:localStorage.getItem('treinoMetas'),conquistasDesbloqueadas:localStorage.getItem('conquistasDesbloqueadas'),perfilPublico:localStorage.getItem('perfilPublico'),treinoScores:localStorage.getItem('treinoScores'),timerSom:localStorage.getItem('timerSom'),backupConfig:localStorage.getItem('backupConfig'),descansoPadrao:localStorage.getItem('descansoPadrao'),wakeLockEnabled:localStorage.getItem('wakeLockEnabled'),academiaModeEnabled:localStorage.getItem('academiaModeEnabled'),plateBarWeight:localStorage.getItem('plateBarWeight'),platePreset:localStorage.getItem('platePreset')};}
-function compartilharBackup(){const dados=gerarObjetoBackup(),blob=new Blob([JSON.stringify(dados)],{type:'application/json'}),nome=`treinoapp_backup_v${APP_VERSION}_${hoje()}.json`;try{const file=new File([blob],nome,{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({title:'Backup TreinoApp',files:[file]}).catch(()=>{});return;}}catch(e){}const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=nome;a.click();setTimeout(()=>URL.revokeObjectURL(url),500);toast('Backup preparado','success');}
+async function compartilharBackup(){
+  const dados=gerarObjetoBackup(),conteudo=JSON.stringify(dados),nome=`treinoapp_backup_v${APP_VERSION}_${hoje()}.json`;
+  if(isNativeAndroid()&&window.TreinoNativeBridge?.shareTextFile){
+    try{await window.TreinoNativeBridge.shareTextFile({fileName:nome,content:conteudo,mimeType:'application/json',title:'Compartilhar backup TreinoApp'});return;}
+    catch(e){console.error('Falha ao compartilhar backup nativo',e);toast('Não foi possível compartilhar o backup: '+String(e?.message||e),'error');return;}
+  }
+  const blob=new Blob([conteudo],{type:'application/json'});
+  try{const file=new File([blob],nome,{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({title:'Backup TreinoApp',files:[file]});return;}}catch(e){if(e?.name==='AbortError')return;}
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=nome;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('Download do backup iniciado','success');
+}
 
-function exportarBackup() {
-  const dados=gerarObjetoBackup();
-  const blob=new Blob([JSON.stringify(dados)],{type:'application/json'});
-  const url=URL.createObjectURL(blob), a=document.createElement('a');
-  a.href=url; a.download=`treinoapp_backup_v${APP_VERSION}_${hoje()}.json`; a.click();
-  URL.revokeObjectURL(url);
-  // Log backup
-  const cfg=getBackupConfig(); cfg.ultimos=(cfg.ultimos||[]).concat(hoje()).slice(-10);
-  setBackupConfig(cfg); renderizarHistoricoBackup();
-  toast('Backup baixado!','success');
+async function exportarBackup() {
+  const dados=gerarObjetoBackup(),conteudo=JSON.stringify(dados),nome=`treinoapp_backup_v${APP_VERSION}_${hoje()}.json`;
+  if(isNativeAndroid()&&window.TreinoNativeBridge?.saveTextFile){
+    try{const r=await window.TreinoNativeBridge.saveTextFile({fileName:nome,content:conteudo,mimeType:'application/json'});toast(`Backup salvo${r?.location?' em '+r.location:''}`,'success');}
+    catch(e){console.error('Falha ao salvar backup nativo',e);toast('Não foi possível salvar o backup: '+String(e?.message||e),'error');return;}
+  }else{
+    const blob=new Blob([conteudo],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=nome;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('Download do backup iniciado','success');
+  }
+  const cfg=getBackupConfig();cfg.ultimos=(cfg.ultimos||[]).concat(hoje()).slice(-10);setBackupConfig(cfg);renderizarHistoricoBackup();
 }
 
 function gerarQRBackup() {
@@ -4714,28 +4768,50 @@ function gerarHTMLRelatorio() {
     + '</body></html>';
 }
 
-function gerarRelatorioPersonal() {
+async function gerarRelatorioPersonal() {
   const html = gerarHTMLRelatorio();
+  const nome = getPerfil().nome || 'atleta';
+  const filename = 'relatorio_treino_'+nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'_')+'_'+hoje()+'.html';
+  if(isNativeAndroid() && window.TreinoNativeBridge?.saveTextFile){
+    try{
+      const r=await window.TreinoNativeBridge.saveTextFile({fileName:filename,content:html,mimeType:'text/html'});
+      toast(`Relatório salvo${r?.location?' em '+r.location:''}`,'success');
+      haptic(80);
+      return;
+    }catch(e){
+      console.error('Falha ao salvar relatório nativo',e);
+      toast('Não foi possível salvar o relatório: '+String(e?.message||e),'error');
+      return;
+    }
+  }
   const blob = new Blob([html], {type:'text/html'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  const nome = getPerfil().nome || 'atleta';
-  a.href = url;
-  a.download = 'relatorio_treino_'+nome.toLowerCase().replace(/[^a-z0-9]/g,'_')+'_'+hoje()+'.html';
-  a.click();
-  URL.revokeObjectURL(url);
-  toast('Relatório gerado! Envie o arquivo para seu personal.','success');
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+  toast('Download do relatório iniciado','success');
   haptic(80);
 }
 
-function compartilharRelatorioPersonal() {
+async function compartilharRelatorioPersonal() {
   const html = gerarHTMLRelatorio();
-  const blob = new Blob([html], {type:'text/html'});
   const nome = getPerfil().nome || 'atleta';
-  const filename = 'relatorio_treino_'+nome.toLowerCase().replace(/[^a-z0-9]/g,'_')+'_'+hoje()+'.html';
+  const filename = 'relatorio_treino_'+nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'_')+'_'+hoje()+'.html';
+  if(isNativeAndroid() && window.TreinoNativeBridge?.shareTextFile){
+    try{
+      await window.TreinoNativeBridge.shareTextFile({fileName:filename,content:html,mimeType:'text/html',title:'Compartilhar relatório de treino'});
+      return;
+    }catch(e){
+      console.error('Falha ao compartilhar relatório nativo',e);
+      toast('Não foi possível abrir o compartilhamento: '+String(e?.message||e),'error');
+      return;
+    }
+  }
+  const blob = new Blob([html], {type:'text/html'});
   const file = new File([blob], filename, {type:'text/html'});
   if(navigator.canShare && navigator.canShare({files:[file]})) {
-    navigator.share({title:'Relatório de Treino — '+nome,text:'Meu relatório de evolução do TreinoApp',files:[file]}).catch(()=>gerarRelatorioPersonal());
+    try{await navigator.share({title:'Relatório de Treino — '+nome,text:'Meu relatório de evolução do TreinoApp',files:[file]});}
+    catch(e){if(e?.name!=='AbortError')gerarRelatorioPersonal();}
   } else {
     gerarRelatorioPersonal();
   }
@@ -4917,7 +4993,7 @@ function calcularAnilhas(){const total=parseFloat(document.getElementById('plate
 // V11 — EXPORTAÇÃO CSV
 // ════════════════════════════════════════════════
 function csvEscape(v){v=v==null?'':String(v);return /[";,\n]/.test(v)?`"${v.replace(/"/g,'""')}"`:v;}
-function exportarCSV(){const hist=getHist();if(!hist.length)return toast('Nenhum dado para exportar','warn');const cols=['id','sessionId','templateId','templateNome','data','hora','exercicio','grupo','numSerie','carga','reps','setType','completedAt','startedAt','finishedAt','durationSec'];const lines=[cols.join(';'),...hist.map(r=>cols.map(c=>csvEscape(r[c])).join(';'))];const blob=new Blob(['\ufeff'+lines.join('\n')],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`treinoapp_v${APP_VERSION}_${hoje()}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(url),500);toast('CSV exportado','success');}
+async function exportarCSV(){const hist=getHist();if(!hist.length)return toast('Nenhum dado para exportar','warn');const cols=['id','sessionId','templateId','templateNome','data','hora','exercicio','grupo','numSerie','carga','reps','setType','completedAt','startedAt','finishedAt','durationSec'];const lines=[cols.join(';'),...hist.map(r=>cols.map(c=>csvEscape(r[c])).join(';'))],conteudo='\ufeff'+lines.join('\n'),nome=`treinoapp_v${APP_VERSION}_${hoje()}.csv`;if(isNativeAndroid()&&window.TreinoNativeBridge?.saveTextFile){try{const r=await window.TreinoNativeBridge.saveTextFile({fileName:nome,content:conteudo,mimeType:'text/csv'});toast(`CSV salvo${r?.location?' em '+r.location:''}`,'success');return;}catch(e){console.error('Falha ao salvar CSV nativo',e);toast('Não foi possível salvar o CSV: '+String(e?.message||e),'error');return;}}const blob=new Blob([conteudo],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=nome;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('Download do CSV iniciado','success');}
 
 // ════════════════════════════════════════════════
 // V11 — SNAPSHOTS DE SEGURANÇA NO INDEXEDDB
@@ -4995,7 +5071,7 @@ async function inicializarNativeUI(){
   setTimeout(()=>reconciliarHealthPendentes(false),1800);
 }
 async function conectarHealthConnect(){if(!isNativeAndroid())return toast('Health Connect está disponível somente no APK Android','info');try{await window.TreinoNativeBridge.requestCorePermissions();const r=await window.TreinoNativeBridge.requestHealthPermissions();toast(r?.granted?'Health Connect conectado':'Revise as permissões do Health Connect','info');await atualizarHealthStatus();if(r?.granted){await diagnosticarHealthConnect(false);reconciliarHealthPendentes(false);}}catch(e){toast('Não foi possível abrir as permissões do Health Connect','error');}}
-async function atualizarHealthStatus(){const el=document.getElementById('healthConnectStatus');if(!el||!isNativeAndroid())return;try{const r=await window.TreinoNativeBridge.getHealthStatus();if(!r.available){el.textContent='Health Connect indisponível neste aparelho';return;}const caps=[`Exercício ${r.readExercise?'✓':'✕'}`,`FC ${r.readHeartRate?'✓':'—'}`,`kcal ${r.readCalories?'✓':'—'}`];el.textContent=r.granted?`Conectado · ${caps.join(' · ')}${r.backgroundAvailable?(r.backgroundGranted?' · segundo plano ✓':' · segundo plano não autorizado'):''}`:`Disponível · ${r.grantedCount||0}/${r.requiredCount||0} permissões concedidas · ${caps.join(' · ')}`;}catch(e){el.textContent='Não foi possível consultar o Health Connect';}}
+async function atualizarHealthStatus(){const el=document.getElementById('healthConnectStatus');if(!el||!isNativeAndroid())return;try{const r=await window.TreinoNativeBridge.getHealthStatus();if(!r.available){el.textContent='Health Connect indisponível neste aparelho';return;}const caps=[`Exercício ${r.readExercise?'✓':'✕'}`,`Gravação ${r.writeExercise?'✓':'✕'}`,`FC ${r.readHeartRate?'✓':'—'}`,`kcal ${r.readCalories?'✓':'—'}`];el.textContent=r.granted?`Conectado · ${caps.join(' · ')}${r.backgroundAvailable?(r.backgroundGranted?' · segundo plano ✓':' · segundo plano não autorizado'):''}`:`Disponível · ${r.grantedCount||0}/${r.requiredCount||0} permissões concedidas · ${caps.join(' · ')}`;}catch(e){el.textContent='Não foi possível consultar o Health Connect';}}
 function renderHealthLastMatch(){
   const el=document.getElementById('healthLastMatch');if(!el)return;
   const links=Object.entries(getHealthLinks()).sort((a,b)=>(b[1].linkedAt||0)-(a[1].linkedAt||0));
@@ -5042,20 +5118,30 @@ async function sincronizarHealthUltimasSessoes(){
 }
 let _healthDiagRecords=[];
 async function diagnosticarHealthConnect(showToast=true){
-  if(!isNativeAndroid())return;
-  const panel=document.getElementById('healthDiagnosticPanel');if(panel)panel.innerHTML='<div class="health-match pending">Lendo sessões do Health Connect...</div>';
+  if(!isNativeAndroid())return toast('Diagnóstico disponível somente no APK Android','info');
+  const panel=document.getElementById('healthDiagnosticPanel');
+  if(panel){panel.innerHTML='<div class="health-match pending"><strong>Executando diagnóstico nativo...</strong><br>Testando permissões, leitura por horário absoluto/local e dados brutos.</div>';panel.scrollIntoView({behavior:'smooth',block:'center'});}
   try{
     const pend=Object.entries(getHealthPending()).sort((a,b)=>(b[1].pendingSince||0)-(a[1].pendingSince||0));
     const target=pend[0]?.[1]||null,targetSid=pend[0]?.[0]||null;
-    const r=await window.TreinoNativeBridge.listHealthExercises({hours:24,targetStartMs:target?.startMs,targetEndMs:target?.endMs});
+    const [probe,r]=await Promise.all([
+      window.TreinoNativeBridge.probeHealthConnect(),
+      window.TreinoNativeBridge.listHealthExercises({hours:168,targetStartMs:target?.startMs,targetEndMs:target?.endMs})
+    ]);
     _healthDiagRecords=(r?.records||[]).slice(0,20).map(x=>({...x,targetSid}));
-    if(!panel)return;
-    if(!_healthDiagRecords.length){panel.innerHTML=`<div class="health-match pending"><strong>Health Connect respondeu, mas não retornou sessões de exercício nas últimas 24 h.</strong><br>Se o treino aparece no Health Connect, revise a permissão de leitura de Exercício para o TreinoApp e reconecte.</div>`;return;}
+    const perms=(probe?.grantedPermissions||[]).map(x=>String(x).replace('android.permission.health.','')).join(', ')||'nenhuma';
+    const errors=[probe?.instant24Error,probe?.instant7dError,probe?.local24Error,probe?.samsung7dError].filter(Boolean);
+    const probeHtml=`<div class="health-match ${probe?.readExercise?'ok':'pending'}"><strong>Teste nativo Health Connect</strong><br>Pacote: ${esc(probe?.packageName||'?')}<br>READ_EXERCISE: ${probe?.readExercise?'SIM':'NÃO'} · WRITE_EXERCISE: ${probe?.writeExercise?'SIM':'NÃO'}<br>READ_HEART_RATE: ${probe?.readHeartRate?'SIM':'NÃO'} · READ_CALORIES: ${probe?.readCalories?'SIM':'NÃO'}<br>Sessões: 24 h/Instant <strong>${probe?.instant24Count??'?'}</strong> · 7 dias/Instant <strong>${probe?.instant7dCount??'?'}</strong> · 24 h/horário local <strong>${probe?.local24Count??'?'}</strong> · Samsung/7 dias <strong>${probe?.samsung7dCount??'?'}</strong><br>FC bruta 24 h: ${probe?.heartRate24Count??'?'} · calorias 24 h: ${probe?.calories24Count??'?'}<br><span style="color:var(--text-muted);word-break:break-word">Permissões: ${esc(perms)}</span>${errors.length?`<br><span style="color:var(--danger)">${esc(errors.join(' | '))}</span>`:''}</div>`;
     const targetText=target?`<div style="font-size:.75em;color:var(--text-muted);margin-bottom:8px;">Comparando com ${esc(target.name||'TreinoApp')}: ${fmtHealthTime(target.startMs)}–${fmtHealthTime(target.endMs)}</div>`:'';
-    const rows=_healthDiagRecords.map((x,i)=>{const conf=x.confidence==null?'':` · <strong>${Math.round(Number(x.confidence)*100)}%</strong>`;return `<div class="health-match ${Number(x.confidence)>=.78?'ok':'pending'}"><strong>${esc(healthSourceLabel(x.sourceApp))}${x.title?' · '+esc(x.title):''}</strong><br>${fmtHealthTime(x.startMs)}–${fmtHealthTime(x.endMs)} · ${x.durationMin||'?'} min${conf}${x.avgHr?' · '+Math.round(x.avgHr)+' bpm':''}${x.kcal?' · '+Math.round(x.kcal)+' kcal':''}${targetSid?`<div style="margin-top:7px"><button class="btn btn-outline btn-sm" onclick="associarHealthDiagnostico(${i})">Associar a sessão pendente</button></div>`:''}</div>`}).join('');
-    panel.innerHTML=`<div style="font-size:.82em;font-weight:800;margin-bottom:6px;">Diagnóstico Health Connect · ${_healthDiagRecords.length} sessão(ões)</div>${targetText}${rows}`;
-    if(showToast)toast(`${_healthDiagRecords.length} sessão(ões) encontrada(s) no Health Connect`,'success');
-  }catch(e){if(panel)panel.innerHTML=`<div class="health-match pending"><strong>Falha ao ler Health Connect</strong><br>${esc(String(e?.message||e))}</div>`;if(showToast)toast('Falha ao diagnosticar Health Connect','warn');}
+    const rows=_healthDiagRecords.length?_healthDiagRecords.map((x,i)=>{const conf=x.confidence==null?'':` · <strong>${Math.round(Number(x.confidence)*100)}%</strong>`;return `<div class="health-match ${Number(x.confidence)>=.78?'ok':'pending'}"><strong>${esc(healthSourceLabel(x.sourceApp))}${x.title?' · '+esc(x.title):''}</strong><br>${fmtHealthTime(x.startMs)}–${fmtHealthTime(x.endMs)} · ${x.durationMin||'?'} min${conf}${x.avgHr?' · '+Math.round(x.avgHr)+' bpm':''}${x.kcal?' · '+Math.round(x.kcal)+' kcal':''}${targetSid?`<div style="margin-top:7px"><button class="btn btn-outline btn-sm" onclick="associarHealthDiagnostico(${i})">Associar a sessão pendente</button></div>`:''}</div>`}).join(''):`<div class="health-match pending"><strong>Nenhum ExerciseSessionRecord retornado pela API.</strong><br>Isso agora é diferenciado de erro de permissão e de problema de horário pelos testes acima.</div>`;
+    if(panel){panel.innerHTML=`${probeHtml}<div style="font-size:.82em;font-weight:800;margin:10px 0 6px;">Sessões legíveis · ${_healthDiagRecords.length}</div>${targetText}${rows}<button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="copiarDiagnosticoHealth()">Copiar diagnóstico Health</button>`;panel.scrollIntoView({behavior:'smooth',block:'start'});}
+    window._lastHealthProbe=probe;
+    if(showToast)toast('Diagnóstico Health concluído','success');
+  }catch(e){if(panel){panel.innerHTML=`<div class="health-match pending"><strong>Falha ao executar diagnóstico Health</strong><br>${esc(String(e?.message||e))}</div>`;panel.scrollIntoView({behavior:'smooth',block:'center'});}toast(`Falha no diagnóstico: ${String(e?.message||e)}`,'warn');}
+}
+function copiarDiagnosticoHealth(){
+  const p=window._lastHealthProbe||{};const txt=[`TreinoApp ${APP_VERSION}`,`package=${p.packageName||'?'}`,`sdkStatus=${p.sdkStatus}`,`READ_EXERCISE=${!!p.readExercise}`,`WRITE_EXERCISE=${!!p.writeExercise}`,`READ_HEART_RATE=${!!p.readHeartRate}`,`READ_CALORIES=${!!p.readCalories}`,`exerciseInstant24=${p.instant24Count}`,`exerciseInstant7d=${p.instant7dCount}`,`exerciseLocal24=${p.local24Count}`,`exerciseSamsung7d=${p.samsung7dCount}`,`heartRate24=${p.heartRate24Count}`,`calories24=${p.calories24Count}`,`errors=${[p.instant24Error,p.instant7dError,p.local24Error,p.samsung7dError,p.heartRateError,p.caloriesError].filter(Boolean).join(' | ')||'none'}`,`permissions=${(p.grantedPermissions||[]).join(',')}`].join('\n');
+  navigator.clipboard?.writeText(txt).then(()=>toast('Diagnóstico Health copiado','success')).catch(()=>prompt('Copie o diagnóstico:',txt));
 }
 async function associarHealthDiagnostico(i){
   const x=_healthDiagRecords[i],sid=x?.targetSid;if(!x||!sid)return toast('Nenhuma sessão pendente selecionada','warn');
@@ -5066,7 +5152,7 @@ async function associarHealthDiagnostico(i){
 async function gravarSessaoPendenteNoHealth(sessionId){
   const p=getHealthPending()[sessionId];if(!p)return toast('Sessão pendente não encontrada','warn');
   if(!confirm('Gravar esta sessão pelo TreinoApp no Health Connect? Use isto apenas se você não pretende associar o treino do Galaxy Watch, para evitar duplicidade.'))return;
-  try{const w=await window.TreinoNativeBridge.writeHealthSession(p);if(w?.written){setHealthLink(sessionId,{writtenByTreinoApp:true,confidence:1,sourceApp:'TreinoApp',durationMin:Math.max(1,Math.round((p.endMs-p.startMs)/60000)),recordId:w.recordId});toast('Sessão gravada no Health Connect','success');}else toast('Não foi possível gravar a sessão','warn');}catch(e){toast('Falha ao gravar no Health Connect','warn');}
+  try{const w=await window.TreinoNativeBridge.writeHealthSession(p);if(w?.written){setHealthLink(sessionId,{writtenByTreinoApp:true,confidence:1,sourceApp:'TreinoApp',durationMin:Math.max(1,Math.round((p.endMs-p.startMs)/60000)),recordId:w.recordId});toast('Sessão gravada no Health Connect','success');}else{const motivo=[w?.reason,w?.errorClass].filter(Boolean).join(' · ')||'motivo não informado';toast(`Não foi possível gravar: ${motivo}`,'warn');const panel=document.getElementById('healthDiagnosticPanel');if(panel)panel.innerHTML=`<div class="health-match pending"><strong>Falha ao gravar no Health Connect</strong><br>${esc(motivo)}</div>`;}}catch(e){toast(`Falha ao gravar: ${String(e?.message||e)}`,'warn');}
 }
 // Ao voltar do Samsung Health/Health Connect, tente novamente em foreground.
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&isNativeAndroid()&&getHealthAuto())setTimeout(()=>{importarResultadosHealthNativos();reconciliarHealthPendentes(false);},700);});
