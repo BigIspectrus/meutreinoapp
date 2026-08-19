@@ -25,6 +25,14 @@ class WorkoutForegroundService : Service() {
     private val prefs by lazy { getSharedPreferences(PREFS, Context.MODE_PRIVATE) }
     private var restFinishRunnable: Runnable? = null
     private var restWakeLock: PowerManager.WakeLock? = null
+    private val widgetTicker = object : Runnable {
+        override fun run() {
+            if (prefs.getBoolean(KEY_ACTIVE, false)) {
+                TreinoAppWidgetProvider.updateAll(this@WorkoutForegroundService)
+                handler.postDelayed(this, 60_000L)
+            }
+        }
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -47,6 +55,8 @@ class WorkoutForegroundService : Service() {
             ensureForeground()
             scheduleRestAlarmIfNeeded()
             TreinoAppWidgetProvider.updateAll(this)
+            handler.removeCallbacks(widgetTicker)
+            handler.postDelayed(widgetTicker, 60_000L)
         }
         return START_STICKY
     }
@@ -113,6 +123,7 @@ class WorkoutForegroundService : Service() {
     private fun finishWorkout() {
         restFinishRunnable?.let(handler::removeCallbacks)
         restFinishRunnable = null
+        handler.removeCallbacks(widgetTicker)
         releaseRestWakeLock()
         prefs.edit().putBoolean(KEY_ACTIVE, false).putLong(KEY_REST_END, 0L).apply()
         TreinoAppWidgetProvider.updateAll(this)
@@ -258,6 +269,7 @@ class WorkoutForegroundService : Service() {
 
     override fun onDestroy() {
         restFinishRunnable?.let(handler::removeCallbacks)
+        handler.removeCallbacks(widgetTicker)
         releaseRestWakeLock()
         super.onDestroy()
     }

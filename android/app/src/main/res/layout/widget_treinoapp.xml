@@ -3,17 +3,167 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center_vertical"
     android:padding="16dp"
     android:background="@drawable/widget_background">
 
-    <TextView android:id="@+id/widgetTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:text="Próximo treino" android:textSize="12sp" android:textColor="#9BA3C7" />
-    <TextView android:id="@+id/widgetWorkout" android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_marginTop="4dp" android:text="Treino" android:textStyle="bold" android:textSize="20sp" android:textColor="#FFFFFF" android:maxLines="1" android:ellipsize="end" />
-    <TextView android:id="@+id/widgetMeta" android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_marginTop="4dp" android:text="0/4 treinos na semana" android:textSize="12sp" android:textColor="#B7BEDD" />
-    <TextView android:id="@+id/widgetButton" android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:layout_marginTop="12dp" android:paddingLeft="14dp" android:paddingRight="14dp" android:paddingTop="8dp" android:paddingBottom="8dp"
-        android:background="@drawable/widget_button_background" android:text="Iniciar treino" android:textStyle="bold" android:textColor="#FFFFFF" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/widgetIcon"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:src="@mipmap/ic_launcher"
+            android:contentDescription="TreinoApp" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TREINOAPP"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#83AEFF"
+                android:letterSpacing="0.08" />
+
+            <TextView
+                android:id="@+id/widgetTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:text="Próximo treino"
+                android:textSize="11sp"
+                android:textColor="#AEB8D8" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/widgetStatusChip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:background="@drawable/widget_chip_background"
+            android:text="PRÓXIMO"
+            android:textSize="9sp"
+            android:textStyle="bold"
+            android:textColor="#DCE8FF" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/widgetWorkout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="Treino"
+        android:textStyle="bold"
+        android:textSize="23sp"
+        android:textColor="#FFFFFF"
+        android:maxLines="1"
+        android:ellipsize="end" />
+
+    <TextView
+        android:id="@+id/widgetSubtitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:text="Meta semanal"
+        android:textSize="11sp"
+        android:textColor="#9BA7CB"
+        android:maxLines="1"
+        android:ellipsize="end" />
+
+    <ProgressBar
+        android:id="@+id/widgetProgress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="6dp"
+        android:layout_marginTop="10dp"
+        android:max="100"
+        android:progress="0"
+        android:progressTint="#4F8EF7"
+        android:progressBackgroundTint="#26314F" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="5dp"
+            android:padding="9dp"
+            android:orientation="vertical"
+            android:background="@drawable/widget_stat_background">
+            <TextView
+                android:id="@+id/widgetStatLeftValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0/4"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF" />
+            <TextView
+                android:id="@+id/widgetStatLeftLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:text="treinos"
+                android:textSize="9sp"
+                android:textColor="#9BA7CB" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="5dp"
+            android:padding="9dp"
+            android:orientation="vertical"
+            android:background="@drawable/widget_stat_background">
+            <TextView
+                android:id="@+id/widgetStatRightValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF" />
+            <TextView
+                android:id="@+id/widgetStatRightLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:text="dias de streak"
+                android:textSize="9sp"
+                android:textColor="#9BA7CB" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/widgetButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="11dp"
+        android:gravity="center"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:background="@drawable/widget_button_background"
+        android:text="INICIAR TREINO"
+        android:textStyle="bold"
+        android:textSize="12sp"
+        android:textColor="#FFFFFF" />
 </LinearLayout>

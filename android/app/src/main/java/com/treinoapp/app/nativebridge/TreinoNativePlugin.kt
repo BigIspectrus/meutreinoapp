@@ -7,7 +7,11 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import androidx.core.content.ContextCompat
+import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.permission.HealthPermission.Companion.PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND
+import androidx.health.connect.client.records.ExerciseSessionRecord
+import androidx.health.connect.client.records.HeartRateRecord
+import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
 import com.getcapacitor.JSArray
 import com.getcapacitor.JSObject
 import com.getcapacitor.Plugin
@@ -44,6 +48,24 @@ class TreinoNativePlugin : Plugin() {
             put("commit", BuildConfig.GIT_SHA)
             put("buildTime", BuildConfig.BUILD_TIME)
         })
+    }
+
+    @PluginMethod
+    fun getNativeStorageInfo(call: PluginCall) {
+        scope.launch {
+            try {
+                val dataBytes = runCatching {
+                    context.dataDir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
+                }.getOrDefault(0L)
+                val dbBytes = runCatching { context.getDatabasePath("treinoapp_native.db").length() }.getOrDefault(0L)
+                resolve(call, JSObject().apply {
+                    put("protected", true)
+                    put("dataBytes", dataBytes)
+                    put("databaseBytes", dbBytes)
+                    put("note", "Armazenamento privado do Android; preservado em atualizações do mesmo app")
+                })
+            } catch (e: Exception) { reject(call, "Falha ao consultar armazenamento Android", e) }
+        }
     }
 
     @PluginMethod
@@ -171,6 +193,10 @@ class TreinoNativePlugin : Plugin() {
                     put("backgroundGranted", PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND in granted)
                     put("grantedCount", granted.size)
                     put("requiredCount", if (available) health.requestablePermissions().size else health.requiredPermissions.size)
+                    put("readExercise", granted.contains(HealthPermission.getReadPermission(ExerciseSessionRecord::class)))
+                    put("writeExercise", granted.contains(HealthPermission.getWritePermission(ExerciseSessionRecord::class)))
+                    put("readHeartRate", granted.contains(HealthPermission.getReadPermission(HeartRateRecord::class)))
+                    put("readCalories", granted.contains(HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class)))
                 })
             } catch (e: Exception) { reject(call, "Falha ao consultar Health Connect", e) }
         }
@@ -188,6 +214,58 @@ class TreinoNativePlugin : Plugin() {
         scope.launch {
             try { resolve(call, matchToJs(health.findBestExerciseMatch(start, end))) }
             catch (e: Exception) { reject(call, "Falha ao buscar treino no Health Connect", e) }
+        }
+    }
+
+    @PluginMethod
+    fun listHealthExercises(call: PluginCall) {
+        val hours = call.getInt("hours", 12) ?: 12
+        val targetStart = call.getDouble("targetStartMs")?.toLong()
+        val targetEnd = call.getDouble("targetEndMs")?.toLong()
+        scope.launch {
+            try {
+                val rows = health.listRecentExerciseSessions(hours, targetStart, targetEnd)
+                val arr = JSArray()
+                rows.forEach { r ->
+                    arr.put(JSObject().apply {
+                        put("recordId", r.recordId)
+                        put("sourceApp", r.sourceApp)
+                        put("title", r.title)
+                        put("exerciseType", r.exerciseType)
+                        put("startMs", r.startMs)
+                        put("endMs", r.endMs)
+                        put("durationMin", r.durationMin)
+                        put("confidence", r.confidence)
+                        put("overlapRatio", r.overlapRatio)
+                        put("startDiffMin", r.startDiffMin)
+                        put("endDiffMin", r.endDiffMin)
+                        put("avgHr", r.avgHr)
+                        put("maxHr", r.maxHr)
+                        put("kcal", r.kcal)
+                    })
+                }
+                resolve(call, JSObject().apply { put("records", arr); put("count", rows.size) })
+            } catch (e: Exception) { reject(call, "Falha ao listar exercícios do Health Connect", e) }
+        }
+    }
+
+    @PluginMethod
+    fun saveHealthLink(call: PluginCall) {
+        val sid = call.getString("sessionId") ?: return call.reject("sessionId obrigatório")
+        scope.launch {
+            try {
+                db.workoutDao().updateHealthLink(
+                    sessionId = sid,
+                    state = call.getString("state", "linked") ?: "linked",
+                    recordId = call.getString("recordId"),
+                    sourceApp = call.getString("sourceApp"),
+                    confidence = call.getDouble("confidence", 1.0) ?: 1.0,
+                    avgHr = call.getDouble("avgHr"),
+                    maxHr = call.getDouble("maxHr"),
+                    kcal = call.getDouble("kcal"),
+                )
+                resolve(call, JSObject().apply { put("saved", true) })
+            } catch (e: Exception) { reject(call, "Falha ao salvar vínculo Health Connect", e) }
         }
     }
 
@@ -310,8 +388,11 @@ class TreinoNativePlugin : Plugin() {
 
     private fun matchToJs(m: HealthConnectRepository.Match) = JSObject().apply {
         put("found", m.found); put("confidence", m.confidence); put("recordId", m.recordId)
-        put("sourceApp", m.sourceApp); put("startMs", m.startMs); put("endMs", m.endMs)
-        put("durationMin", m.durationMin); put("avgHr", m.avgHr); put("maxHr", m.maxHr); put("kcal", m.kcal)
+        put("sourceApp", m.sourceApp); put("title", m.title); put("exerciseType", m.exerciseType)
+        put("startMs", m.startMs); put("endMs", m.endMs); put("durationMin", m.durationMin)
+        put("avgHr", m.avgHr); put("maxHr", m.maxHr); put("kcal", m.kcal)
+        put("candidateCount", m.candidateCount); put("overlapRatio", m.overlapRatio)
+        put("startDiffMin", m.startDiffMin); put("endDiffMin", m.endDiffMin)
     }
 
     private fun serviceCall(call: PluginCall, action: String) {

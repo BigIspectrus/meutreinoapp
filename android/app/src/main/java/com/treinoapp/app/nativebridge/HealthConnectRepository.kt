@@ -24,14 +24,10 @@ import kotlin.math.max
 import kotlin.math.min
 
 class HealthConnectRepository(private val context: Context) {
-    /** Permissões mínimas para localizar e enriquecer uma sessão do relógio. */
-    // A única permissão indispensável para associar uma sessão do relógio é a leitura de exercícios.
-    // FC/calorias/peso e escrita são recursos adicionais: negar um deles não impede a associação básica.
     val requiredPermissions: Set<String> = setOf(
         HealthPermission.getReadPermission(ExerciseSessionRecord::class),
     )
 
-    /** Permissões adicionais para enriquecer a sessão, gravar o treino e sincronizar peso. */
     private val optionalPermissions: Set<String> = setOf(
         HealthPermission.getReadPermission(HeartRateRecord::class),
         HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class),
@@ -52,7 +48,7 @@ class HealthConnectRepository(private val context: Context) {
 
     fun requestablePermissions(): Set<String> = if (backgroundReadAvailable()) {
         (requiredPermissions + optionalPermissions) + PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND
-    } else (requiredPermissions + optionalPermissions)
+    } else requiredPermissions + optionalPermissions
 
     suspend fun grantedPermissions(): Set<String> =
         if (isAvailable()) client().permissionController.getGrantedPermissions() else emptySet()
@@ -64,62 +60,167 @@ class HealthConnectRepository(private val context: Context) {
         val confidence: Double = 0.0,
         val recordId: String? = null,
         val sourceApp: String? = null,
+        val title: String? = null,
+        val exerciseType: Int? = null,
         val startMs: Long? = null,
         val endMs: Long? = null,
         val durationMin: Long? = null,
         val avgHr: Double? = null,
         val maxHr: Double? = null,
         val kcal: Double? = null,
+        val candidateCount: Int = 0,
+        val overlapRatio: Double = 0.0,
+        val startDiffMin: Double? = null,
+        val endDiffMin: Double? = null,
     )
+
+    data class ExerciseCandidate(
+        val recordId: String,
+        val sourceApp: String,
+        val title: String?,
+        val exerciseType: Int,
+        val startMs: Long,
+        val endMs: Long,
+        val durationMin: Long,
+        val confidence: Double?,
+        val overlapRatio: Double?,
+        val startDiffMin: Double?,
+        val endDiffMin: Double?,
+        val avgHr: Double?,
+        val maxHr: Double?,
+        val kcal: Double?,
+    )
+
+    private fun sourceLabel(packageName: String): String = when (packageName) {
+        "com.sec.android.app.shealth" -> "Samsung Health"
+        "com.google.android.apps.fitness" -> "Google Fit"
+        context.packageName, "com.treinoapp.app", "com.treinoapp.beta" -> "TreinoApp"
+        else -> packageName
+    }
+
+    /**
+     * Lê sessões de exercício em uma janela larga. A v12.0.1 deliberadamente
+     * não aplica filtro por origem no request: primeiro precisamos enxergar o
+     * que o Health Connect realmente entrega e só depois classificar a origem.
+     */
+    private suspend fun readExerciseRecords(start: Instant, end: Instant): List<ExerciseSessionRecord> {
+        val response = client().readRecords(
+            ReadRecordsRequest<ExerciseSessionRecord>(
+                timeRangeFilter = TimeRangeFilter.between(start, end),
+                ascendingOrder = true,
+                pageSize = 1000,
+            )
+        )
+        return response.records
+    }
+
+    private data class Ranked(
+        val record: ExerciseSessionRecord,
+        val confidence: Double,
+        val overlapRatio: Double,
+        val startDiffMin: Double,
+        val endDiffMin: Double,
+    )
+
+    private fun rankRecord(record: ExerciseSessionRecord, startMs: Long, endMs: Long): Ranked {
+        val rs = record.startTime.toEpochMilli()
+        val re = record.endTime.toEpochMilli()
+        val appDuration = max(1L, endMs - startMs)
+        val candidateDuration = max(1L, re - rs)
+        val overlap = max(0L, min(endMs, re) - max(startMs, rs))
+        val overlapRatio = overlap.toDouble() / max(appDuration, candidateDuration).toDouble()
+        val startDiff = abs(rs - startMs).toDouble()
+        val endDiff = abs(re - endMs).toDouble()
+        val durationDiff = abs(candidateDuration - appDuration).toDouble()
+
+        // Janelas mais tolerantes que na v12.0.0. O Galaxy Watch/Samsung Health
+        // pode registrar o início/fim alguns segundos ou minutos diferente do app.
+        val startScore = (1.0 - startDiff / (30 * 60_000.0)).coerceIn(0.0, 1.0)
+        val endScore = (1.0 - endDiff / (30 * 60_000.0)).coerceIn(0.0, 1.0)
+        val durationScore = (1.0 - durationDiff / max(appDuration, candidateDuration).toDouble()).coerceIn(0.0, 1.0)
+        var confidence = (overlapRatio * 0.50 + startScore * 0.22 + endScore * 0.18 + durationScore * 0.10)
+
+        // Sessões quase coincidentes devem continuar fortes mesmo quando uma das
+        // plataformas fecha a sessão alguns segundos antes/depois.
+        if (startDiff <= 3 * 60_000 && endDiff <= 3 * 60_000) confidence = max(confidence, 0.88)
+        else if (startDiff <= 5 * 60_000 && endDiff <= 5 * 60_000) confidence = max(confidence, 0.78)
+
+        return Ranked(
+            record = record,
+            confidence = confidence.coerceIn(0.0, 1.0),
+            overlapRatio = overlapRatio,
+            startDiffMin = startDiff / 60_000.0,
+            endDiffMin = endDiff / 60_000.0,
+        )
+    }
 
     suspend fun findBestExerciseMatch(startMs: Long, endMs: Long): Match {
         if (!isAvailable() || !hasRequiredPermissions() || endMs <= startMs) return Match(false)
-        val hc = client()
         val appStart = Instant.ofEpochMilli(startMs)
         val appEnd = Instant.ofEpochMilli(endMs)
-        val searchStart = appStart.minusSeconds(20 * 60)
-        val searchEnd = appEnd.plusSeconds(20 * 60)
-        val records = hc.readRecords(
-            ReadRecordsRequest<ExerciseSessionRecord>(
-                timeRangeFilter = TimeRangeFilter.between(searchStart, searchEnd)
-            )
-        ).records
-
+        val searchStart = appStart.minusSeconds(90 * 60)
+        val searchEnd = appEnd.plusSeconds(90 * 60)
+        val records = readExerciseRecords(searchStart, searchEnd)
         val ownPackages = setOf(context.packageName, "com.treinoapp.app", "com.treinoapp.beta")
         val candidates = records.filter { it.metadata.dataOrigin.packageName !in ownPackages }
-        if (candidates.isEmpty()) return Match(false)
+        if (candidates.isEmpty()) return Match(false, candidateCount = 0)
 
-        val appDuration = max(1L, endMs - startMs)
-        val ranked = candidates.map { r ->
-            val rs = r.startTime.toEpochMilli()
-            val re = r.endTime.toEpochMilli()
-            val overlap = max(0L, min(endMs, re) - max(startMs, rs))
-            val candidateDuration = max(1L, re - rs)
-            val overlapRatio = overlap.toDouble() / max(appDuration, candidateDuration).toDouble()
-            val startDiff = abs(rs - startMs).toDouble()
-            val endDiff = abs(re - endMs).toDouble()
-            val startScore = (1.0 - startDiff / (15 * 60_000.0)).coerceIn(0.0, 1.0)
-            val endScore = (1.0 - endDiff / (15 * 60_000.0)).coerceIn(0.0, 1.0)
-            val confidence = (overlapRatio * 0.70 + startScore * 0.15 + endScore * 0.15).coerceIn(0.0, 1.0)
-            Triple(r, confidence, overlapRatio)
-        }.sortedByDescending { it.second }
-
+        val ranked = candidates.map { rankRecord(it, startMs, endMs) }.sortedByDescending { it.confidence }
         val best = ranked.first()
-        if (best.second < 0.45) return Match(false)
-        val r = best.first
-        val metrics = aggregateMetrics(hc, r.startTime, r.endTime, r.metadata.dataOrigin)
+        val r = best.record
+        val metrics = aggregateMetrics(client(), r.startTime, r.endTime, r.metadata.dataOrigin)
+
+        // "found" agora significa que existe uma sessão candidata real. A decisão
+        // de associar automaticamente continua sendo feita por limiar de confiança.
         return Match(
             found = true,
-            confidence = best.second,
+            confidence = best.confidence,
             recordId = r.metadata.id,
-            sourceApp = r.metadata.dataOrigin.packageName,
+            sourceApp = sourceLabel(r.metadata.dataOrigin.packageName),
+            title = r.title?.toString(),
+            exerciseType = r.exerciseType,
             startMs = r.startTime.toEpochMilli(),
             endMs = r.endTime.toEpochMilli(),
             durationMin = max(1L, (r.endTime.toEpochMilli() - r.startTime.toEpochMilli()) / 60_000L),
             avgHr = metrics.first,
             maxHr = metrics.second,
             kcal = metrics.third,
+            candidateCount = candidates.size,
+            overlapRatio = best.overlapRatio,
+            startDiffMin = best.startDiffMin,
+            endDiffMin = best.endDiffMin,
         )
+    }
+
+    suspend fun listRecentExerciseSessions(hours: Int, targetStartMs: Long? = null, targetEndMs: Long? = null): List<ExerciseCandidate> {
+        if (!isAvailable() || !hasRequiredPermissions()) return emptyList()
+        val now = Instant.now()
+        val start = now.minusSeconds(hours.coerceIn(1, 168).toLong() * 3600L)
+        val rows = readExerciseRecords(start, now.plusSeconds(10 * 60L)).sortedByDescending { it.startTime }
+        val out = mutableListOf<ExerciseCandidate>()
+        for (r in rows.take(30)) {
+            val ranked = if (targetStartMs != null && targetEndMs != null && targetEndMs > targetStartMs) {
+                rankRecord(r, targetStartMs, targetEndMs)
+            } else null
+            val metrics = aggregateMetrics(client(), r.startTime, r.endTime, r.metadata.dataOrigin)
+            out += ExerciseCandidate(
+                recordId = r.metadata.id,
+                sourceApp = sourceLabel(r.metadata.dataOrigin.packageName),
+                title = r.title?.toString(),
+                exerciseType = r.exerciseType,
+                startMs = r.startTime.toEpochMilli(),
+                endMs = r.endTime.toEpochMilli(),
+                durationMin = max(1L, (r.endTime.toEpochMilli() - r.startTime.toEpochMilli()) / 60_000L),
+                confidence = ranked?.confidence,
+                overlapRatio = ranked?.overlapRatio,
+                startDiffMin = ranked?.startDiffMin,
+                endDiffMin = ranked?.endDiffMin,
+                avgHr = metrics.first,
+                maxHr = metrics.second,
+                kcal = metrics.third,
+            )
+        }
+        return out
     }
 
     private suspend fun aggregateMetrics(
@@ -210,11 +311,8 @@ class HealthConnectRepository(private val context: Context) {
                     )
                 }.getOrNull()
             }
-            if (records.isNotEmpty()) {
-                runCatching { hc.insertRecords(records); written = records.size }
-            }
+            if (records.isNotEmpty()) runCatching { hc.insertRecords(records); written = records.size }
         }
-
         if (!granted.contains(HealthPermission.getReadPermission(WeightRecord::class))) {
             return WeightSyncResult(null, null, written)
         }

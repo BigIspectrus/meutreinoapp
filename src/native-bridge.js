@@ -11,6 +11,7 @@ function call(method, payload = {}) {
 window.TreinoNativeBridge = {
   isNative: native,
   getNativeInfo: () => call('getNativeInfo'),
+  getNativeStorageInfo: () => call('getNativeStorageInfo'),
   openUrl: url => call('openUrl', { url }),
   requestCorePermissions: () => call('requestCorePermissions'),
   getWorkoutState: () => call('getWorkoutState'),
@@ -26,6 +27,8 @@ window.TreinoNativeBridge = {
   getHealthStatus: () => call('getHealthStatus'),
   requestHealthPermissions: () => call('requestHealthPermissions'),
   getHealthSyncResults: () => call('getHealthSyncResults'),
+  listHealthExercises: data => call('listHealthExercises', data || {}),
+  saveHealthLink: data => call('saveHealthLink', data || {}),
   findHealthMatch: data => call('findHealthMatch', data),
   writeHealthSession: data => call('writeHealthSession', data),
   syncWeight: data => call('syncWeight', data),

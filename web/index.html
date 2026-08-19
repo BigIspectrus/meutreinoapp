@@ -10,8 +10,8 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <title>TreinoApp v12</title>
-  <meta name="treinoapp-version" content="12.0.0">
-  <meta name="treinoapp-build" content="2026.08.18.3">
+  <meta name="treinoapp-version" content="12.0.1">
+  <meta name="treinoapp-build" content="2026.08.18.4">
   <script defer src="./vendor/chart.umd.js"></script>
   <script defer src="./vendor/jspdf.umd.min.js"></script>
   <script defer src="./vendor/qrcode.min.js"></script>
@@ -1057,13 +1057,14 @@
     </div>
   </div>
 
-  <!-- registro avulso -->
+  <!-- sessão avulsa: usa o mesmo modo de treino, timer e conclusão de séries -->
   <div class="card">
     <div class="card-title" style="cursor:pointer;justify-content:space-between;" onclick="toggleAvulso()">
-      <span>✏️ Registro Avulso</span>
+      <span>Sessão Avulsa</span>
       <span id="avulsoChevron" style="color:var(--text-muted);font-size:.85em;">▼</span>
     </div>
     <div id="avulsoContent" style="display:none;">
+      <p style="font-size:.82em;color:var(--text-muted);margin-bottom:12px;">Inicie um exercício avulso com a mesma interface do treino montado: séries, tipo de série, histórico, descanso automático, notificação e timer nativo.</p>
       <div class="row">
         <div class="form-group col"><label>Data</label><input type="date" id="dataTreino"></div>
         <div class="form-group col">
@@ -1076,23 +1077,20 @@
           </select>
         </div>
       </div>
-      <div class="form-group">
-        <label>Exercício</label>
-        <select id="selectExercicio"><option value="">Selecione o grupo primeiro...</option></select>
+      <div class="form-group"><label>Exercício</label><select id="selectExercicio"><option value="">Selecione o grupo primeiro...</option></select></div>
+      <div class="row">
+        <div class="form-group col"><label>Séries</label><select id="avulsoSeriesCount"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>10</option></select></div>
+        <div class="form-group col"><label>Descanso</label><select id="avulsoRest"><option value="60">1:00</option><option value="90" selected>1:30</option><option value="120">2:00</option><option value="150">2:30</option><option value="180">3:00</option><option value="240">4:00</option></select></div>
+      </div>
+      <div class="row">
+        <div class="form-group col"><label>Incremento</label><select id="avulsoIncrement"><option value="0.5">0,5 kg</option><option value="1">1 kg</option><option value="1.25">1,25 kg</option><option value="2">2 kg</option><option value="2.5" selected>2,5 kg</option><option value="5">5 kg</option><option value="10">10 kg</option></select></div>
+        <div class="form-group col"><label>Meta de reps</label><select id="avulsoRepRange"><option value="livre">Livre</option><option value="6-8">6–8</option><option value="8-10">8–10</option><option value="8-12" selected>8–12</option><option value="10-12">10–12</option><option value="12-15">12–15</option><option value="15-20">15–20</option></select></div>
       </div>
       <div style="background:var(--surface2);padding:9px;border-radius:var(--radius-sm);margin-bottom:11px;border:1px solid var(--border);">
         <label style="margin-bottom:7px;">Não achou? Adicione:</label>
-        <div class="row">
-          <input type="text" id="novoExercicioNome" placeholder="Nome do exercício" class="col">
-          <button class="btn btn-outline btn-sm" style="width:78px;" onclick="salvarNovoExercicio()">Salvar</button>
-        </div>
+        <div class="row"><input type="text" id="novoExercicioNome" placeholder="Nome do exercício" class="col"><button class="btn btn-outline btn-sm" style="width:78px;" onclick="salvarNovoExercicio()">Salvar</button></div>
       </div>
-      <label>Séries:</label>
-      <div id="containerSeries"></div>
-      <div class="row" style="margin-top:9px;">
-        <button class="btn btn-ghost btn-sm" style="flex:1;" onclick="adicionarLinhaSerie()">+ Série</button>
-        <button class="btn btn-primary" style="flex:1;" onclick="salvarTreinoAvulso()">Salvar</button>
-      </div>
+      <button class="btn btn-primary" onclick="iniciarSessaoAvulsa()">INICIAR SESSÃO AVULSA</button>
     </div>
   </div>
 
@@ -1493,9 +1491,10 @@
     <div class="config-item"><div><div class="config-label">Health Connect</div><div class="config-sub" id="healthConnectStatus">Verificando disponibilidade...</div></div><button class="btn btn-outline btn-sm" style="width:auto;" onclick="conectarHealthConnect()">Conectar</button></div>
     <div class="config-item"><div><div class="config-label">Sincronização automática</div><div class="config-sub">Associa automaticamente o treino do Galaxy Watch quando a correspondência for confiável</div></div><select id="selHealthAuto" style="width:auto;padding:6px 10px;font-size:.83em;" onchange="salvarHealthConfig()"><option value="1">Ativada</option><option value="0">Desativada</option></select></div>
     <div class="config-item"><div><div class="config-label">Gravar no Health Connect</div><div class="config-sub">Se não houver sessão equivalente do relógio, grava a musculação do TreinoApp</div></div><select id="selHealthWrite" style="width:auto;padding:6px 10px;font-size:.83em;" onchange="salvarHealthConfig()"><option value="1">Ativado</option><option value="0">Desativado</option></select></div>
-    <div class="row" style="margin-top:10px;"><button class="btn btn-ghost btn-sm" style="flex:1;" onclick="sincronizarHealthUltimasSessoes()">Sincronizar sessões recentes</button><button class="btn btn-ghost btn-sm" style="flex:1;" onclick="sincronizarPesoHealth()">Sincronizar peso</button></div>
+    <div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap;"><button class="btn btn-ghost btn-sm" style="flex:1;min-width:150px;" onclick="sincronizarHealthUltimasSessoes()">Sincronizar sessões</button><button class="btn btn-outline btn-sm" style="flex:1;min-width:150px;" onclick="diagnosticarHealthConnect()">Diagnosticar Health</button><button class="btn btn-ghost btn-sm" style="flex:1;min-width:150px;" onclick="sincronizarPesoHealth()">Sincronizar peso</button></div>
     <div class="native-status" id="nativeStatusText"></div>
     <div id="healthLastMatch"></div>
+    <div id="healthDiagnosticPanel" style="margin-top:10px;"></div>
   </div>
 
   <div class="card">
@@ -1512,14 +1511,14 @@
 </div>
 
 <script>
-const APP_VERSION = '12.0.0';
-const APP_BUILD = '2026.08.18.3';
+const APP_VERSION = '12.0.1';
+const APP_BUILD = '2026.08.18.4';
 const DATA_SCHEMA_VERSION = 12;
 const GITHUB_REPO='BigIspectrus/meutreinoapp';
 const GITHUB_PAGES_BASE='https://bigispectrus.github.io/meutreinoapp';
 let _latestAndroidReleaseUrl='';
 let _nativeChannel='web';
-const APP_CACHE_VERSION = 'treinoapp-v12.0.0-20260818-3';
+const APP_CACHE_VERSION = 'treinoapp-v12.0.1-20260818-4';
 
 const SET_TYPES={workset:'Work set',warmup:'Aquecimento',topset:'Top set',backoff:'Back-off',dropset:'Drop set',cluster:'Cluster set',fst7:'FST-7',restpause:'Rest-pause',myoreps:'Myo-reps',amrap:'AMRAP'};
 function normalizarSetType(v){return SET_TYPES[v]?v:'workset';}
@@ -1615,7 +1614,6 @@ window.onload = async function() {
   document.getElementById('dataPeso').value = hoje;
   document.getElementById('dataTreinoAtivo').value = hoje;
 
-  for(let i=0;i<3;i++) adicionarLinhaSerie();
   atualizarSelectGrafico();
   renderizarHistorico();
   renderizarTreinoSelector();
@@ -1623,7 +1621,7 @@ window.onload = async function() {
   verificarStatusNotif();
 
   // Service Worker
-  if('serviceWorker' in navigator) {
+  if(!isNativeAndroid() && 'serviceWorker' in navigator) {
     try {
       swReg = await navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'});
       configurarAtualizacoesPWA(swReg);
@@ -2003,7 +2001,7 @@ function selecionarTreino(template, btnEl) {
   window._treinoPauseStartedAt = draft?.pauseStartedAt||null;
   setModoTreinoAtivo(true, template);
   document.querySelectorAll('.treino-card-btn').forEach(b => b.classList.remove('selected'));
-  btnEl.classList.add('selected');
+  btnEl?.classList?.add('selected');
   treinoAtivoTemplate = template;
 
   document.getElementById('treinoAtivoNome').innerHTML = `${template.icone||'💪'} ${esc(template.nome)}`;
@@ -2088,7 +2086,7 @@ function salvarRascunho() {
   });
   const cards=[...document.querySelectorAll('#exerciciosAtivos .exercicio-card')],skippedExs=cards.filter(c=>c.classList.contains('skipped')).map(c=>c.dataset.ex).filter(Boolean);
   const baseExs=new Set(treinoAtivoTemplate.exercicios||[]),extraExs=cards.filter(c=>c.dataset.ex&&!baseExs.has(c.dataset.ex)).map(c=>({ex:c.dataset.ex,series:c.querySelectorAll('.serie-row').length}));
-  const payload={schemaVersion:DATA_SCHEMA_VERSION,sessionId:window._treinoSessionId||gerarId('sessao'),templateId:treinoAtivoTemplate.id||null,data:document.getElementById('dataTreinoAtivo')?.value||hoje(),valores,skippedExs,extraExs,startedAt:window._treinoStartedAt||Date.now(),paused:!!window._treinoPaused,pauseStartedAt:window._treinoPauseStartedAt||null,totalPausedMs:Number(window._treinoTotalPausedMs)||0,timestamp:Date.now()};
+  const payload={schemaVersion:DATA_SCHEMA_VERSION,sessionId:window._treinoSessionId||gerarId('sessao'),templateId:treinoAtivoTemplate.id||null,templateSnapshot:treinoAtivoTemplate?.isAdHoc?treinoAtivoTemplate:null,data:document.getElementById('dataTreinoAtivo')?.value||hoje(),valores,skippedExs,extraExs,startedAt:window._treinoStartedAt||Date.now(),paused:!!window._treinoPaused,pauseStartedAt:window._treinoPauseStartedAt||null,totalPausedMs:Number(window._treinoTotalPausedMs)||0,timestamp:Date.now()};
   window._treinoSessionId=payload.sessionId;
   try{localStorage.setItem('_rascunhoTreino',JSON.stringify(payload))}catch(e){console.warn('Falha ao salvar rascunho',e)}
 }
@@ -2169,6 +2167,7 @@ function salvarTreinoAtivo() {
   document.getElementById('modalResumoSessao')?.classList.add('open');
   const nativeSets=usar.map(row=>({id:gerarId('native'),exercise:row.querySelector('.ativo-carga')?.dataset.ex||'',setNumber:Number(row.querySelector('.ativo-carga')?.dataset.serie)||0,weight:Number(row.querySelector('.ativo-carga')?.value)||0,reps:Number(row.querySelector('.ativo-reps')?.value)||0,setType:normalizarSetType(row.querySelector('.ativo-tipo')?.value),completedAt:Number(row.dataset.completedAt)||finishedAt}));
   try{window.TreinoNativeBridge?.onWorkoutFinished?.({sessionId,templateId:treinoAtivoTemplate?.id||null,name:treinoAtivoTemplate?.nome||'Treino',startMs:startedAt,endMs:finishedAt,durationSec,completedSets:usar.length,totalSets:rows.length,skippedExercises:skippedExs,sets:nativeSets});}catch(e){console.warn('Integração nativa ao finalizar',e)}
+  if(treinoAtivoTemplate?.isAdHoc) localStorage.removeItem('_adhocTemplateV12');
   treinoAtivoTemplate=null; window._treinoSessionId=null; window._treinoStartedAt=null; window._treinoTotalPausedMs=0; window._treinoPaused=false; window._treinoPauseStartedAt=null; pararRelogioTreino(); liberarWakeLock(); atualizarDiagnosticoUI();
   atualizarGrafico(); renderizarHistorico(); renderizarDashboard(); salvarSnapshotSeguro('treino_concluido'); haptic(100);
 }
@@ -2368,6 +2367,25 @@ function adicionarLinhaSerie() {
   div.className='serie-row';
   div.innerHTML=`<div class="serie-badge">S${n}</div><input type="number" class="carga-input" step="0.5" placeholder="kg" style="flex:1;"><input type="number" class="reps-input" placeholder="reps" style="flex:1;"><select class="set-type-select avulso-tipo" data-kind="workset" aria-label="Tipo da série ${n}" onchange="atualizarSetTypeVisual(this)">${setTypeOptionsHtml('workset')}</select>`;
   c.appendChild(div);
+}
+
+function iniciarSessaoAvulsa(){
+  const data=document.getElementById('dataTreino')?.value||hoje();
+  const grupo=document.getElementById('selectGrupo')?.value||'';
+  const exercicio=document.getElementById('selectExercicio')?.value||'';
+  if(!grupo||!exercicio)return toast('Selecione grupo e exercício','warn');
+  const series=Math.max(1,parseInt(document.getElementById('avulsoSeriesCount')?.value)||3);
+  const rest=Math.max(0,parseInt(document.getElementById('avulsoRest')?.value)||getDescansoPadrao());
+  const inc=Math.max(.1,Number(document.getElementById('avulsoIncrement')?.value)||2.5);
+  const repRange=document.getElementById('avulsoRepRange')?.value||'livre';
+  const id=`adhoc_${gerarId('treino')}`;
+  const t={id,nome:`Avulso · ${exercicio}`,icone:'A',exercicios:[exercicio],series,seriesMap:{[exercicio]:series},restMap:{[exercicio]:rest},incrementMap:{[exercicio]:inc},repRangeMap:{[exercicio]:repRange},isAdHoc:true,grupoAvulso:grupo};
+  try{localStorage.setItem('_adhocTemplateV12',JSON.stringify(t));}catch(_){ }
+  document.getElementById('dataTreinoAtivo').value=data;
+  selecionarTreino(t,null);
+}
+function continuarSessaoAvulsa(){
+  try{const t=JSON.parse(localStorage.getItem('_adhocTemplateV12')||'null');if(!t)return toast('Sessão avulsa não encontrada','warn');irParaAba('treinar');setTimeout(()=>selecionarTreino(t,null),80);}catch(e){toast('Não foi possível restaurar a sessão avulsa','warn');}
 }
 
 function salvarTreinoAvulso() {
@@ -3938,7 +3956,7 @@ function renderizarDashboard() {
         <div class="dash-kpi"><div class="dash-kpi-val">${diasTreino.length}</div><div class="dash-kpi-lbl">Total dias</div></div>
       </div>
       ${ultimaDateBr?`<div class="dash-last">Último treino: <strong>${ultimaDateBr}</strong> · ${ultimaExs.slice(0,3).join(', ')}${ultimaExs.length>3?'...':''} · ${(ultimaVol/1000).toFixed(2)}t</div>`:''}
-      ${(()=>{const ts=getTreinosSalvos();let rasc=getRascunhoValido(); const draftT=rasc?ts.find(t=>String(t.id)===String(rasc.templateId)):null;if(draftT)return `<button class="cta-treinar" onclick='iniciarTreinoPorId(${jsArg(draftT.id)})'>CONTINUAR ${esc(draftT.nome).toUpperCase()}</button>`;const lastTid=ultimaRegs.find(r=>r.templateId)?.templateId||null;const lastT=ts.find(t=>String(t.id)===String(lastTid));return lastT?`<button class="cta-treinar" onclick='iniciarTreinoPorId(${jsArg(lastT.id)})'>REPETIR ${esc(lastT.nome).toUpperCase()}</button>`:`<button class="cta-treinar" onclick="irParaAba('treinar')">INICIAR TREINO</button>`;})()}
+      ${(()=>{const ts=getTreinosSalvos();let rasc=getRascunhoValido(); const draftT=rasc?ts.find(t=>String(t.id)===String(rasc.templateId)):null;if(draftT)return `<button class="cta-treinar" onclick='iniciarTreinoPorId(${jsArg(draftT.id)})'>CONTINUAR ${esc(draftT.nome).toUpperCase()}</button>`;if(rasc?.templateSnapshot?.isAdHoc)return `<button class="cta-treinar" onclick="continuarSessaoAvulsa()">CONTINUAR SESSÃO AVULSA</button>`;const lastTid=ultimaRegs.find(r=>r.templateId)?.templateId||null;const lastT=ts.find(t=>String(t.id)===String(lastTid));return lastT?`<button class="cta-treinar" onclick='iniciarTreinoPorId(${jsArg(lastT.id)})'>REPETIR ${esc(lastT.nome).toUpperCase()}</button>`:`<button class="cta-treinar" onclick="irParaAba('treinar')">INICIAR TREINO</button>`;})()}
       ${getTreinosSalvos().length>0?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:-6px;">${getTreinosSalvos().slice(0,3).map(t=>`<button style="font-size:.72em;color:var(--text);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);padding:6px 10px;border-radius:12px;cursor:pointer;" onclick='iniciarTreinoPorId(${jsArg(t.id)})'>${esc(t.nome).slice(0,18)}</button>`).join('')}</div>`:''}
     </div>`;
 
@@ -4769,16 +4787,33 @@ function abrirAddExSessao(){if(!treinoAtivoTemplate)return toast('Inicie um trei
 function atualizarExsAddSessao(){const g=document.getElementById('addSessaoGrupo').value,sel=document.getElementById('addSessaoEx');sel.innerHTML='<option value="">Selecione...</option>';if(!g)return;(obterExerciciosSalvos()[g]||[]).sort().forEach(ex=>sel.add(new Option(ex,ex)));}
 function confirmarAddExSessao(){const ex=document.getElementById('addSessaoEx').value,n=parseInt(document.getElementById('addSessaoSeries').value)||3;if(!ex)return toast('Selecione um exercício','warn');if([...document.querySelectorAll('#exerciciosAtivos .exercicio-card')].some(c=>c.dataset.ex===ex))return toast('Este exercício já está na sessão','warn');criarCardExercicioSessao(ex,n);fecharModal('modalAddSessaoEx');salvarRascunho();atualizarProgressoTreino();setTimeout(()=>{const cards=[...document.querySelectorAll('#exerciciosAtivos .exercicio-card')];cards[cards.length-1]?.scrollIntoView({behavior:'smooth',block:'center'});},120);}
 function criarCardExercicioSessao(ex,n=3,restaurando=false){const container=document.getElementById('exerciciosAtivos');if(!container)return;const hist=getHist().filter(r=>r.exercicio===ex),sessoes=agruparSessoes(hist),ultima=Object.values(sessoes).sort((a,b)=>getSessionTimestamp(b)-getSessionTimestamp(a))[0]||[],mapa={};ultima.forEach(r=>mapa[r.numSerie]=r);const inc=2.5,desc=getDescansoPadrao();let seriesHTML='';for(let i=1;i<=n;i++){const prev=mapa[i],prevTxt=prev?`<span>${prev.carga}kg</span><span style="font-size:.7em">${prev.reps||0}r</span>`:'<span style="color:var(--border)">—</span>',exEncoded=encodeURIComponent(ex);seriesHTML+=`<div class="serie-row" data-rest="${desc}" data-inc="${inc}" data-prev-carga="${prev?.carga||''}" data-prev-reps="${prev?.reps||''}"><div class="serie-badge">S${i}</div><div class="prev-val" title="Último treino">${prevTxt}</div><button type="button" class="inc-btn" aria-label="Diminuir carga" onclick="ajustarCarga(decodeURIComponent('${exEncoded}'),${i},-${inc})">−</button><input type="number" class="ativo-carga" data-ex="${esc(ex)}" data-serie="${i}" step="${inc}" placeholder="kg" ${prev?`value="${prev.carga}"`:''} inputmode="decimal"><button type="button" class="inc-btn" aria-label="Aumentar carga" onclick="ajustarCarga(decodeURIComponent('${exEncoded}'),${i},${inc})">+</button><input type="number" class="ativo-reps" data-ex="${esc(ex)}" data-serie="${i}" placeholder="reps" ${prev?.reps?`value="${prev.reps}"`:''} inputmode="numeric"><select class="set-type-select ativo-tipo" data-kind="workset" aria-label="Tipo da série ${i}" onchange="atualizarSetTypeVisual(this)">${setTypeOptionsHtml('workset')}</select><button type="button" class="serie-check" onclick="toggleSerieCheck(this)" aria-label="Concluir série ${i}">✓</button><div class="set-quick-tools"><button type="button" class="set-mini-btn" onclick="copiarSerieAnterior(this)">Série anterior</button><button type="button" class="set-mini-btn" onclick="copiarCargaAnterior(this)">Carga anterior</button></div></div>`;}const card=document.createElement('div');card.className='exercicio-card';card.dataset.ex=ex;card.innerHTML=`<div class="ex-card-header"><span class="ex-name">${esc(ex)}</span><span class="focus-done-mark">Concluído</span><div class="ex-header-actions"><span class="badge badge-primary">${n}s</span><button type="button" class="ex-skip-btn" onclick="toggleHistoricoExercicio(this)">Hist.</button><button type="button" class="ex-skip-btn" onclick="togglePularExercicio(this)">Pular</button></div></div><div class="ex-history-mini"></div><div class="ex-card-body">${seriesHTML}</div>`;container.appendChild(card);prepararModoAcademiaCards();aplicarModoAcademia();if(!restaurando)marcarDadosNaoSalvos();}
-async function atualizarStorageStatus(){const st=document.getElementById('storagePersistStatus'),btn=document.getElementById('btnPersistStorage'),fill=document.getElementById('storageMeterFill');if(!navigator.storage){if(st)st.textContent='API não suportada neste navegador';if(btn)btn.style.display='none';return;}try{const persisted=await navigator.storage.persisted(),est=await navigator.storage.estimate(),used=est.usage||0,quota=est.quota||1,pct=Math.min(100,used/quota*100);if(st)st.textContent=`${persisted?'Persistente':'Padrão'} · ${(used/1024/1024).toFixed(1)} MB usados`;if(fill)fill.style.width=pct+'%';if(btn){btn.textContent=persisted?'Protegido':'Proteger';btn.disabled=persisted;}}catch(e){if(st)st.textContent='Não foi possível consultar';}atualizarDiagnosticoUI();}
-async function solicitarPersistenciaStorage(){if(!navigator.storage?.persist)return toast('Armazenamento persistente não suportado','warn');try{const ok=await navigator.storage.persist();toast(ok?'Armazenamento persistente ativado':'O navegador não concedeu persistência','info');atualizarStorageStatus();}catch(e){toast('Não foi possível solicitar persistência','warn');}}
-function getDiagnostico(){let persistent='desconhecido';return {appVersion:APP_VERSION,build:APP_BUILD,schema:DATA_SCHEMA_VERSION,url:location.href,standalone:matchMedia('(display-mode: standalone)').matches,serviceWorker:!!navigator.serviceWorker?.controller,online:navigator.onLine,userAgent:navigator.userAgent,registros:getHist().length,treinos:getTreinosSalvos().length,rascunho:!!getRascunhoValido(),timerAtivo:_timerEndTime>Date.now(),timestamp:new Date().toISOString()};}
-function atualizarDiagnosticoUI(){const el=document.getElementById('diagResumo');if(!el)return;const d=getDiagnostico();el.textContent=`TreinoApp v${d.appVersion} | build ${d.build}
-SW: ${d.serviceWorker?'ativo':'não controlando'} | PWA: ${d.standalone?'instalado':'navegador'}
-Registros: ${d.registros} | Treinos: ${d.treinos}`;Promise.all([consultarVersaoServiceWorker(),consultarVersaoRemota()]).then(([sw,remote])=>{if(!document.getElementById('diagResumo'))return;el.textContent=`TreinoApp v${d.appVersion} | build ${d.build}
+async function atualizarStorageStatus(){
+  const st=document.getElementById('storagePersistStatus'),btn=document.getElementById('btnPersistStorage'),fill=document.getElementById('storageMeterFill');
+  if(isNativeAndroid()){
+    try{const n=await window.TreinoNativeBridge.getNativeStorageInfo();const mb=(Number(n?.dataBytes||0)/1024/1024).toFixed(1);if(st)st.textContent=`Protegido pelo Android · ${mb} MB em dados privados`;if(fill)fill.style.width='12%';if(btn){btn.textContent='Protegido';btn.disabled=true;btn.style.display='inline-flex';}return;}catch(e){if(st)st.textContent='Armazenamento privado do Android';if(btn){btn.textContent='Protegido';btn.disabled=true;}return;}
+  }
+  if(!navigator.storage){if(st)st.textContent='API não suportada neste navegador';if(btn)btn.style.display='none';return;}
+  try{const persisted=await navigator.storage.persisted(),est=await navigator.storage.estimate(),used=est.usage||0,quota=est.quota||1,pct=Math.min(100,used/quota*100);if(st)st.textContent=`${persisted?'Persistente':'Padrão'} · ${(used/1024/1024).toFixed(1)} MB usados`;if(fill)fill.style.width=pct+'%';if(btn){btn.style.display='inline-flex';btn.textContent=persisted?'Protegido':'Proteger';btn.disabled=persisted;}}catch(e){if(st)st.textContent='Não foi possível consultar';}
+}
+async function solicitarPersistenciaStorage(){if(isNativeAndroid())return toast('No APK os dados já ficam no armazenamento privado do Android e são preservados nas atualizações do mesmo aplicativo','success');if(!navigator.storage?.persist)return toast('Armazenamento persistente não suportado','warn');try{const ok=await navigator.storage.persist();toast(ok?'Armazenamento persistente ativado':'O navegador não concedeu persistência','info');atualizarStorageStatus();}catch(e){toast('Não foi possível solicitar persistência','warn');}}
+function getDiagnostico(){return {appVersion:APP_VERSION,build:APP_BUILD,schema:DATA_SCHEMA_VERSION,url:location.href,native:isNativeAndroid(),standalone:matchMedia('(display-mode: standalone)').matches,serviceWorker:!isNativeAndroid()&&!!navigator.serviceWorker?.controller,online:navigator.onLine,userAgent:navigator.userAgent,registros:getHist().length,treinos:getTreinosSalvos().length,rascunho:!!getRascunhoValido(),timerAtivo:_timerEndTime>Date.now(),healthPending:Object.keys(getHealthPending?.()||{}).length,timestamp:new Date().toISOString()};}
+async function atualizarDiagnosticoUI(){
+  const el=document.getElementById('diagResumo');if(!el)return;const d=getDiagnostico();
+  if(isNativeAndroid()){
+    try{const [info,status,remote]=await Promise.all([window.TreinoNativeBridge.getNativeInfo(),window.TreinoNativeBridge.getHealthStatus().catch(()=>null),consultarVersaoRemota()]);el.textContent=`TreinoApp Android v${info?.versionName||d.appVersion} | código ${info?.versionCode||'?'} | ${String(info?.channel||'stable').toUpperCase()}
+Pacote: ${info?.packageName||'com.treinoapp.app'}
+Web Core: v${d.appVersion} · build ${d.build}
+Service Worker: não utilizado no APK
+Health Connect: ${status?.granted?'conectado':'não conectado'}${status?.backgroundGranted?' · segundo plano autorizado':''}
+GitHub Pages: ${remote?.version?`v${remote.version}${remote.build?' · '+remote.build:''}`:'offline/indisponível'}
+Registros: ${d.registros} | Treinos: ${d.treinos} | Health pendentes: ${d.healthPending}`;return;}catch(e){ }
+  }
+  const [sw,remote]=await Promise.all([consultarVersaoServiceWorker(),consultarVersaoRemota()]);el.textContent=`TreinoApp Web v${d.appVersion} | build ${d.build}
 SW: ${sw?`v${sw.version} · ${sw.build}`:(d.serviceWorker?'ativo':'não controlando')}
 GitHub Pages: ${remote?.version?`v${remote.version}${remote.build?' · '+remote.build:''}`:'offline/indisponível'}
-PWA: ${d.standalone?'instalado':'navegador'} | Registros: ${d.registros} | Treinos: ${d.treinos}`;});}
-async function copiarDiagnostico(){const txt=JSON.stringify(getDiagnostico(),null,2);try{await navigator.clipboard.writeText(txt);toast('Diagnóstico copiado','success')}catch(e){prompt('Copie o diagnóstico:',txt)}}
+PWA: ${d.standalone?'instalado':'navegador'} | Registros: ${d.registros} | Treinos: ${d.treinos}`;
+}
+async function copiarDiagnostico(){let d=getDiagnostico();if(isNativeAndroid()){try{d={...d,nativeInfo:await window.TreinoNativeBridge.getNativeInfo(),health:await window.TreinoNativeBridge.getHealthStatus()};}catch(_){}}const txt=JSON.stringify(d,null,2);try{await navigator.clipboard.writeText(txt);toast('Diagnóstico copiado','success')}catch(e){prompt('Copie o diagnóstico:',txt)}}
 window.addEventListener('error',e=>registrarErroLocal(e.message,e.filename,e.lineno));window.addEventListener('unhandledrejection',e=>registrarErroLocal(String(e.reason||'Promise rejeitada')));
 function registrarErroLocal(msg,arquivo='',linha=''){try{const arr=JSON.parse(localStorage.getItem('_appErrors')||'[]');arr.push({at:new Date().toISOString(),msg:String(msg).slice(0,500),arquivo:String(arquivo).slice(-120),linha});localStorage.setItem('_appErrors',JSON.stringify(arr.slice(-20)))}catch(e){}}
 
@@ -4909,7 +4944,7 @@ function verificarNovidadesVersao(){if(localStorage.getItem('_lastSeenVersion')!
 window.addEventListener('beforeunload',e=>{if(treinoAtivoTemplate){try{salvarRascunho()}catch(_){}e.preventDefault();e.returnValue='';}});
 
 
-function iniciarTreinoWidget(){try{irParaAba('treinar');const rasc=getRascunhoValido();if(rasc?.templateId){const t=getTreinosSalvos().find(x=>String(x.id)===String(rasc.templateId));if(t){setTimeout(()=>{const btn=[...document.querySelectorAll('.treino-card-btn')].find((_,i)=>getTreinosSalvos()[i]?.id===t.id)||document.querySelector('.treino-card-btn');if(btn)selecionarTreino(t,btn);},120);return;}}const treinos=getTreinosSalvos();if(!treinos.length){abrirModalTreino();return;}const ultima=obterUltimaSessao(getHist()),lastId=ultima?.[0]?.templateId;let idx=treinos.findIndex(t=>String(t.id)===String(lastId));idx=idx<0?0:(idx+1)%treinos.length;setTimeout(()=>{const btn=document.querySelectorAll('.treino-card-btn')[idx];if(btn)selecionarTreino(treinos[idx],btn);},120);}catch(e){console.warn(e)}}
+function iniciarTreinoWidget(){try{irParaAba('treinar');const rasc=getRascunhoValido();if(rasc?.templateId){const t=getTreinosSalvos().find(x=>String(x.id)===String(rasc.templateId));if(t){setTimeout(()=>{const btn=[...document.querySelectorAll('.treino-card-btn')].find((_,i)=>getTreinosSalvos()[i]?.id===t.id)||document.querySelector('.treino-card-btn');selecionarTreino(t,btn||null);},120);return;}if(rasc?.templateSnapshot?.isAdHoc){setTimeout(()=>selecionarTreino(rasc.templateSnapshot,null),120);return;}}const treinos=getTreinosSalvos();if(!treinos.length){abrirModalTreino();return;}const ultima=obterUltimaSessao(getHist()),lastId=ultima?.[0]?.templateId;let idx=treinos.findIndex(t=>String(t.id)===String(lastId));idx=idx<0?0:(idx+1)%treinos.length;setTimeout(()=>{const btn=document.querySelectorAll('.treino-card-btn')[idx];if(btn)selecionarTreino(treinos[idx],btn);},120);}catch(e){console.warn(e)}}
 
 // ════════════════════════════════════════════════
 // V12 — ANDROID NATIVO / HEALTH CONNECT / WIDGET
@@ -4924,13 +4959,19 @@ async function iniciarServicoNativoTreino(payload){
   }catch(e){console.warn('Serviço nativo indisponível; o treino continua no app',e);toast('O treino continua, mas a notificação em segundo plano não pôde ser iniciada','warn');}
 }
 function getHealthLinks(){return parseJSONSeguro(localStorage.getItem('healthLinksV12')||'{}',{},'healthLinksV12');}
-function setHealthLink(sessionId,data){const m=getHealthLinks();m[sessionId]={...data,linkedAt:Date.now()};localStorage.setItem('healthLinksV12',JSON.stringify(m));removerHealthPendente(sessionId);renderHealthLastMatch();}
+function setHealthLink(sessionId,data){
+  const m=getHealthLinks();m[sessionId]={...data,linkedAt:Date.now()};localStorage.setItem('healthLinksV12',JSON.stringify(m));removerHealthPendente(sessionId);renderHealthLastMatch();
+  if(isNativeAndroid())window.TreinoNativeBridge.saveHealthLink({sessionId,state:'linked',...data,confidence:Number(data?.confidence)||1}).catch(()=>{});
+}
 function getHealthPending(){return parseJSONSeguro(localStorage.getItem('healthPendingV12')||'{}',{},'healthPendingV12');}
-function setHealthPendente(summary){const p=getHealthPending();p[summary.sessionId]={...summary,pendingSince:p[summary.sessionId]?.pendingSince||Date.now(),lastCheckAt:Date.now()};localStorage.setItem('healthPendingV12',JSON.stringify(p));}
+function setHealthPendente(summary){const p=getHealthPending();p[summary.sessionId]={...summary,pendingSince:p[summary.sessionId]?.pendingSince||Date.now(),lastCheckAt:Date.now()};localStorage.setItem('healthPendingV12',JSON.stringify(p));renderHealthLastMatch();}
 function removerHealthPendente(sessionId){const p=getHealthPending();if(p[sessionId]){delete p[sessionId];localStorage.setItem('healthPendingV12',JSON.stringify(p));}}
 function getHealthAuto(){return localStorage.getItem('healthAutoSync')!=='0';}
 function getHealthWrite(){return localStorage.getItem('healthWriteEnabled')!=='0';}
 function salvarHealthConfig(){const a=document.getElementById('selHealthAuto'),w=document.getElementById('selHealthWrite');if(a)localStorage.setItem('healthAutoSync',a.value);if(w)w.value!==undefined&&localStorage.setItem('healthWriteEnabled',w.value);}
+function fmtHealthTime(ms){if(!ms)return '—';try{return new Date(Number(ms)).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});}catch(_){return '—';}}
+function fmtHealthDateTime(ms){if(!ms)return '—';try{return new Date(Number(ms)).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});}catch(_){return '—';}}
+function healthSourceLabel(x){const s=String(x||'');if(s.includes('shealth'))return 'Samsung Health';if(s.includes('treinoapp'))return 'TreinoApp';return s||'Health Connect';}
 function mostrarAvisoMigracaoPWA(){
   if(!isNativeAndroid()||localStorage.getItem('_apkMigrationNoticeSeen')==='1')return;
   const hist=getHist();
@@ -4942,45 +4983,94 @@ function mostrarAvisoMigracaoPWA(){
 
 async function inicializarNativeUI(){
   if(!isNativeAndroid())return;
+  // No APK os assets já estão empacotados. Service Worker é recurso da versão web/PWA.
+  try{const regs=await navigator.serviceWorker?.getRegistrations?.();if(regs)await Promise.all(regs.map(r=>r.unregister().catch(()=>{})));swReg=null;}catch(_){ }
   window.TreinoNativeBridge.onWorkoutFinished=nativeWorkoutFinishedImpl;
   const card=document.getElementById('nativeIntegrationCard');if(card)card.style.display='block';
+  const installCard=document.querySelector('#btnInstallPWA')?.closest('.card');if(installCard)installCard.style.display='none';
   const a=document.getElementById('selHealthAuto'),w=document.getElementById('selHealthWrite');if(a)a.value=getHealthAuto()?'1':'0';if(w)w.value=getHealthWrite()?'1':'0';
-  try{const info=await window.TreinoNativeBridge.getNativeInfo();_nativeChannel=info.channel||'stable';const badge=document.getElementById('nativeChannelBadge'),txt=document.getElementById('nativeStatusText');if(badge)badge.textContent=String(_nativeChannel).toUpperCase();if(txt)txt.innerHTML=`<strong>Android ${esc(info.versionName||APP_VERSION)}</strong> · código ${info.versionCode||'?'} · ${esc(_nativeChannel)}<br>Commit: ${esc(String(info.commit||'local').slice(0,10))} · build: ${esc(info.buildTime||'local')}<br>Notificação persistente, timer nativo, widget, Health Connect e banco espelho disponíveis.`;}catch(e){}
-  await importarResultadosHealthNativos();await atualizarHealthStatus();renderHealthLastMatch();
+  try{const info=await window.TreinoNativeBridge.getNativeInfo();_nativeChannel=info.channel||'stable';const badge=document.getElementById('nativeChannelBadge'),txt=document.getElementById('nativeStatusText');if(badge)badge.textContent=String(_nativeChannel).toUpperCase();if(txt)txt.innerHTML=`<strong>Android ${esc(info.versionName||APP_VERSION)}</strong> · código ${info.versionCode||'?'} · ${esc(_nativeChannel)}<br>Pacote: ${esc(info.packageName||'')}<br>Commit: ${esc(String(info.commit||'local').slice(0,10))} · build: ${esc(info.buildTime||'local')}<br>Notificação persistente, timer nativo, widget, Health Connect e banco Android disponíveis.`;}catch(e){}
+  await importarResultadosHealthNativos();await atualizarHealthStatus();renderHealthLastMatch();await atualizarStorageStatus();atualizarDiagnosticoUI();
   if(localStorage.getItem('_nativeDbSyncedSchema')!==String(DATA_SCHEMA_VERSION))setTimeout(()=>sincronizarBancoNativo(false),1000);
   setTimeout(()=>reconciliarHealthPendentes(false),1800);
 }
-async function conectarHealthConnect(){if(!isNativeAndroid())return toast('Health Connect está disponível somente no APK Android','info');try{await window.TreinoNativeBridge.requestCorePermissions();const r=await window.TreinoNativeBridge.requestHealthPermissions();toast(r?.granted?'Health Connect conectado':'Revise as permissões do Health Connect','info');await atualizarHealthStatus();if(r?.granted)reconciliarHealthPendentes(false);}catch(e){toast('Não foi possível abrir as permissões do Health Connect','error');}}
-async function atualizarHealthStatus(){const el=document.getElementById('healthConnectStatus');if(!el||!isNativeAndroid())return;try{const r=await window.TreinoNativeBridge.getHealthStatus();el.textContent=!r.available?'Health Connect indisponível neste aparelho':r.granted?`Conectado${r.backgroundAvailable?(r.backgroundGranted?' · leitura em segundo plano ativa':' · segundo plano não autorizado'):''}`:`Disponível · ${r.grantedCount||0}/${r.requiredCount||0} permissões concedidas`;}catch(e){el.textContent='Não foi possível consultar o Health Connect';}}
-function renderHealthLastMatch(){const el=document.getElementById('healthLastMatch');if(!el)return;const links=Object.entries(getHealthLinks()).sort((a,b)=>(b[1].linkedAt||0)-(a[1].linkedAt||0)),pending=Object.keys(getHealthPending()).length;if(!links.length&&!pending){el.innerHTML='';return;}let html='';if(links.length){const [,x]=links[0];html=`<div class="health-match ${x.confidence>=.85?'ok':'pending'}"><strong>Última associação Health Connect</strong><br>${x.sourceApp?esc(x.sourceApp)+' · ':''}${x.durationMin?x.durationMin+' min · ':''}${x.avgHr?Math.round(x.avgHr)+' bpm médio · ':''}${x.maxHr?Math.round(x.maxHr)+' bpm máx. · ':''}${x.kcal?Math.round(x.kcal)+' kcal':''}</div>`;}if(pending)html+=`<div class="health-match pending"><strong>${pending} sessão(ões) aguardando sincronização</strong><br>O TreinoApp continuará procurando a sessão do Galaxy Watch/Samsung Health antes de gravar uma sessão própria.</div>`;el.innerHTML=html;}
-async function importarResultadosHealthNativos(){if(!isNativeAndroid())return;try{const r=await window.TreinoNativeBridge.getHealthSyncResults();for(const x of (r?.results||[])){if(x?.sessionId&&!getHealthLinks()[x.sessionId])setHealthLink(x.sessionId,{...x,confidence:Number(x.confidence)||1,linkedAt:Number(x.linkedAt)||Date.now()});}}catch(e){console.warn('Resultados Health nativos indisponíveis',e);}}
-async function processarHealthParaSessao(summary,manual=false,allowWriteFallback=false){
+async function conectarHealthConnect(){if(!isNativeAndroid())return toast('Health Connect está disponível somente no APK Android','info');try{await window.TreinoNativeBridge.requestCorePermissions();const r=await window.TreinoNativeBridge.requestHealthPermissions();toast(r?.granted?'Health Connect conectado':'Revise as permissões do Health Connect','info');await atualizarHealthStatus();if(r?.granted){await diagnosticarHealthConnect(false);reconciliarHealthPendentes(false);}}catch(e){toast('Não foi possível abrir as permissões do Health Connect','error');}}
+async function atualizarHealthStatus(){const el=document.getElementById('healthConnectStatus');if(!el||!isNativeAndroid())return;try{const r=await window.TreinoNativeBridge.getHealthStatus();if(!r.available){el.textContent='Health Connect indisponível neste aparelho';return;}const caps=[`Exercício ${r.readExercise?'✓':'✕'}`,`FC ${r.readHeartRate?'✓':'—'}`,`kcal ${r.readCalories?'✓':'—'}`];el.textContent=r.granted?`Conectado · ${caps.join(' · ')}${r.backgroundAvailable?(r.backgroundGranted?' · segundo plano ✓':' · segundo plano não autorizado'):''}`:`Disponível · ${r.grantedCount||0}/${r.requiredCount||0} permissões concedidas · ${caps.join(' · ')}`;}catch(e){el.textContent='Não foi possível consultar o Health Connect';}}
+function renderHealthLastMatch(){
+  const el=document.getElementById('healthLastMatch');if(!el)return;
+  const links=Object.entries(getHealthLinks()).sort((a,b)=>(b[1].linkedAt||0)-(a[1].linkedAt||0));
+  const pendingEntries=Object.entries(getHealthPending()).sort((a,b)=>(b[1].pendingSince||0)-(a[1].pendingSince||0));
+  if(!links.length&&!pendingEntries.length){el.innerHTML='';return;}
+  let html='';
+  if(links.length){const [,x]=links[0];html=`<div class="health-match ok"><strong>Última associação Health Connect</strong><br>${esc(healthSourceLabel(x.sourceApp))}${x.title?' · '+esc(x.title):''}${x.durationMin?' · '+x.durationMin+' min':''}${x.avgHr?' · '+Math.round(x.avgHr)+' bpm médio':''}${x.maxHr?' · '+Math.round(x.maxHr)+' bpm máx.':''}${x.kcal?' · '+Math.round(x.kcal)+' kcal':''}<br><span style="color:var(--text-muted)">Correspondência ${Math.round((Number(x.confidence)||1)*100)}%</span></div>`;}
+  if(pendingEntries.length){const [sid,p]=pendingEntries[0];html+=`<div class="health-match pending"><strong>${pendingEntries.length} sessão(ões) aguardando sincronização</strong><br>${esc(p.name||'Treino')} · ${fmtHealthTime(p.startMs)}–${fmtHealthTime(p.endMs)}<br><span style="color:var(--text-muted)">Última tentativa: ${fmtHealthDateTime(p.lastCheckAt)}</span><div class="row" style="margin-top:8px;gap:6px;"><button class="btn btn-outline btn-sm" style="flex:1" onclick="diagnosticarHealthConnect()">Ver sessões do Health</button>${getHealthWrite()?`<button class="btn btn-ghost btn-sm" style="flex:1" onclick="gravarSessaoPendenteNoHealth('${sid.replace(/'/g,'')}')">Gravar pelo TreinoApp</button>`:''}</div></div>`;}
+  el.innerHTML=html;
+}
+async function importarResultadosHealthNativos(){if(!isNativeAndroid())return;try{const r=await window.TreinoNativeBridge.getHealthSyncResults();for(const x of (r?.results||[])){if(x?.sessionId&&!getHealthLinks()[x.sessionId]&&x.state==='linked')setHealthLink(x.sessionId,{...x,confidence:Number(x.confidence)||1,linkedAt:Number(x.linkedAt)||Date.now()});}}catch(e){console.warn('Resultados Health nativos indisponíveis',e);}}
+async function processarHealthParaSessao(summary,manual=false){
   if(!isNativeAndroid()||!getHealthAuto())return null;
   try{
     const status=await window.TreinoNativeBridge.getHealthStatus();if(!status?.granted)return null;
+    summary.lastCheckAt=Date.now();setHealthPendente(summary);
     const match=await window.TreinoNativeBridge.findHealthMatch({startMs:summary.startMs,endMs:summary.endMs});
-    if(match?.found&&Number(match.confidence)>=.85){setHealthLink(summary.sessionId,match);if(!manual)toast('Treino do Galaxy Watch associado automaticamente','success');return match;}
-    if(match?.found&&Number(match.confidence)>=.55){
-      if(manual&&confirm(`Encontramos um treino do Health Connect com ${Math.round(Number(match.confidence)*100)}% de correspondência. Associar a esta sessão?`)){setHealthLink(summary.sessionId,match);return match;}
-      setHealthPendente(summary);return match;
+    const confidence=Number(match?.confidence)||0;
+    if(match?.found&&confidence>=.78){setHealthLink(summary.sessionId,match);if(!manual)toast(`Treino do ${healthSourceLabel(match.sourceApp)} associado automaticamente`,'success');return match;}
+    if(match?.found&&manual&&confidence>=.30){
+      const detalhe=`${healthSourceLabel(match.sourceApp)}${match.title?' · '+match.title:''}\n${fmtHealthTime(match.startMs)}–${fmtHealthTime(match.endMs)} · ${match.durationMin||'?'} min\nCorrespondência ${Math.round(confidence*100)}%`;
+      if(confirm(`Encontramos esta sessão no Health Connect:\n\n${detalhe}\n\nAssociar a este treino?`)){setHealthLink(summary.sessionId,match);return match;}
     }
-    if(getHealthWrite()&&allowWriteFallback){const w=await window.TreinoNativeBridge.writeHealthSession(summary);if(w?.written){const own={writtenByTreinoApp:true,confidence:1,sourceApp:'TreinoApp',durationMin:Math.round((summary.endMs-summary.startMs)/60000),recordId:w.recordId};setHealthLink(summary.sessionId,own);return own;}}
-    setHealthPendente(summary);return match;
-  }catch(e){if(manual)toast('Sincronização Health Connect falhou','warn');console.warn(e);return null;}
+    return match;
+  }catch(e){if(manual)toast('Sincronização Health Connect falhou','warn');console.warn('Health match',e);return null;}
 }
 async function reconciliarHealthPendentes(manual=false){
   if(!isNativeAndroid()||!getHealthAuto())return;
-  const pend=getHealthPending(),entries=Object.entries(pend).sort((a,b)=>(a[1].pendingSince||0)-(b[1].pendingSince||0));let vinculadas=0;
+  const pend=getHealthPending(),entries=Object.entries(pend).sort((a,b)=>(a[1].pendingSince||0)-(b[1].pendingSince||0));let vinculadas=0,encontradas=0;
   for(const [sid,summary] of entries.slice(0,12)){
     if(getHealthLinks()[sid]){removerHealthPendente(sid);continue;}
-    const age=Date.now()-Number(summary.pendingSince||Date.now());
-    const allowWriteFallback=age>=60*60*1000;
-    const r=await processarHealthParaSessao(summary,manual,allowWriteFallback);
-    if(r&&(Number(r.confidence)>=.85||r.writtenByTreinoApp))vinculadas++;
+    const r=await processarHealthParaSessao({...summary,sessionId:sid},manual);
+    if(r?.found)encontradas++;
+    if(r&&Number(r.confidence)>=.78)vinculadas++;
   }
-  renderHealthLastMatch();if(manual)toast(vinculadas?`${vinculadas} sessão(ões) sincronizada(s)`:'Nenhuma nova correspondência confirmada','info');
+  renderHealthLastMatch();
+  if(manual){if(vinculadas)toast(`${vinculadas} sessão(ões) sincronizada(s)`,'success');else if(encontradas)toast('Há sessão candidata no Health Connect; veja o diagnóstico para associar','info');else toast('Nenhuma sessão candidata encontrada na janela de tempo','info');}
 }
-async function sincronizarHealthUltimasSessoes(){if(!isNativeAndroid())return toast('Disponível no APK Android','info');const sessoes=Object.entries(agruparSessoes(getHist())).sort((a,b)=>getSessionTimestamp(b[1])-getSessionTimestamp(a[1])).slice(0,20),links=getHealthLinks();for(const [sid,regs] of sessoes){if(links[sid])continue;const start=Math.min(...regs.map(r=>Number(r.startedAt)||Infinity)),end=Math.max(...regs.map(r=>Number(r.finishedAt)||0));if(!isFinite(start)||!end)continue;setHealthPendente({sessionId:sid,name:regs[0]?.templateNome||'Treino',startMs:start,endMs:end});}await reconciliarHealthPendentes(true);}
+async function sincronizarHealthUltimasSessoes(){
+  if(!isNativeAndroid())return toast('Disponível no APK Android','info');
+  const sessoes=Object.entries(agruparSessoes(getHist())).sort((a,b)=>getSessionTimestamp(b[1])-getSessionTimestamp(a[1])).slice(0,20),links=getHealthLinks();
+  for(const [sid,regs] of sessoes){if(links[sid])continue;const start=Math.min(...regs.map(r=>Number(r.startedAt)||Infinity)),end=Math.max(...regs.map(r=>Number(r.finishedAt)||0));if(!isFinite(start)||!end)continue;setHealthPendente({sessionId:sid,name:regs[0]?.templateNome||'Treino',startMs:start,endMs:end});}
+  await reconciliarHealthPendentes(true);
+}
+let _healthDiagRecords=[];
+async function diagnosticarHealthConnect(showToast=true){
+  if(!isNativeAndroid())return;
+  const panel=document.getElementById('healthDiagnosticPanel');if(panel)panel.innerHTML='<div class="health-match pending">Lendo sessões do Health Connect...</div>';
+  try{
+    const pend=Object.entries(getHealthPending()).sort((a,b)=>(b[1].pendingSince||0)-(a[1].pendingSince||0));
+    const target=pend[0]?.[1]||null,targetSid=pend[0]?.[0]||null;
+    const r=await window.TreinoNativeBridge.listHealthExercises({hours:24,targetStartMs:target?.startMs,targetEndMs:target?.endMs});
+    _healthDiagRecords=(r?.records||[]).slice(0,20).map(x=>({...x,targetSid}));
+    if(!panel)return;
+    if(!_healthDiagRecords.length){panel.innerHTML=`<div class="health-match pending"><strong>Health Connect respondeu, mas não retornou sessões de exercício nas últimas 24 h.</strong><br>Se o treino aparece no Health Connect, revise a permissão de leitura de Exercício para o TreinoApp e reconecte.</div>`;return;}
+    const targetText=target?`<div style="font-size:.75em;color:var(--text-muted);margin-bottom:8px;">Comparando com ${esc(target.name||'TreinoApp')}: ${fmtHealthTime(target.startMs)}–${fmtHealthTime(target.endMs)}</div>`:'';
+    const rows=_healthDiagRecords.map((x,i)=>{const conf=x.confidence==null?'':` · <strong>${Math.round(Number(x.confidence)*100)}%</strong>`;return `<div class="health-match ${Number(x.confidence)>=.78?'ok':'pending'}"><strong>${esc(healthSourceLabel(x.sourceApp))}${x.title?' · '+esc(x.title):''}</strong><br>${fmtHealthTime(x.startMs)}–${fmtHealthTime(x.endMs)} · ${x.durationMin||'?'} min${conf}${x.avgHr?' · '+Math.round(x.avgHr)+' bpm':''}${x.kcal?' · '+Math.round(x.kcal)+' kcal':''}${targetSid?`<div style="margin-top:7px"><button class="btn btn-outline btn-sm" onclick="associarHealthDiagnostico(${i})">Associar a sessão pendente</button></div>`:''}</div>`}).join('');
+    panel.innerHTML=`<div style="font-size:.82em;font-weight:800;margin-bottom:6px;">Diagnóstico Health Connect · ${_healthDiagRecords.length} sessão(ões)</div>${targetText}${rows}`;
+    if(showToast)toast(`${_healthDiagRecords.length} sessão(ões) encontrada(s) no Health Connect`,'success');
+  }catch(e){if(panel)panel.innerHTML=`<div class="health-match pending"><strong>Falha ao ler Health Connect</strong><br>${esc(String(e?.message||e))}</div>`;if(showToast)toast('Falha ao diagnosticar Health Connect','warn');}
+}
+async function associarHealthDiagnostico(i){
+  const x=_healthDiagRecords[i],sid=x?.targetSid;if(!x||!sid)return toast('Nenhuma sessão pendente selecionada','warn');
+  if(!confirm(`Associar ${healthSourceLabel(x.sourceApp)} · ${x.title||'Exercício'} (${fmtHealthTime(x.startMs)}–${fmtHealthTime(x.endMs)}) ao treino pendente?`))return;
+  setHealthLink(sid,{...x,confidence:Number(x.confidence)||.5});
+  document.getElementById('healthDiagnosticPanel').innerHTML='';toast('Sessão associada manualmente','success');
+}
+async function gravarSessaoPendenteNoHealth(sessionId){
+  const p=getHealthPending()[sessionId];if(!p)return toast('Sessão pendente não encontrada','warn');
+  if(!confirm('Gravar esta sessão pelo TreinoApp no Health Connect? Use isto apenas se você não pretende associar o treino do Galaxy Watch, para evitar duplicidade.'))return;
+  try{const w=await window.TreinoNativeBridge.writeHealthSession(p);if(w?.written){setHealthLink(sessionId,{writtenByTreinoApp:true,confidence:1,sourceApp:'TreinoApp',durationMin:Math.max(1,Math.round((p.endMs-p.startMs)/60000)),recordId:w.recordId});toast('Sessão gravada no Health Connect','success');}else toast('Não foi possível gravar a sessão','warn');}catch(e){toast('Falha ao gravar no Health Connect','warn');}
+}
+// Ao voltar do Samsung Health/Health Connect, tente novamente em foreground.
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&isNativeAndroid()&&getHealthAuto())setTimeout(()=>{importarResultadosHealthNativos();reconciliarHealthPendentes(false);},700);});
+window.addEventListener('focus',()=>{if(isNativeAndroid()&&getHealthAuto())setTimeout(()=>reconciliarHealthPendentes(false),600);});
 async function sincronizarPesoHealth(){if(!isNativeAndroid())return toast('Disponível no APK Android','info');try{const peso=getPeso(),entries=Object.entries(peso).sort((a,b)=>b[0].localeCompare(a[0]));const r=await window.TreinoNativeBridge.syncWeight({localWeights:entries.slice(0,50).map(([date,kg])=>({date,kg:Number(kg)}))});if(r?.latestKg&&r?.latestDate){const p=getPeso();p[r.latestDate]=Number(r.latestKg);localStorage.setItem('pesoCorporal',JSON.stringify(p));invalidarCache();}toast(`Peso sincronizado${r?.latestKg?' · '+r.latestKg+' kg':''}`,'success');}catch(e){toast('Falha ao sincronizar peso','warn');}}
 async function sincronizarBancoNativo(showToast=true){if(!isNativeAndroid())return;try{const hist=getHist(),chunk=250;if(!hist.length){localStorage.setItem('_nativeDbSyncedSchema',String(DATA_SCHEMA_VERSION));return;}for(let i=0;i<hist.length;i+=chunk)await window.TreinoNativeBridge.syncNativeDatabase({records:hist.slice(i,i+chunk),replace:i===0});localStorage.setItem('_nativeDbSyncedSchema',String(DATA_SCHEMA_VERSION));if(showToast)toast('Banco Android sincronizado','success');}catch(e){if(showToast)toast('Não foi possível sincronizar o banco Android','warn');}}
 function resumoNativoAtual(){if(!treinoAtivoTemplate)return null;const rows=[...document.querySelectorAll('#exerciciosAtivos .serie-row')].filter(r=>!r.closest('.exercicio-card')?.classList.contains('skipped')),done=rows.filter(r=>r.querySelector('.serie-check')?.classList.contains('checked')),active=getExerciseCards().find(c=>c.classList.contains('focus-active'))||getExerciseCards().find(c=>!c.classList.contains('skipped'));const nr=active?[...active.querySelectorAll('.serie-row')].findIndex(r=>!r.querySelector('.serie-check')?.classList.contains('checked'))+1:0;return{sessionId:window._treinoSessionId,name:treinoAtivoTemplate.nome||'Treino',startedAt:window._treinoStartedAt,totalSets:rows.length,completedSets:done.length,currentExercise:active?.dataset.ex||'',currentSet:Math.max(1,nr),paused:!!window._treinoPaused};}

@@ -34,7 +34,7 @@ class HealthSyncWorker(
         val pending = dao.pendingHealthSessions(minEnd)
         for (session in pending) {
             val match = runCatching { health.findBestExerciseMatch(session.startMs, session.endMs) }.getOrNull() ?: continue
-            if (match.found && match.confidence >= 0.85) {
+            if (match.found && match.confidence >= 0.78) {
                 dao.updateHealthLink(
                     sessionId = session.sessionId,
                     state = "linked",
@@ -67,13 +67,18 @@ object HealthSyncScheduler {
     }
 
     fun scheduleSoon(context: Context) {
-        val request = OneTimeWorkRequestBuilder<HealthSyncWorker>()
-            .setInitialDelay(3, TimeUnit.MINUTES)
-            .build()
-        WorkManager.getInstance(context).enqueueUniqueWork(
-            SOON_NAME,
-            ExistingWorkPolicy.REPLACE,
-            request,
-        )
+        // Galaxy Watch -> Samsung Health -> Health Connect pode levar alguns minutos.
+        // Agendamos uma pequena escada de novas tentativas em vez de uma única leitura.
+        val manager = WorkManager.getInstance(context)
+        listOf(1L, 3L, 7L, 15L, 30L).forEach { delay ->
+            val request = OneTimeWorkRequestBuilder<HealthSyncWorker>()
+                .setInitialDelay(delay, TimeUnit.MINUTES)
+                .build()
+            manager.enqueueUniqueWork(
+                "$SOON_NAME-$delay",
+                ExistingWorkPolicy.REPLACE,
+                request,
+            )
+        }
     }
 }

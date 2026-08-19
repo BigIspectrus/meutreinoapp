@@ -1,0 +1,36 @@
+warning: in the working copy of 'VERSION', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'android/app/build.gradle', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'android/app/src/main/java/com/treinoapp/app/nativebridge/HealthConnectRepository.kt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'android/app/src/main/java/com/treinoapp/app/nativebridge/HealthSyncWorker.kt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'android/app/src/main/java/com/treinoapp/app/nativebridge/TreinoNativePlugin.kt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'android/app/src/main/java/com/treinoapp/app/nativebridge/WorkoutForegroundService.kt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'android/app/src/main/java/com/treinoapp/app/widget/TreinoAppWidgetProvider.kt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'android/app/src/main/res/drawable/widget_background.xml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'android/app/src/main/res/layout/widget_treinoapp.xml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'android/app/src/main/res/xml/treinoapp_widget_info.xml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'android/settings.gradle', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'scripts/validate_project.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/native-bridge.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/VERSION', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/index.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/sw.js', LF will be replaced by CRLF the next time Git touches it
+ BUILD.json                                         |   2 [32m+[m[31m-[m
+ VERSION                                            |   2 [32m+[m[31m-[m
+ android/app/build.gradle                           |   4 [32m+[m[31m-[m
+ .../app/nativebridge/HealthConnectRepository.kt    | 176 [32m++++++++++++++[m[31m----[m
+ .../treinoapp/app/nativebridge/HealthSyncWorker.kt |  23 [32m++[m[31m-[m
+ .../app/nativebridge/TreinoNativePlugin.kt         |  85 [32m++++++++[m[31m-[m
+ .../app/nativebridge/WorkoutForegroundService.kt   |  12 [32m++[m
+ .../app/widget/TreinoAppWidgetProvider.kt          |  26 [32m++[m[31m-[m
+ .../src/main/res/drawable/widget_background.xml    |   6 [32m+[m[31m-[m
+ .../app/src/main/res/layout/widget_treinoapp.xml   | 170 [32m++++++++++++++++[m[31m-[m
+ .../app/src/main/res/xml/treinoapp_widget_info.xml |   2 [32m+[m[31m-[m
+ package.json                                       |   2 [32m+[m[31m-[m
+ scripts/validate_project.py                        |  30 [32m+[m[31m--[m
+ src/native-bridge.js                               |   3 [32m+[m
+ web/BUILD.json                                     |   2 [32m+[m[31m-[m
+ web/VERSION                                        |   2 [32m+[m[31m-[m
+ web/index.html                                     | 206 [32m+++++++++++++++[m[31m------[m
+ web/sw.js                                          |   4 [32m+[m[31m-[m
+ 18 files changed, 607 insertions(+), 150 deletions(-)
