@@ -7,6 +7,11 @@ import androidx.health.connect.client.aggregate.AggregationResult
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.permission.HealthPermission.Companion.PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND
 import androidx.health.connect.client.records.ExerciseSessionRecord
+import androidx.health.connect.client.records.SleepSessionRecord
+import androidx.health.connect.client.records.RestingHeartRateRecord
+import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
+import androidx.health.connect.client.records.BodyFatRecord
+import androidx.health.connect.client.records.LeanBodyMassRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
 import androidx.health.connect.client.records.WeightRecord
@@ -36,6 +41,11 @@ class HealthConnectRepository(private val context: Context) {
         HealthPermission.getWritePermission(ExerciseSessionRecord::class),
         HealthPermission.getReadPermission(WeightRecord::class),
         HealthPermission.getWritePermission(WeightRecord::class),
+        HealthPermission.getReadPermission(SleepSessionRecord::class),
+        HealthPermission.getReadPermission(RestingHeartRateRecord::class),
+        HealthPermission.getReadPermission(HeartRateVariabilityRmssdRecord::class),
+        HealthPermission.getReadPermission(BodyFatRecord::class),
+        HealthPermission.getReadPermission(LeanBodyMassRecord::class),
     )
 
     fun isAvailable(): Boolean =
@@ -130,6 +140,28 @@ class HealthConnectRepository(private val context: Context) {
         val heartRateError: String?,
         val caloriesError: String?,
         val sampleSessions: List<ExerciseCandidate>,
+    )
+
+    data class RecoverySnapshot(
+        val generatedAt: Long = System.currentTimeMillis(),
+        val sleepLastMinutes: Long? = null,
+        val sleepLastStartMs: Long? = null,
+        val sleepLastEndMs: Long? = null,
+        val sleep7dAvgMinutes: Double? = null,
+        val restingHrLatest: Long? = null,
+        val restingHr7dAvg: Double? = null,
+        val restingHr28dAvg: Double? = null,
+        val hrvLatestMs: Double? = null,
+        val hrv7dAvgMs: Double? = null,
+        val hrv28dAvgMs: Double? = null,
+        val weightKg: Double? = null,
+        val bodyFatPct: Double? = null,
+        val leanMassKg: Double? = null,
+        val sleepSource: String? = null,
+        val restingHrSource: String? = null,
+        val hrvSource: String? = null,
+        val bodySource: String? = null,
+        val permissions: List<String> = emptyList(),
     )
 
     data class WriteResult(
@@ -498,6 +530,98 @@ class HealthConnectRepository(private val context: Context) {
         } catch (t: Throwable) {
             WriteResult(false, reason = t.message ?: "Falha desconhecida em insertRecords", errorClass = t::class.java.name)
         }
+    }
+
+    suspend fun getRecoverySnapshot(days: Int = 28): RecoverySnapshot {
+        if (!isAvailable()) return RecoverySnapshot()
+        val hc = client()
+        val granted = grantedPermissions()
+        val now = Instant.now()
+        val safeDays = days.coerceIn(7, 90)
+        val start = now.minusSeconds(safeDays.toLong() * 24 * 3600)
+        val start7 = now.minusSeconds(7L * 24 * 3600)
+        fun has(record: kotlin.reflect.KClass<out androidx.health.connect.client.records.Record>) =
+            granted.contains(HealthPermission.getReadPermission(record))
+
+        val sleepRecords = if (has(SleepSessionRecord::class)) runCatching {
+            hc.readRecords(ReadRecordsRequest<SleepSessionRecord>(
+                timeRangeFilter = TimeRangeFilter.between(start, now.plusSeconds(3600)),
+                ascendingOrder = true,
+                pageSize = 1000,
+            )).records
+        }.getOrDefault(emptyList()) else emptyList()
+        val latestSleep = sleepRecords.maxByOrNull { it.endTime }
+        val sleep7 = sleepRecords.filter { it.endTime >= start7 }
+        val sleep7Avg = sleep7.map { (it.endTime.toEpochMilli() - it.startTime.toEpochMilli()).coerceAtLeast(0L) / 60000.0 }
+            .takeIf { it.isNotEmpty() }?.average()
+
+        val resting = if (has(RestingHeartRateRecord::class)) runCatching {
+            hc.readRecords(ReadRecordsRequest<RestingHeartRateRecord>(
+                timeRangeFilter = TimeRangeFilter.between(start, now.plusSeconds(3600)),
+                ascendingOrder = true,
+                pageSize = 1000,
+            )).records
+        }.getOrDefault(emptyList()) else emptyList()
+        val latestRest = resting.maxByOrNull { it.time }
+        val rest7 = resting.filter { it.time >= start7 }.map { it.beatsPerMinute.toDouble() }
+        val rest28 = resting.map { it.beatsPerMinute.toDouble() }
+
+        val hrv = if (has(HeartRateVariabilityRmssdRecord::class)) runCatching {
+            hc.readRecords(ReadRecordsRequest<HeartRateVariabilityRmssdRecord>(
+                timeRangeFilter = TimeRangeFilter.between(start, now.plusSeconds(3600)),
+                ascendingOrder = true,
+                pageSize = 1000,
+            )).records
+        }.getOrDefault(emptyList()) else emptyList()
+        val latestHrv = hrv.maxByOrNull { it.time }
+        val hrv7 = hrv.filter { it.time >= start7 }.map { it.heartRateVariabilityMillis }
+        val hrv28 = hrv.map { it.heartRateVariabilityMillis }
+
+        val weights = if (has(WeightRecord::class)) runCatching {
+            hc.readRecords(ReadRecordsRequest<WeightRecord>(
+                timeRangeFilter = TimeRangeFilter.between(now.minusSeconds(365L * 24 * 3600), now.plusSeconds(3600)),
+                ascendingOrder = true,
+                pageSize = 1000,
+            )).records
+        }.getOrDefault(emptyList()) else emptyList()
+        val bodyFat = if (has(BodyFatRecord::class)) runCatching {
+            hc.readRecords(ReadRecordsRequest<BodyFatRecord>(
+                timeRangeFilter = TimeRangeFilter.between(now.minusSeconds(365L * 24 * 3600), now.plusSeconds(3600)),
+                ascendingOrder = true,
+                pageSize = 1000,
+            )).records
+        }.getOrDefault(emptyList()) else emptyList()
+        val lean = if (has(LeanBodyMassRecord::class)) runCatching {
+            hc.readRecords(ReadRecordsRequest<LeanBodyMassRecord>(
+                timeRangeFilter = TimeRangeFilter.between(now.minusSeconds(365L * 24 * 3600), now.plusSeconds(3600)),
+                ascendingOrder = true,
+                pageSize = 1000,
+            )).records
+        }.getOrDefault(emptyList()) else emptyList()
+        val latestWeight = weights.maxByOrNull { it.time }
+        val latestFat = bodyFat.maxByOrNull { it.time }
+        val latestLean = lean.maxByOrNull { it.time }
+
+        return RecoverySnapshot(
+            sleepLastMinutes = latestSleep?.let { ((it.endTime.toEpochMilli() - it.startTime.toEpochMilli()).coerceAtLeast(0L) / 60000L) },
+            sleepLastStartMs = latestSleep?.startTime?.toEpochMilli(),
+            sleepLastEndMs = latestSleep?.endTime?.toEpochMilli(),
+            sleep7dAvgMinutes = sleep7Avg,
+            restingHrLatest = latestRest?.beatsPerMinute,
+            restingHr7dAvg = rest7.takeIf { it.isNotEmpty() }?.average(),
+            restingHr28dAvg = rest28.takeIf { it.isNotEmpty() }?.average(),
+            hrvLatestMs = latestHrv?.heartRateVariabilityMillis,
+            hrv7dAvgMs = hrv7.takeIf { it.isNotEmpty() }?.average(),
+            hrv28dAvgMs = hrv28.takeIf { it.isNotEmpty() }?.average(),
+            weightKg = latestWeight?.weight?.inKilograms,
+            bodyFatPct = latestFat?.percentage?.value,
+            leanMassKg = latestLean?.mass?.inKilograms,
+            sleepSource = latestSleep?.metadata?.dataOrigin?.packageName?.let(::sourceLabel),
+            restingHrSource = latestRest?.metadata?.dataOrigin?.packageName?.let(::sourceLabel),
+            hrvSource = latestHrv?.metadata?.dataOrigin?.packageName?.let(::sourceLabel),
+            bodySource = (latestWeight?.metadata?.dataOrigin?.packageName ?: latestFat?.metadata?.dataOrigin?.packageName ?: latestLean?.metadata?.dataOrigin?.packageName)?.let(::sourceLabel),
+            permissions = granted.sorted(),
+        )
     }
 
     data class WeightSyncResult(val latestKg: Double?, val latestDate: String?, val written: Int)

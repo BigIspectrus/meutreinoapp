@@ -23,7 +23,7 @@ class HealthPermissionsRationaleActivity : Activity() {
             setTypeface(typeface, android.graphics.Typeface.BOLD)
         })
         root.addView(TextView(this).apply {
-            text = "O TreinoApp usa o Health Connect somente com sua autorização para associar sessões registradas pelo Galaxy Watch/Samsung Health ao treino do aplicativo, consultar frequência cardíaca, calorias e peso e, quando não houver uma sessão equivalente, gravar a sessão de musculação do TreinoApp. Você pode revogar as permissões a qualquer momento nas configurações do Health Connect."
+            text = "O TreinoApp usa o Health Connect somente com sua autorização para associar sessões registradas pelo Galaxy Watch/Samsung Health ao treino do aplicativo, consultar frequência cardíaca, calorias, peso, composição corporal, sono, frequência cardíaca de repouso e HRV e, quando não houver uma sessão equivalente, gravar a sessão de musculação do TreinoApp. Você pode revogar as permissões a qualquer momento nas configurações do Health Connect."
             textSize = 16f
             setTextColor(Color.rgb(190,196,220))
             setPadding(0,(18*density).toInt(),0,0)

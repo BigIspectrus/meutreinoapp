@@ -1,36 +1,38 @@
 # Roadmap Android
 
-## Entregue até v12.1.0 Beta
+## Entregue na v12.2.0 Beta
 
-- Capacitor com variantes Stable/Beta;
-- foreground workout service;
-- timer e ações na notificação;
-- widget;
-- Room com migrações não destrutivas;
-- Health Connect para sessão, FC, calorias e peso;
-- associação automática/assistida Galaxy Watch -> Health Connect -> TreinoApp;
-- correção robusta dos timestamps WebView/Kotlin/Room;
-- detalhes completos por treino;
-- gráfico e zonas de frequência cardíaca;
-- resposta cardiovascular aproximada por exercício;
-- comparação com treino anterior equivalente;
-- painel de performance de 30 dias;
-- cartão compartilhável com dados do relógio;
-- relatório para personal com métricas Health;
-- backup dos vínculos e amostras Health;
-- tipos de série avançados;
-- pipeline APK/AAB assinado.
+- Stable/Beta separadas;
+- foreground service, timer e notificação nativos;
+- widget com treino ativo e planejamento do dia;
+- Health Connect para exercício, FC, calorias, peso, sono, FC de repouso, HRV e composição corporal;
+- associação automática Galaxy Watch/Samsung Health;
+- Room com migrações 1->2 e 2->3;
+- RIR/RPE por série;
+- FC e recuperação cardíaca aproximadas por série;
+- timeline série x FC;
+- gráfico com marcadores das séries;
+- PRs avançados;
+- progressão sugerida;
+- histórico avançado por exercício;
+- painel Recovery sem score opaco;
+- calendário e planejamento semanal;
+- auditoria de fluxos APK x navegador;
+- exportação, relatório e compartilhamento nativos.
 
-## Próximos passos após validar v12.1.0
+## Após validar a v12.2.0
 
-- testes automatizados de migrações Room em CI;
-- backup nativo do banco antes de migrações importantes;
-- revisão dedicada de correspondências Health ambíguas;
-- widget redimensionável com mais estados;
-- atalhos nativos por treino;
-- refinamentos de haptics e notificações;
-- filtros e séries históricas maiores no painel de performance.
+- testes instrumentados de migração Room no CI;
+- testes automatizados Android para Health match e payloads do bridge;
+- opção de configurar a janela de recuperação pós-série;
+- análise de recuperação entre blocos/exercícios;
+- atalhos Android por treino planejado;
+- widget redimensionável com variantes pequena/média/grande;
+- anexos locais de foto/vídeo por exercício;
+- substituições de exercícios por sessão;
+- programação de blocos/mesociclos;
+- eventual app Wear OS complementar.
 
-## Wear OS opcional
+## Regra de segurança dos dados
 
-Somente depois de validar a Stable no telefone: aplicativo complementar para Galaxy Watch/Wear OS para visualizar exercício/série, concluir série e acompanhar o descanso no pulso.
+Nunca usar `fallbackToDestructiveMigration()` no banco principal. Atualizações Stable devem manter applicationId, chave de assinatura e versionCode crescente.

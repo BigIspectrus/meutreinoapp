@@ -25,7 +25,7 @@ ok("applicationId 'com.treinoapp.app'" in gradle, 'Stable applicationId ausente'
 ok("applicationId 'com.treinoapp.beta'" in gradle, 'Beta applicationId ausente')
 ok('compileSdk 36' in gradle and 'targetSdk 36' in gradle and 'minSdk 26' in gradle, 'SDKs Android incorretos')
 ok('fallbackToDestructiveMigration' not in '\n'.join(p.read_text(errors='ignore') for p in (ROOT/'android/app/src/main/java').rglob('*.kt')), 'Migração destrutiva proibida')
-for token in ['FOREGROUND_SERVICE_HEALTH','ACTIVITY_RECOGNITION','POST_NOTIFICATIONS','READ_EXERCISE','READ_HEART_RATE','READ_TOTAL_CALORIES_BURNED','READ_HEALTH_DATA_IN_BACKGROUND']:
+for token in ['FOREGROUND_SERVICE_HEALTH','ACTIVITY_RECOGNITION','POST_NOTIFICATIONS','READ_EXERCISE','READ_HEART_RATE','READ_TOTAL_CALORIES_BURNED','READ_HEALTH_DATA_IN_BACKGROUND','READ_SLEEP','READ_RESTING_HEART_RATE','READ_HEART_RATE_VARIABILITY','READ_BODY_FAT','READ_LEAN_BODY_MASS']:
     ok(token in manifest, f'Permissão/declaração Android ausente: {token}')
 for token in ['WorkoutForegroundService','TreinoAppWidgetProvider','HealthPermissionsRationaleActivity']:
     ok(token in manifest, f'Componente Android ausente: {token}')
@@ -87,11 +87,19 @@ for token in ['longArgOrNull','getHealthExerciseDetail','heartRateSamples','hear
     ok(token in plugin, f'Bridge Health avançado ausente: {token}')
 for token in ['HeartRatePoint','readDetailedMetrics','BPM_MIN','heartRateSamples','getExerciseDetail']:
     ok(token in repo, f'Leitura Health detalhada ausente: {token}')
-ok('version = 2' in dbkt and 'MIGRATION_1_2' in dbkt and '.addMigrations(MIGRATION_1_2)' in dbkt, 'Migração Room 1->2 ausente')
+ok('version = 3' in dbkt and 'MIGRATION_1_2' in dbkt and 'MIGRATION_2_3' in dbkt and '.addMigrations(MIGRATION_1_2, MIGRATION_2_3)' in dbkt, 'Migrações Room 1->2->3 ausentes')
 for token in ['modalDetalhesSessao','abrirDetalhesTreino','compartilharSessaoDetalhada','renderHealthPerformance','healthPerformanceChart','calcularZonasFc','calcularFcPorExercicio','normalizarAmostrasHealth','healthRelHtml','Galaxy Watch / Health Connect']:
     ok(token in html, f'UI de detalhes/performance/relatório ausente: {token}')
 ok('healthLinksV12:localStorage.getItem' in html, 'Backup não inclui vínculos Health')
-ok('DATA_SCHEMA_VERSION = 13' in html or 'DATA_SCHEMA_VERSION=13' in html, 'Schema web v13 esperado para reparo/backup Health')
+ok('DATA_SCHEMA_VERSION = 14' in html or 'DATA_SCHEMA_VERSION=14' in html, 'Schema web v14 esperado para RIR/RPE, recovery e agenda')
+
+# Performance & Recovery / v12.2
+for token in ['getRecoverySnapshot','SleepSessionRecord','RestingHeartRateRecord','HeartRateVariabilityRmssdRecord','BodyFatRecord','LeanBodyMassRecord']:
+    ok(token in repo or token in plugin, f'Recurso Recovery Health ausente: {token}')
+for token in ['ativo-rir','ativo-rpe','calcularRecuperacaoSeries','setMarkersV122','calcularPrsAvancadosDaSessao','calcularSugestaoProgressaoExercicio','sub-recovery','sub-agenda','weeklyPlanV12','renderizarAgendaMensal','modalExerciseInsights']:
+    ok(token in html, f'Recurso v12.2 ausente: {token}')
+ok('rir' in read('android/app/src/main/java/com/treinoapp/app/data/NativeEntities.kt') and 'rpe' in read('android/app/src/main/java/com/treinoapp/app/data/NativeEntities.kt'), 'Room não persiste RIR/RPE')
+ok("onclick='abrirDetalhesTreino(${jsArg(sessionKey)})'" in html, 'Botão Detalhes ainda pode quebrar por aspas no HTML dinâmico')
 
 if errors:
     print('VALIDAÇÃO FALHOU')

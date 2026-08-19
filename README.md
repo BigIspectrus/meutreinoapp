@@ -1,62 +1,107 @@
-# TreinoApp v12.1.0 Beta — Web + Android
+# TreinoApp v12.2.0 Beta — Performance & Recovery
 
-TreinoApp continua funcionando como PWA no GitHub Pages e também possui uma versão Android nativa baseada em Capacitor.
+TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capacitor. A variante Beta pode coexistir com a Stable.
 
-## Identidade do aplicativo
+## Identidade
 
 - Stable: `com.treinoapp.app`
 - Beta: `com.treinoapp.beta`
-- Versão deste projeto: `12.1.0`
-- versionCode: `120100`
-- Android: API 36, minSdk 26
+- Versão: `12.2.0`
+- versionCode: `120200`
+- Android: compile/target API 36, minSdk 26
+- Room: schema 3, somente migrações explícitas
 
-## Recursos Android
+## Treino e execução
 
-- notificação persistente durante o treino;
-- cronômetro nativo de descanso com ações `-15s`, `Pular` e `+30s`;
-- serviço Android de treino ativo;
-- widget de tela inicial;
-- Health Connect com leitura e escrita de sessão, frequência cardíaca, calorias e peso;
-- associação automática com sessões do relógio quando a confiança temporal for >= 78%;
-- confirmação manual quando a correspondência não for suficientemente segura;
-- Room nativo como espelho resiliente de sessões e séries, com migração não destrutiva;
-- APK Beta e Stable separados;
-- APK/AAB assinados pelo GitHub Actions.
+- serviço nativo de treino em primeiro plano;
+- notificação persistente com duração/progresso;
+- descanso nativo com `-15s`, `Pular` e `+30s`;
+- widget com sessão ativa e treino planejado do dia;
+- Modo Academia;
+- sessão avulsa usando o mesmo motor do treino montado;
+- tipos avançados de série;
+- RIR e RPE opcionais em cada série;
+- rascunho automático incluindo RIR/RPE;
+- progressão de carga sugerida, nunca aplicada automaticamente.
 
-## Health Connect na v12.1.0
+## Galaxy Watch / Health Connect
 
-A v12.1.0 corrige o transporte dos timestamps entre WebView, Kotlin e Room. Horários de início/fim passam a ser tratados como `Long`, evitando que sessões quase idênticas do TreinoApp e do Samsung Health sejam rejeitadas como se não estivessem na mesma janela de tempo.
+O fluxo esperado é Galaxy Watch -> Samsung Health -> Health Connect -> TreinoApp.
 
-Quando uma sessão é associada, o TreinoApp pode preservar junto ao treino:
+A associação usa horários de início/fim, duração e sobreposição. Timestamps atravessam WebView/Kotlin/Room como `Long`, evitando perda de precisão.
 
-- ID do registro Health;
-- origem dos dados;
-- início e fim do relógio;
+Quando uma sessão é vinculada, o TreinoApp preserva:
+
+- ID e origem do registro Health;
+- horário do relógio;
 - confiança da associação;
-- frequência cardíaca média, máxima e mínima;
-- calorias;
-- amostras de frequência cardíaca reduzidas para visualização;
+- FC média, máxima e mínima;
+- calorias estimadas pela origem;
+- amostras de FC reduzidas para visualização;
 - duração monitorada.
 
-## Uso dos dados do relógio
+## Detalhes avançados do treino
 
-Os dados não ficam apenas no diagnóstico. O Histórico ganhou uma tela completa de detalhes por sessão com:
+A tela de detalhes combina dados do TreinoApp com os dados fisiológicos do relógio:
 
-- exercícios, séries, carga, repetições, volume e PRs;
-- dados do Galaxy Watch/Health Connect;
-- gráfico de frequência cardíaca;
-- zonas de FC quando o usuário informa sua FC máxima;
+- gráfico de FC com marcadores das séries;
+- linha do tempo série x FC;
+- FC próxima ao fim da série;
+- pico nos primeiros segundos após a série;
+- FC aproximada em +30 s, +60 s e +90 s;
+- queda de FC durante a recuperação quando a janela não é contaminada pela série seguinte;
+- RIR e RPE;
+- zonas de FC quando o usuário informa FC máxima pessoal;
 - resposta cardiovascular aproximada por exercício;
-- comparação com a sessão anterior equivalente;
-- alinhamento técnico dos horários TreinoApp x relógio;
-- compartilhamento visual da sessão com dados fisiológicos.
+- comparação com sessão anterior;
+- PRs de carga, repetições, volume de série e e1RM;
+- sugestão de progressão por faixa de repetições/RIR;
+- histórico avançado por exercício com gráfico de carga e e1RM.
 
-A tela Progresso também possui um painel de performance de 30 dias com tendências de FC, calorias, duração, volume e densidade do treino. O relatório HTML para personal inclui uma seção Health Connect quando houver sessões vinculadas.
+As medidas série a série são aproximações temporais. Elas não são apresentadas como diagnóstico ou medida clínica.
 
-## Dados e atualizações
+## Recovery
 
-Atualizações da mesma variante preservam os dados quando mantêm o mesmo applicationId, chave de assinatura e versionCode crescente. O Room usa migrações explícitas e não utiliza `fallbackToDestructiveMigration()`.
+A aba Recuperação usa dados disponíveis no Health Connect:
 
-O backup JSON inclui os vínculos Health e as amostras usadas nos gráficos.
+- último sono e média de 7 dias;
+- FC de repouso atual, média 7 dias e média 28 dias;
+- HRV RMSSD atual, média 7 dias e média 28 dias;
+- peso;
+- percentual de gordura;
+- massa magra;
+- carga recente de treino;
+- queda média de FC aos 60 segundos em séries mensuráveis.
 
-Leia `TESTE_v12.1.0_BETA.md` antes de promover esta versão para Stable.
+O TreinoApp não cria um "readiness score" opaco. Os componentes são exibidos separadamente e com aviso de que possuem múltiplos determinantes.
+
+## Agenda
+
+- planejamento semanal por template;
+- calendário mensal com dias treinados e treinos planejados;
+- treino planejado do dia na tela inicial;
+- widget usa o treino planejado quando não há sessão ativa.
+
+## Android x Web/PWA
+
+No APK:
+
+- Service Worker/PWA não são usados;
+- atualização é via GitHub Releases;
+- notificações são gerenciadas pelo Android;
+- downloads, compartilhamento e galeria usam APIs nativas;
+- armazenamento é identificado como privado do Android;
+- cartão de instalação PWA é ocultado;
+- "reparar app" recarrega os assets empacotados, sem tentar manipular Service Worker.
+
+Na versão Web/PWA, os fluxos de navegador permanecem disponíveis.
+
+## Dados
+
+- histórico Web é a base funcional principal;
+- Room mantém espelho nativo de sessões/séries;
+- Room schema 3 adiciona RIR/RPE via `MIGRATION_2_3`;
+- `fallbackToDestructiveMigration()` continua proibido;
+- backup JSON inclui vínculos Health, plano semanal e cache de Recovery.
+
+Antes de promover para Stable, execute `TESTE_v12.2.0_BETA.md`.

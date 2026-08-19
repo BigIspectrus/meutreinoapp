@@ -40,5 +40,7 @@ data class WorkoutSetEntity(
     val weight: Double,
     val reps: Int,
     val setType: String,
-    val completedAt: Long
+    val completedAt: Long,
+    val rir: Int? = null,
+    val rpe: Double? = null,
 )

@@ -19,6 +19,11 @@ import androidx.health.connect.client.permission.HealthPermission.Companion.PERM
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
+import androidx.health.connect.client.records.SleepSessionRecord
+import androidx.health.connect.client.records.RestingHeartRateRecord
+import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
+import androidx.health.connect.client.records.BodyFatRecord
+import androidx.health.connect.client.records.LeanBodyMassRecord
 import com.getcapacitor.JSArray
 import com.getcapacitor.JSObject
 import com.getcapacitor.Plugin
@@ -290,8 +295,44 @@ class TreinoNativePlugin : Plugin() {
                     put("writeExercise", granted.contains(HealthPermission.getWritePermission(ExerciseSessionRecord::class)))
                     put("readHeartRate", granted.contains(HealthPermission.getReadPermission(HeartRateRecord::class)))
                     put("readCalories", granted.contains(HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class)))
+                    put("readSleep", granted.contains(HealthPermission.getReadPermission(SleepSessionRecord::class)))
+                    put("readRestingHeartRate", granted.contains(HealthPermission.getReadPermission(RestingHeartRateRecord::class)))
+                    put("readHrv", granted.contains(HealthPermission.getReadPermission(HeartRateVariabilityRmssdRecord::class)))
+                    put("readBodyFat", granted.contains(HealthPermission.getReadPermission(BodyFatRecord::class)))
+                    put("readLeanBodyMass", granted.contains(HealthPermission.getReadPermission(LeanBodyMassRecord::class)))
                 })
             } catch (e: Exception) { reject(call, "Falha ao consultar Health Connect", e) }
+        }
+    }
+
+    @PluginMethod
+    fun getRecoverySnapshot(call: PluginCall) {
+        val days = call.getInt("days", 28) ?: 28
+        scope.launch {
+            try {
+                val r = health.getRecoverySnapshot(days)
+                resolve(call, JSObject().apply {
+                    put("generatedAt", r.generatedAt)
+                    put("sleepLastMinutes", r.sleepLastMinutes)
+                    put("sleepLastStartMs", r.sleepLastStartMs)
+                    put("sleepLastEndMs", r.sleepLastEndMs)
+                    put("sleep7dAvgMinutes", r.sleep7dAvgMinutes)
+                    put("restingHrLatest", r.restingHrLatest)
+                    put("restingHr7dAvg", r.restingHr7dAvg)
+                    put("restingHr28dAvg", r.restingHr28dAvg)
+                    put("hrvLatestMs", r.hrvLatestMs)
+                    put("hrv7dAvgMs", r.hrv7dAvgMs)
+                    put("hrv28dAvgMs", r.hrv28dAvgMs)
+                    put("weightKg", r.weightKg)
+                    put("bodyFatPct", r.bodyFatPct)
+                    put("leanMassKg", r.leanMassKg)
+                    put("sleepSource", r.sleepSource)
+                    put("restingHrSource", r.restingHrSource)
+                    put("hrvSource", r.hrvSource)
+                    put("bodySource", r.bodySource)
+                    put("permissions", JSArray(r.permissions))
+                })
+            } catch (e: Exception) { reject(call, "Falha ao ler recuperação do Health Connect", e) }
         }
     }
 
@@ -503,6 +544,8 @@ class TreinoNativePlugin : Plugin() {
                         reps = o.optInt("reps"),
                         setType = o.optString("setType", "workset"),
                         completedAt = o.optLong("completedAt", session.endMs),
+                        rir = if (o.has("rir") && !o.isNull("rir")) o.optInt("rir") else null,
+                        rpe = if (o.has("rpe") && !o.isNull("rpe")) o.optDouble("rpe") else null,
                     )
                 }
                 db.workoutDao().upsertSession(session)
@@ -532,6 +575,8 @@ class TreinoNativePlugin : Plugin() {
                         reps = o.optInt("reps"),
                         setType = o.optString("setType", "workset"),
                         completedAt = o.optLong("completedAt", o.optLong("finishedAt", 0L)),
+                        rir = if (o.has("rir") && !o.isNull("rir")) o.optInt("rir") else null,
+                        rpe = if (o.has("rpe") && !o.isNull("rpe")) o.optDouble("rpe") else null,
                     )
                 }
                 if (replace) db.workoutDao().replaceAllLegacy(sets) else db.workoutDao().upsertLegacySets(sets)

@@ -147,3 +147,11 @@ Não execute novamente o bump para `12.1.0`, pois este pacote já está nessa ve
 ## 12. Regra obrigatória para não perder a capacidade de atualizar
 
 Nunca altere o package Stable `com.treinoapp.app` e nunca troque a chave de assinatura. Nunca desinstale a Stable apenas para instalar uma atualização comum. Instale o APK novo por cima e escolha **Atualizar**.
+
+## Fluxo v12.2.0 Beta
+
+Este pacote já está em `VERSION = 12.2.0` e `versionCode = 120200`.
+
+Use a branch `beta`, aplique o patch, rode `py .\scripts\validate_project.py`, faça commit e push. O workflow `TreinoApp Beta APK` deve compilar a variante `com.treinoapp.beta`.
+
+Não promova para Stable antes de completar `TESTE_v12.2.0_BETA.md` e confirmar migração Room, Health Connect, Detalhes, RIR/RPE, recuperação cardíaca, agenda e exportações nativas.

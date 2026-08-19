@@ -1,1 +1,8 @@
-{"version":"12.1.0","versionCode":120100,"build":"2026.08.18.7","commit":"local-build","deployedAt":null,"channel":"source"}
+{
+  "version": "12.2.0",
+  "versionCode": 120200,
+  "build": "2026.08.19.1",
+  "commit": "local-build",
+  "deployedAt": null,
+  "channel": "source"
+}

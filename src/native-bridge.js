@@ -30,6 +30,7 @@ window.TreinoNativeBridge = {
   saveImageToGallery: data => call('saveImageToGallery', data || {}),
   shareImage: data => call('shareImage', data || {}),
   getHealthStatus: () => call('getHealthStatus'),
+  getRecoverySnapshot: data => call('getRecoverySnapshot', data || {}),
   requestHealthPermissions: () => call('requestHealthPermissions'),
   getHealthSyncResults: () => call('getHealthSyncResults'),
   listHealthExercises: data => call('listHealthExercises', data || {}),

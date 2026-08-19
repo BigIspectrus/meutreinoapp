@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [WorkoutSessionEntity::class, WorkoutSetEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 abstract class TreinoDatabase : RoomDatabase() {
@@ -30,12 +30,19 @@ abstract class TreinoDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE workout_sets ADD COLUMN rir INTEGER")
+                db.execSQL("ALTER TABLE workout_sets ADD COLUMN rpe REAL")
+            }
+        }
+
         fun get(context: Context): TreinoDatabase = INSTANCE ?: synchronized(this) {
             INSTANCE ?: Room.databaseBuilder(
                 context.applicationContext,
                 TreinoDatabase::class.java,
                 "treinoapp_native.db"
-            ).addMigrations(MIGRATION_1_2).build().also { INSTANCE = it }
+            ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build().also { INSTANCE = it }
         }
     }
 }

@@ -1,31 +1,14 @@
-# Arquitetura Android v12.1
+# Arquitetura Android v12.2
 
-## Interface
+## Camadas
 
-A UI principal continua em HTML/CSS/JavaScript, empacotada pelo Capacitor. A mesma base é publicada como PWA no GitHub Pages.
+A interface continua em HTML/CSS/JavaScript empacotada pelo Capacitor. A mesma base possui runtime Web/PWA e runtime Android, mas recursos dependentes de plataforma são separados explicitamente.
 
-## Ponte nativa
-
-`TreinoNativePlugin` faz a comunicação WebView -> Android. Parâmetros temporais como `startedAt`, `startMs`, `endMs`, `targetStartMs` e `targetEndMs` são lidos por uma rotina própria que aceita qualquer `Number` ou string numérica e converte para `Long`.
-
-Isso evita perda de timestamps em milissegundos e é essencial para:
-
-- associação Health;
-- gravação no Health Connect;
-- persistência no Room;
-- sincronização em segundo plano.
+`TreinoNativePlugin` é a ponte WebView -> Android. Timestamps usam conversão robusta para `Long`.
 
 ## Serviço de treino
 
-`WorkoutForegroundService` mantém fora da WebView o estado mínimo da sessão:
-
-- sessão atual;
-- início e pausa;
-- exercício/série atual;
-- séries concluídas;
-- fim do descanso.
-
-A notificação permanente mostra duração ou contagem regressiva. Durante o descanso oferece `-15s`, `Pular` e `+30s`.
+`WorkoutForegroundService` mantém o estado mínimo da sessão fora da WebView, incluindo sessão, início, pausa, progresso e descanso.
 
 ## Health Connect
 
@@ -34,48 +17,57 @@ A notificação permanente mostra duração ou contagem regressiva. Durante o de
 - `ExerciseSessionRecord`;
 - `HeartRateRecord`;
 - `TotalCaloriesBurnedRecord`;
-- `WeightRecord`.
+- `WeightRecord`;
+- `SleepSessionRecord`;
+- `RestingHeartRateRecord`;
+- `HeartRateVariabilityRmssdRecord`;
+- `BodyFatRecord`;
+- `LeanBodyMassRecord`.
 
-A associação compara início, fim, duração e sobreposição temporal. Correspondências com confiança >= 0,78 podem ser vinculadas automaticamente. Resultados intermediários podem ser apresentados para confirmação manual.
+Dados opcionais somente aparecem quando a origem os fornece e quando a permissão correspondente foi concedida.
 
-Ao vincular uma sessão, são preservados os metadados Health e métricas fisiológicas. Para a frequência cardíaca, o repositório também pode ler as amostras do intervalo da sessão e reduzir a quantidade de pontos antes de entregá-las à camada web.
+### FC por série
 
-A camada web usa esses dados para:
+Cada série concluída possui `completedAt`. A camada Web cruza esse instante com amostras de FC da sessão associada. Para recuperação, procura:
 
-- detalhes da sessão;
-- gráfico de FC;
-- zonas de FC;
-- comparação de sessões;
-- análise aproximada por exercício;
-- painel de performance;
-- imagem compartilhável;
-- relatório HTML.
+- FC mais próxima do término;
+- pico em até 20 s;
+- FC próxima de +30 s, +60 s e +90 s.
 
-Os dados do Galaxy Watch normalmente seguem o fluxo Galaxy Watch -> Samsung Health -> Health Connect -> TreinoApp.
+Se outra série for concluída antes da janela desejada, aquela medida de recuperação é descartada para reduzir contaminação pelo próximo esforço.
+
+O cálculo é descritivo e não diagnóstico.
 
 ## Room
 
-O banco `treinoapp_native.db` mantém sessões e séries, além do vínculo Health.
+Banco: `treinoapp_native.db`.
 
-A v12.1 usa Room schema 2. A migração 1 -> 2 adiciona de forma não destrutiva:
+Schema 1: sessão e séries.
 
-- `healthMinHr`;
-- `healthStartMs`;
-- `healthEndMs`;
-- `healthTitle`;
-- `healthExerciseType`;
-- `healthSampleCount`;
-- `healthSamplesJson`.
+Schema 2: campos detalhados do vínculo Health e amostras de FC.
 
-Nunca habilitar `fallbackToDestructiveMigration()` no banco principal.
+Schema 3: `rir` e `rpe` em `workout_sets`.
 
-## Reconciliação de dados antigos da Beta
+Migrações:
 
-Versões anteriores podiam gravar horários nativos inválidos devido à leitura por `getDouble()`. Ao detectar o novo schema web, a v12.1 reconstrói no Room as sessões recentes usando o histórico web, recuperando início/fim válidos para novas tentativas de sincronização.
+- `MIGRATION_1_2`;
+- `MIGRATION_2_3`.
 
-## Stable x Beta
+Não existe migração destrutiva.
 
-- Stable: `com.treinoapp.app`
-- Beta: `com.treinoapp.beta`
+## Planejamento
 
-Os dois aplicativos podem coexistir. Seus dados e permissões são independentes por design.
+`weeklyPlanV12` armazena o template associado a cada dia da semana. Ele alimenta Dashboard, Agenda e widget.
+
+## Recovery
+
+`getRecoverySnapshot()` lê uma janela de até 28 dias para sono/FC repouso/HRV e a última composição corporal disponível. Um cache Web de 15 minutos reduz consultas repetidas.
+
+## Runtime Android
+
+No APK:
+
+- PWA/Service Worker ficam desativados;
+- GitHub Releases é o canal de atualização;
+- armazenamento, arquivos, compartilhamento, galeria e notificações seguem APIs Android;
+- componentes exclusivamente Web são ocultados.
