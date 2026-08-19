@@ -602,6 +602,24 @@
     .native-status{font-size:.78em;color:var(--text-muted);line-height:1.5;margin-top:8px}.native-status strong{color:var(--text)}
     .health-match{margin-top:9px;padding:9px 10px;border:1px solid var(--border);border-radius:9px;background:var(--surface2);font-size:.78em;line-height:1.45}
     .health-match.ok{border-color:var(--success)}.health-match.pending{border-color:var(--accent)}
+    .session-detail-modal{max-width:620px;max-height:92vh;overflow-y:auto;}
+    .session-detail-hero{padding:15px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(135deg,var(--surface2),var(--surface));margin-bottom:12px;}
+    .session-detail-title{font-size:1.35em;font-weight:900;line-height:1.1;margin-bottom:5px;}
+    .session-detail-sub{font-size:.78em;color:var(--text-muted);}
+    .session-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0;}
+    .session-detail-stat{padding:10px;border:1px solid var(--border);border-radius:11px;background:var(--surface2);}
+    .session-detail-stat strong{display:block;font-size:1.2em;color:var(--text);}.session-detail-stat span{font-size:.72em;color:var(--text-muted);}
+    .session-health-card{padding:12px;border:1px solid var(--success);border-radius:13px;background:var(--surface2);margin:12px 0;}
+    .session-health-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:9px;}
+    .session-health-metric{padding:8px;text-align:center;border:1px solid var(--border);border-radius:9px;background:var(--surface);}
+    .session-health-metric strong{display:block;font-size:1.05em}.session-health-metric span{font-size:.68em;color:var(--text-muted);}
+    .session-detail-section{margin-top:14px}.session-detail-section-title{font-size:.86em;font-weight:900;margin-bottom:7px;color:var(--text);}
+    .session-detail-ex{padding:9px 0;border-bottom:1px solid var(--border)}.session-detail-ex:last-child{border-bottom:0}.session-detail-ex-name{font-weight:800;font-size:.88em}.session-detail-ex-meta{font-size:.72em;color:var(--text-muted);margin-top:3px}
+    .session-zone{display:grid;grid-template-columns:42px 1fr 58px;gap:7px;align-items:center;font-size:.72em;margin:5px 0}.session-zone-bar{height:8px;border-radius:99px;background:var(--border);overflow:hidden}.session-zone-fill{height:100%;background:var(--primary);border-radius:99px}
+    .session-compare-row{display:grid;grid-template-columns:1fr 82px 82px 66px;gap:6px;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:.75em}.session-compare-row:last-child{border-bottom:0}.session-compare-head{color:var(--text-muted);font-size:.68em;font-weight:700}.session-delta.up{color:var(--success)}.session-delta.down{color:var(--accent)}
+    .health-perf-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px}.health-perf-stat{padding:11px;border:1px solid var(--border);border-radius:12px;background:var(--surface2)}.health-perf-stat strong{display:block;font-size:1.25em}.health-perf-stat span{font-size:.7em;color:var(--text-muted)}
+    .hist-health-badge{display:inline-flex;align-items:center;padding:2px 6px;border:1px solid var(--success);border-radius:99px;font-size:.62em;color:var(--success);margin-left:5px;vertical-align:middle}
+    @media(max-width:520px){.session-health-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.session-compare-row{grid-template-columns:1fr 68px 68px 55px}.session-detail-modal{max-width:96vw}}
     .channel-badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:.7em;font-weight:800;text-transform:uppercase;letter-spacing:.4px;background:var(--primary-dim);color:var(--primary)}
     @media(max-width:760px){
       #exerciciosAtivos .serie-row{grid-template-areas:'badge prev check' 'minus weight plus' 'reps reps reps' 'type type type'}
@@ -731,6 +749,18 @@
   </div>
 </div>
 
+<!-- MODAL DETALHES DA SESSÃO -->
+<div class="modal-overlay" id="modalDetalhesSessao">
+  <div class="modal session-detail-modal">
+    <div class="modal-title">Detalhes do treino</div>
+    <div id="detalhesSessaoContent"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModal('modalDetalhesSessao')" style="flex:1">Fechar</button>
+      <button class="btn btn-primary" onclick="compartilharSessaoDetalhada()" style="flex:1">Compartilhar treino</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL COMPARTILHAR -->
 <div class="modal-overlay" id="modalCompartilhar">
   <div class="modal" style="max-width:420px;">
@@ -789,10 +819,11 @@
 <!-- MODAL NOVIDADES -->
 <div class="modal-overlay" id="modalNovidades">
   <div class="modal" style="max-width:500px;">
-    <div class="modal-title">TreinoApp v11.0.0</div>
+    <div class="modal-title">TreinoApp v12.1.0 Beta</div>
     <div style="font-size:.88em;line-height:1.6;color:var(--text-muted);">
       <p style="color:var(--text);font-weight:700;margin-bottom:8px;">Principais novidades desta versão</p>
-      <p>Modo Academia com um exercício em foco, entrada rápida de carga e repetições, calculadora de anilhas, navegação anterior/próximo, cartões concluídos compactos, backup interno de segurança, exportação CSV, reparo de cache sem apagar seus treinos e diagnóstico ampliado do deploy.</p>
+      <p>Correção da associação automática com o Health Connect, preservando horários de início e fim entre WebView, Kotlin e Room. Cada treino pode exibir dados do Galaxy Watch, gráfico de frequência cardíaca, zonas configuráveis, calorias, comparação com a sessão anterior, resposta cardiovascular por exercício e detalhes técnicos do vínculo.</p>
+      <p style="margin-top:8px;">A tela Progresso ganhou um painel de performance de 30 dias. O compartilhamento do treino e o relatório para personal agora incluem dados fisiológicos quando disponíveis, e o backup passa a preservar os vínculos Health e as amostras usadas nos gráficos.</p>
     </div>
     <div class="modal-footer"><button class="btn btn-primary" onclick="fecharNovidades()">Entendi</button></div>
   </div>
@@ -1195,6 +1226,12 @@
     <div id="tabelaEvolucao" style="overflow-x:auto;display:none;"></div>
     <div id="graficoVazio" class="empty-state" style="display:none;"><div class="ei">📊</div><p>Sem dados ainda para este exercício.</p></div>
   </div>
+  <div class="card" id="healthPerformanceCard">
+    <div class="card-title">Performance dos treinos</div>
+    <p style="font-size:.76em;color:var(--text-muted);margin-bottom:10px;">Combina volume e duração do TreinoApp com frequência cardíaca e calorias do relógio.</p>
+    <div id="healthPerformanceContent"></div>
+    <canvas id="healthPerformanceChart" height="145" style="margin-top:10px;"></canvas>
+  </div>
   </div><!-- /sub-evolucao -->
   <div class="sub-content" id="sub-streak">
 
@@ -1492,6 +1529,7 @@
     <div class="config-item"><div><div class="config-label">Health Connect</div><div class="config-sub" id="healthConnectStatus">Verificando disponibilidade...</div></div><button class="btn btn-outline btn-sm" style="width:auto;" onclick="conectarHealthConnect()">Conectar</button></div>
     <div class="config-item"><div><div class="config-label">Sincronização automática</div><div class="config-sub">Associa automaticamente o treino do Galaxy Watch quando a correspondência for confiável</div></div><select id="selHealthAuto" style="width:auto;padding:6px 10px;font-size:.83em;" onchange="salvarHealthConfig()"><option value="1">Ativada</option><option value="0">Desativada</option></select></div>
     <div class="config-item"><div><div class="config-label">Gravar no Health Connect</div><div class="config-sub">Se não houver sessão equivalente do relógio, grava a musculação do TreinoApp</div></div><select id="selHealthWrite" style="width:auto;padding:6px 10px;font-size:.83em;" onchange="salvarHealthConfig()"><option value="1">Ativado</option><option value="0">Desativado</option></select></div>
+    <div class="config-item"><div><div class="config-label">FC máxima pessoal</div><div class="config-sub">Opcional. Usada somente para calcular zonas de frequência cardíaca nos detalhes do treino.</div></div><input id="healthHrMax" type="number" min="100" max="240" inputmode="numeric" placeholder="bpm" style="width:82px;padding:6px 8px;font-size:.83em;" onchange="salvarHealthConfig()"></div>
     <div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap;"><button class="btn btn-ghost btn-sm" style="flex:1;min-width:150px;" onclick="sincronizarHealthUltimasSessoes()">Sincronizar sessões</button><button class="btn btn-outline btn-sm" style="flex:1;min-width:150px;" onclick="diagnosticarHealthConnect()">Diagnosticar Health</button><button class="btn btn-ghost btn-sm" style="flex:1;min-width:150px;" onclick="sincronizarPesoHealth()">Sincronizar peso</button></div>
     <div class="native-status" id="nativeStatusText"></div>
     <div id="healthLastMatch"></div>
@@ -1512,9 +1550,9 @@
 </div>
 
 <script>
-const APP_VERSION = '12.0.2';
-const APP_BUILD = '2026.08.18.5';
-const DATA_SCHEMA_VERSION = 12;
+const APP_VERSION = '12.1.0';
+const APP_BUILD = '2026.08.18.7';
+const DATA_SCHEMA_VERSION = 13;
 const GITHUB_REPO='BigIspectrus/meutreinoapp';
 const GITHUB_PAGES_BASE='https://bigispectrus.github.io/meutreinoapp';
 let _latestAndroidReleaseUrl='';
@@ -2146,6 +2184,7 @@ function salvarTreinoAtivo() {
   const startedAt=window._treinoStartedAt || agora.getTime();
   const finishedAt=Date.now();
   const sessionId=window._treinoSessionId || gerarId('sessao');
+  window._lastFinishedSessionId=sessionId;
   const pausedExtra=window._treinoPaused&&window._treinoPauseStartedAt?Math.max(0,finishedAt-Number(window._treinoPauseStartedAt)):0;
   const totalPausedMs=(Number(window._treinoTotalPausedMs)||0)+pausedExtra;
   const durationSec=Math.max(0,Math.round((finishedAt-startedAt-totalPausedMs)/1000));
@@ -2538,6 +2577,7 @@ function renderizarHistorico() {
   if(!lista) return;
   renderizarResumoSemanal();
   renderizarComparativo();
+  renderHealthPerformance();
 
   const busca = getBusca();
   if(histModoAgrupado) {
@@ -2591,7 +2631,8 @@ function renderizarHistoricoAgrupado(lista, busca='') {
     let exsHTML='';
     Object.entries(porEx).forEach(([ex,series])=>{ const temPR=series.some(x=>x.carga===maxEx[ex]), temPlateau=plateau.includes(ex); const pills=series.sort((a,b)=>a.numSerie-b.numSerie).map(x=>`<span class="serie-pill${x.carga===maxEx[ex]?' pr':''}">${x.carga}kg×${x.reps||'?'}</span>`).join(''); exsHTML+=`<div class="hist-sessao-ex"><div class="hist-sessao-ex-nome">${esc(ex)}${temPR?'<span class="pr-badge">PR</span>':''}${temPlateau?'<span class="plateau-badge">Plateau</span>':''}</div><div class="hist-sessao-series">${pills}</div></div>`; });
     const sessao=document.createElement('div'); sessao.className='hist-sessao';
-    sessao.innerHTML=`<div class="hist-sessao-header"><div><div class="hist-sessao-title">${esc(nomeSessao)} · ${dataBr}</div><div class="hist-sessao-meta">${grupos.join(', ')} · ${totalSeries} séries${durTxt}</div></div><button class="btn btn-danger btn-sm btn-icon" aria-label="Excluir sessão" onclick="apagarSessao('${sessionKey}')">×</button></div><div class="hist-sessao-body">${exsHTML}</div>`;
+    const hlink=getHealthLinks?.()?.[sessionKey];
+    sessao.innerHTML=`<div class="hist-sessao-header"><div><div class="hist-sessao-title">${esc(nomeSessao)} · ${dataBr}${hlink?'<span class="hist-health-badge">Relógio</span>':''}</div><div class="hist-sessao-meta">${grupos.join(', ')} · ${totalSeries} séries${durTxt}${hlink?.avgHr?' · '+Math.round(hlink.avgHr)+' bpm':''}${hlink?.kcal?' · '+Math.round(hlink.kcal)+' kcal':''}</div></div><div style="display:flex;gap:6px"><button class="btn btn-outline btn-sm" onclick="abrirDetalhesTreino(${jsArg(sessionKey)})">Detalhes</button><button class="btn btn-danger btn-sm btn-icon" aria-label="Excluir sessão" onclick="apagarSessao(${jsArg(sessionKey)})">×</button></div></div><div class="hist-sessao-body" onclick="abrirDetalhesTreino(${jsArg(sessionKey)})" style="cursor:pointer">${exsHTML}</div>`;
     lista.appendChild(sessao);
   });
 }
@@ -3074,6 +3115,10 @@ function importarBackup(event) {
       if(d.academiaModeEnabled!==undefined&&d.academiaModeEnabled!==null) localStorage.setItem('academiaModeEnabled',d.academiaModeEnabled);
       if(d.plateBarWeight) localStorage.setItem('plateBarWeight',d.plateBarWeight);
       if(d.platePreset) localStorage.setItem('platePreset',d.platePreset);
+      if(d.healthLinksV12) localStorage.setItem('healthLinksV12',d.healthLinksV12);
+      if(d.healthHrMax) localStorage.setItem('healthHrMax',d.healthHrMax);
+      if(d.healthAutoSync!==undefined&&d.healthAutoSync!==null) localStorage.setItem('healthAutoSync',d.healthAutoSync);
+      if(d.healthWriteEnabled!==undefined&&d.healthWriteEnabled!==null) localStorage.setItem('healthWriteEnabled',d.healthWriteEnabled);
       toast('Backup importado! Recarregando...','success');
       invalidarCache();
       setTimeout(()=>location.reload(),1500);
@@ -3081,7 +3126,7 @@ function importarBackup(event) {
   };
   reader.readAsText(file);
 }
-function resetarDados() { const keys=['historicoTreinoV3','pesoCorporal','exerciciosCustomizadosV3','treinosTemplates','temaPreferido','userProfile','treinoMetas','conquistasDesbloqueadas','perfilPublico','treinoScores','timerSom','backupConfig','descansoPadrao','_rascunhoTreino','_onboardingV9','_onboardingV10','_onboardingV11','_lastSeenVersion','_lastSnapshotDay','_restTimerEndAt','wakeLockEnabled','academiaModeEnabled','plateBarWeight','platePreset','_appErrors']; keys.forEach(k=>localStorage.removeItem(k)); invalidarCache(); toast('Dados do TreinoApp apagados. Recarregando...','info'); setTimeout(()=>location.reload(),1000); }
+function resetarDados() { const keys=['historicoTreinoV3','pesoCorporal','exerciciosCustomizadosV3','treinosTemplates','temaPreferido','userProfile','treinoMetas','conquistasDesbloqueadas','perfilPublico','treinoScores','timerSom','backupConfig','descansoPadrao','_rascunhoTreino','_onboardingV9','_onboardingV10','_onboardingV11','_lastSeenVersion','_lastSnapshotDay','_restTimerEndAt','wakeLockEnabled','academiaModeEnabled','plateBarWeight','platePreset','healthLinksV12','healthPendingV12','healthHrMax','healthAutoSync','healthWriteEnabled','_appErrors']; keys.forEach(k=>localStorage.removeItem(k)); invalidarCache(); toast('Dados do TreinoApp apagados. Recarregando...','info'); setTimeout(()=>location.reload(),1000); }
 
 
 // ════════════════════════════════════════════════
@@ -3534,110 +3579,134 @@ function renderizarDesafio() {
     </div>`;
 }
 
+let _detalheSessaoKey=null;
+let _sessionHrChart=null;
+let _healthPerfChart=null;
+
+function normalizarAmostrasHealth(link){
+  if(!link)return [];
+  let arr=Array.isArray(link.heartRateSamples)?link.heartRateSamples:null;
+  if(!arr&&link.heartRateSamplesJson){try{arr=JSON.parse(link.heartRateSamplesJson)}catch(_){arr=[]}}
+  return (arr||[]).map(x=>({timeMs:Number(x.timeMs)||0,bpm:Number(x.bpm)||0})).filter(x=>x.timeMs>0&&x.bpm>0).sort((a,b)=>a.timeMs-b.timeMs);
+}
+function boundsSessao(regs){
+  const start=Math.min(...regs.map(r=>Number(r.startedAt)||Infinity));
+  const end=Math.max(...regs.map(r=>Number(r.finishedAt)||0));
+  const durationSec=Math.max(...regs.map(r=>Number(r.durationSec)||0),isFinite(start)&&end>start?Math.round((end-start)/1000):0);
+  return {startMs:isFinite(start)?start:0,endMs:end,durationSec};
+}
+function volumeSessao(regs){return regs.reduce((a,r)=>a+volumeRegistro(r),0)}
+function formatarDuracaoTreino(sec){sec=Math.max(0,Math.round(Number(sec)||0));const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;return h?`${h}h ${String(m).padStart(2,'0')}min`:m?`${m}min ${String(s).padStart(2,'0')}s`:`${s}s`;}
+function formatarNumeroTreino(v,d=0){const n=Number(v);return Number.isFinite(n)?n.toLocaleString('pt-BR',{maximumFractionDigits:d,minimumFractionDigits:d}):'—';}
+function sessaoAnteriorComparavel(sessionKey,regs){
+  const atualTs=getSessionTimestamp(regs),templateId=regs.find(r=>r.templateId)?.templateId,templateNome=regs.find(r=>r.templateNome)?.templateNome||'';
+  const all=Object.entries(agruparSessoes(getHist())).filter(([k,a])=>k!==sessionKey&&getSessionTimestamp(a)<atualTs);
+  const comp=all.filter(([,a])=>templateId?(a.some(r=>r.templateId===templateId)):(templateNome&&a.some(r=>r.templateNome===templateNome)));
+  return (comp.length?comp:all).sort((a,b)=>getSessionTimestamp(b[1])-getSessionTimestamp(a[1]))[0]||null;
+}
+function contarPrsDaSessao(sessionKey,regs){
+  const ts=getSessionTimestamp(regs),prev=Object.values(agruparSessoes(getHist())).filter(a=>getSessionTimestamp(a)<ts).flat();
+  const prevMax=calcularMaxPorEx(prev),curr={};regs.forEach(r=>{if(setContaParaPR(r))curr[r.exercicio]=Math.max(curr[r.exercicio]||0,Number(r.carga)||0)});
+  return Object.entries(curr).filter(([ex,v])=>v>0&&(!prevMax[ex]||v>prevMax[ex])).length;
+}
+function calcularZonasFc(samples,fcMax){
+  if(!samples.length||!fcMax)return [];
+  const secs=[0,0,0,0,0];
+  for(let i=0;i<samples.length;i++){
+    const cur=samples[i],next=samples[i+1];
+    const dt=Math.max(1,Math.min(30,Math.round(((next?.timeMs||cur.timeMs+5000)-cur.timeMs)/1000)));
+    const p=cur.bpm/fcMax;const z=p<.60?0:p<.70?1:p<.80?2:p<.90?3:4;secs[z]+=dt;
+  }
+  const total=secs.reduce((a,b)=>a+b,0)||1;
+  return secs.map((sec,i)=>({name:`Z${i+1}`,sec,pct:sec/total*100,range:i===0?'<60%':i===1?'60–69%':i===2?'70–79%':i===3?'80–89%':'≥90%'}));
+}
+function calcularFcPorExercicio(regs,samples,bounds){
+  if(!samples.length)return [];
+  const map={};regs.forEach(r=>{(map[r.exercicio]||(map[r.exercicio]=[])).push(r)});
+  const blocks=Object.entries(map).map(([ex,a])=>({ex,regs:a,first:Math.min(...a.map(r=>Number(r.completedAt)||bounds.startMs)),last:Math.max(...a.map(r=>Number(r.completedAt)||bounds.startMs))})).sort((a,b)=>a.first-b.first);
+  return blocks.map((b,i)=>{
+    const prev=blocks[i-1],next=blocks[i+1];
+    const start=i===0?bounds.startMs:Math.round(((prev?.last||b.first)+b.first)/2);
+    const end=i===blocks.length-1?bounds.endMs:Math.round((b.last+(next?.first||b.last))/2);
+    const pts=samples.filter(p=>p.timeMs>=start&&p.timeMs<=end);
+    return {ex:b.ex,avg:pts.length?pts.reduce((a,p)=>a+p.bpm,0)/pts.length:null,max:pts.length?Math.max(...pts.map(p=>p.bpm)):null,samples:pts.length};
+  });
+}
+function montarComparacaoSessao(sessionKey,regs,health){
+  const ant=sessaoAnteriorComparavel(sessionKey,regs);if(!ant)return '<div style="font-size:.76em;color:var(--text-muted)">Ainda não há sessão anterior comparável.</div>';
+  const [antKey,antRegs]=ant,antHealth=getHealthLinks()[antKey]||{},b=boundsSessao(regs),ab=boundsSessao(antRegs);
+  const rows=[
+    ['Volume',volumeSessao(regs)/1000,volumeSessao(antRegs)/1000,'t',1],
+    ['Séries',regs.length,antRegs.length,'',0],
+    ['Duração',b.durationSec/60,ab.durationSec/60,' min',0],
+    ['Densidade',b.durationSec?volumeSessao(regs)/(b.durationSec/60):0,ab.durationSec?volumeSessao(antRegs)/(ab.durationSec/60):0,' kg/min',0],
+    ['FC média',health.avgHr,antHealth.avgHr,' bpm',0],
+    ['Calorias',health.kcal,antHealth.kcal,' kcal',0],
+  ];
+  return `<div class="session-compare-row session-compare-head"><span>Métrica</span><span>Hoje</span><span>Anterior</span><span>Δ</span></div>`+rows.map(([name,a,c,u,d])=>{if(a==null||c==null||!Number.isFinite(Number(a))||!Number.isFinite(Number(c)))return '';const delta=Number(a)-Number(c),pct=Number(c)!==0?delta/Number(c)*100:null;return `<div class="session-compare-row"><span>${name}</span><span>${formatarNumeroTreino(a,d)}${u}</span><span>${formatarNumeroTreino(c,d)}${u}</span><span class="session-delta ${delta>=0?'up':'down'}">${pct==null?'—':(pct>=0?'+':'')+pct.toFixed(0)+'%'}</span></div>`}).join('');
+}
+function desenharGraficoFcSessao(samples,startMs){
+  const canvas=document.getElementById('sessionHrChart');if(!canvas)return;
+  if(_sessionHrChart){_sessionHrChart.destroy();_sessionHrChart=null;}
+  if(!samples.length||typeof Chart==='undefined'){canvas.style.display='none';return;}canvas.style.display='block';
+  const labels=samples.map(p=>{const s=Math.max(0,Math.round((p.timeMs-startMs)/1000));return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`});
+  _sessionHrChart=new Chart(canvas.getContext('2d'),{type:'line',data:{labels,datasets:[{label:'FC',data:samples.map(p=>p.bpm),borderColor:'#ef5b8b',backgroundColor:'rgba(239,91,139,.12)',fill:true,tension:.28,pointRadius:samples.length>80?0:2,borderWidth:2}]},options:{responsive:true,animation:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>v+' bpm'},grid:{color:'rgba(120,130,170,.12)'}},x:{ticks:{maxTicksLimit:6},grid:{display:false}}}}});
+}
+function abrirDetalhesTreino(sessionKey){
+  const regs=getHist().filter(r=>getSessionKey(r)===sessionKey);if(!regs.length)return toast('Sessão não encontrada','warn');
+  _detalheSessaoKey=sessionKey;const health=getHealthLinks()[sessionKey]||{},samples=normalizarAmostrasHealth(health),b=boundsSessao(regs),vol=volumeSessao(regs),prs=contarPrsDaSessao(sessionKey,regs),date=regs[0]?.data?.split('-').reverse().join('/')||'—',name=regs.find(r=>r.templateNome)?.templateNome||'Treino';
+  const exMap={};regs.forEach(r=>(exMap[r.exercicio]||(exMap[r.exercicio]=[])).push(r));
+  const fcEx=Object.fromEntries(calcularFcPorExercicio(regs,samples,b).map(x=>[x.ex,x]));
+  const fcMax=Number(localStorage.getItem('healthHrMax'))||0,zones=calcularZonasFc(samples,fcMax);
+  const healthHtml=health.recordId||health.sourceApp?`<div class="session-health-card"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><strong>${esc(healthSourceLabel(health.sourceApp))}${health.title?' · '+esc(health.title):''}</strong><div style="font-size:.7em;color:var(--text-muted);margin-top:3px">${fmtHealthTime(health.startMs)}–${fmtHealthTime(health.endMs)} · correspondência ${Math.round((Number(health.confidence)||1)*100)}%</div></div><span class="badge badge-success">Relógio</span></div><div class="session-health-grid"><div class="session-health-metric"><strong>${health.avgHr?Math.round(health.avgHr):'—'}</strong><span>FC média (bpm)</span></div><div class="session-health-metric"><strong>${health.maxHr?Math.round(health.maxHr):'—'}</strong><span>FC máxima (bpm)</span></div><div class="session-health-metric"><strong>${health.minHr?Math.round(health.minHr):'—'}</strong><span>FC mínima (bpm)</span></div><div class="session-health-metric"><strong>${health.kcal?Math.round(health.kcal):'—'}</strong><span>Calorias (kcal)</span></div><div class="session-health-metric"><strong>${health.durationMin||Math.max(1,Math.round(((health.endMs||0)-(health.startMs||0))/60000))}</strong><span>Duração relógio (min)</span></div><div class="session-health-metric"><strong>${health.heartRateSampleCount||samples.length||'—'}</strong><span>Amostras FC</span></div></div></div>`:`<div class="health-match pending"><strong>Sem dados do relógio associados.</strong><br>Use Mais → Sincronizar sessões para procurar a sessão correspondente no Health Connect.</div>`;
+  const exHtml=Object.entries(exMap).map(([ex,a])=>{a.sort((x,y)=>(x.numSerie||0)-(y.numSerie||0));const f=fcEx[ex],pills=a.map(r=>`<span class="serie-pill">${r.carga}kg×${r.reps||0}</span>`).join('');return `<div class="session-detail-ex"><div class="session-detail-ex-name">${esc(ex)}</div><div class="hist-sessao-series" style="margin-top:5px">${pills}</div><div class="session-detail-ex-meta">${f?.avg?`FC aproximada no bloco: ${Math.round(f.avg)} bpm · pico ${Math.round(f.max)} bpm · ${f.samples} amostras`:'Sem amostras de FC suficientes para este bloco'}</div></div>`}).join('');
+  const zonesHtml=samples.length?(fcMax?zones.map(z=>`<div class="session-zone"><strong>${z.name}</strong><div class="session-zone-bar"><div class="session-zone-fill" style="width:${Math.min(100,z.pct).toFixed(1)}%"></div></div><span>${Math.round(z.sec/60)} min</span></div>`).join(''):`<div style="font-size:.74em;color:var(--text-muted)">Configure sua FC máxima em Mais → Android nativo para calcular o tempo nas zonas.</div>`):'<div style="font-size:.74em;color:var(--text-muted)">O Health Connect não forneceu amostras pontuais de frequência cardíaca para esta sessão.</div>';
+  const html=`<div class="session-detail-hero"><div class="session-detail-title">${esc(name)}</div><div class="session-detail-sub">${date} · ${fmtHealthTime(b.startMs)}–${fmtHealthTime(b.endMs)}</div><div class="session-detail-grid"><div class="session-detail-stat"><strong>${formatarDuracaoTreino(b.durationSec)}</strong><span>Duração TreinoApp</span></div><div class="session-detail-stat"><strong>${regs.length}</strong><span>Séries concluídas</span></div><div class="session-detail-stat"><strong>${(vol/1000).toFixed(2)} t</strong><span>Volume total</span></div><div class="session-detail-stat"><strong>${prs}</strong><span>PRs nesta sessão</span></div></div></div>${healthHtml}<div class="session-detail-section"><div class="session-detail-section-title">Frequência cardíaca ao longo do treino</div><canvas id="sessionHrChart" height="160"></canvas></div><div class="session-detail-section"><div class="session-detail-section-title">Zonas de frequência cardíaca${fcMax?' · FCmáx '+fcMax+' bpm':''}</div>${zonesHtml}</div><div class="session-detail-section"><div class="session-detail-section-title">Exercícios e resposta cardiovascular</div>${exHtml}</div><div class="session-detail-section"><div class="session-detail-section-title">Comparação com sessão anterior</div>${montarComparacaoSessao(sessionKey,regs,health)}</div><div class="session-detail-section"><div class="session-detail-section-title">Origem e vínculo</div><div style="font-size:.72em;color:var(--text-muted)">TreinoApp: ${fmtHealthTime(b.startMs)}–${fmtHealthTime(b.endMs)}${health.startMs?`<br>Relógio: ${fmtHealthTime(health.startMs)}–${fmtHealthTime(health.endMs)}<br>Diferença início: ${Math.round(Math.abs(Number(health.startMs)-b.startMs)/1000)} s · fim: ${Math.round(Math.abs(Number(health.endMs)-b.endMs)/1000)} s`:''}</div></div>`;
+  document.getElementById('detalhesSessaoContent').innerHTML=html;document.getElementById('modalDetalhesSessao').classList.add('open');setTimeout(()=>desenharGraficoFcSessao(samples,Number(health.startMs)||b.startMs),60);
+}
+function compartilharSessaoDetalhada(){if(!_detalheSessaoKey)return;fecharModal('modalDetalhesSessao');abrirCompartilhar(_detalheSessaoKey);}
+function atualizarResumoPosTreinoHealth(sessionId,health){
+  if(window._lastFinishedSessionId!==sessionId)return;const el=document.getElementById('resumoSessaoContent');if(!el||!health?.found)return;
+  const old=el.querySelector('.post-health-summary');if(old)old.remove();const div=document.createElement('div');div.className='post-health-summary health-match ok';div.innerHTML=`<strong>${esc(healthSourceLabel(health.sourceApp))} associado</strong><br>${health.avgHr?Math.round(health.avgHr)+' bpm médio · ':''}${health.maxHr?Math.round(health.maxHr)+' bpm máx. · ':''}${health.kcal?Math.round(health.kcal)+' kcal · ':''}${Math.round((Number(health.confidence)||1)*100)}% de correspondência`;el.appendChild(div);
+}
+function renderHealthPerformance(){
+  const out=document.getElementById('healthPerformanceContent'),canvas=document.getElementById('healthPerformanceChart');if(!out||!canvas)return;
+  const links=getHealthLinks(),now=Date.now(),cut=now-30*86400000,groups=Object.entries(agruparSessoes(getHist())).map(([k,regs])=>({k,regs,ts:getSessionTimestamp(regs),health:links[k]})).filter(x=>x.ts>=cut).sort((a,b)=>a.ts-b.ts),synced=groups.filter(x=>x.health);
+  if(!synced.length){out.innerHTML='<div style="font-size:.78em;color:var(--text-muted)">Sincronize treinos com o Health Connect para liberar métricas fisiológicas e tendências.</div>';canvas.style.display='none';if(_healthPerfChart){_healthPerfChart.destroy();_healthPerfChart=null;}return;}
+  const totalKcal=synced.reduce((a,x)=>a+(Number(x.health.kcal)||0),0),avgHrVals=synced.map(x=>Number(x.health.avgHr)).filter(Boolean),avgHr=avgHrVals.length?avgHrVals.reduce((a,b)=>a+b,0)/avgHrVals.length:0,totalMin=groups.reduce((a,x)=>a+boundsSessao(x.regs).durationSec/60,0),totalVol=groups.reduce((a,x)=>a+volumeSessao(x.regs),0),density=totalMin?totalVol/totalMin:0;
+  out.innerHTML=`<div class="health-perf-grid"><div class="health-perf-stat"><strong>${synced.length}</strong><span>Treinos com relógio / 30d</span></div><div class="health-perf-stat"><strong>${Math.round(totalKcal)}</strong><span>kcal estimadas / 30d</span></div><div class="health-perf-stat"><strong>${avgHr?Math.round(avgHr):'—'} bpm</strong><span>FC média das sessões</span></div><div class="health-perf-stat"><strong>${Math.round(totalMin)} min</strong><span>Tempo total treinado</span></div><div class="health-perf-stat"><strong>${(totalVol/1000).toFixed(1)} t</strong><span>Volume total</span></div><div class="health-perf-stat"><strong>${Math.round(density)} kg/min</strong><span>Densidade média</span></div></div>`;
+  const recent=synced.slice(-12);canvas.style.display='block';if(_healthPerfChart)_healthPerfChart.destroy();
+  _healthPerfChart=new Chart(canvas.getContext('2d'),{type:'line',data:{labels:recent.map(x=>x.regs[0]?.data?.slice(5).split('-').reverse().join('/')||''),datasets:[{label:'FC média',data:recent.map(x=>x.health.avgHr||null),borderColor:'#ef5b8b',backgroundColor:'rgba(239,91,139,.08)',tension:.3,yAxisID:'y'},{label:'kcal',data:recent.map(x=>x.health.kcal||null),borderColor:'#f7c94f',backgroundColor:'rgba(247,201,79,.08)',tension:.3,yAxisID:'y1'}]},options:{responsive:true,animation:false,plugins:{legend:{labels:{boxWidth:10}}},scales:{y:{position:'left',ticks:{callback:v=>v+' bpm'},grid:{color:'rgba(120,130,170,.1)'}},y1:{position:'right',ticks:{callback:v=>v+' kcal'},grid:{display:false}},x:{grid:{display:false}}}}});
+}
+
+
 // ════════════════════════════════════════════════
 // COMPARTILHAR TREINO (Canvas API)
 // ════════════════════════════════════════════════
-function abrirCompartilhar() {
-  const hist = getHist();
-  if(hist.length===0) return toast('Nenhum treino para compartilhar','error');
-
-  const datas = [...new Set(hist.map(r=>r.data))].sort();
-  const ultimaData = datas[datas.length-1];
-  const regs = hist.filter(r=>r.data===ultimaData);
-  const dataBr = ultimaData.split('-').reverse().join('/');
-
-  const canvas = document.getElementById('shareCanvas');
-  const ctx = canvas.getContext('2d');
-  const W=1080, H=1080;
-  canvas.width=W; canvas.height=H;
-
-  const isDark = (window._temaEfetivo||temaAtual)!=='light';
-  const bg = isDark?'#0f1117':'#f0f2fa';
-  const surface = isDark?'#1a1d27':'#ffffff';
-  const border = isDark?'#2e3350':'#d0d5ee';
-  const textColor = isDark?'#e8eaf6':'#1e2340';
-  const muted = isDark?'#7b82a8':'#6b7280';
-  const primary = isDark?'#4f8ef7':'#2563eb';
-  const accent = isDark?'#f7c94f':'#d97706';
-
-  // Background
-  ctx.fillStyle = bg;
-  ctx.fillRect(0,0,W,H);
-
-  // Top accent bar
-  ctx.fillStyle = primary;
-  ctx.fillRect(0,0,W,8);
-
-  // Logo
-  ctx.font = 'bold 52px Barlow Condensed, sans-serif';
-  ctx.fillStyle = primary;
-  ctx.fillText('💪 TREINOAPP', 60, 90);
-
-  // Date
-  ctx.font = '36px Barlow, sans-serif';
-  ctx.fillStyle = muted;
-  ctx.fillText(dataBr, 60, 135);
-
-  // Score
-  const score = calcularScoreTreino(regs, hist);
-  ctx.font = 'bold 36px Barlow Condensed, sans-serif';
-  ctx.fillStyle = score>=80?'#4ff79a':score>=60?accent:primary;
-  ctx.fillText(`Score: ${score}/100`, W-260, 90);
-
-  // Divider
-  ctx.strokeStyle = border;
-  ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(60,160); ctx.lineTo(W-60,160); ctx.stroke();
-
-  // Exercises
-  const exs = {};
-  regs.forEach(r=>{ if(!exs[r.exercicio]) exs[r.exercicio]=[]; exs[r.exercicio].push(r); });
-
-  let y = 220;
-  const maxEx = calcularMaxPorEx(hist);
-
-  Object.entries(exs).slice(0,7).forEach(([ex,series])=>{
-    // Exercise name
-    ctx.font = 'bold 38px Barlow Condensed, sans-serif';
-    ctx.fillStyle = accent;
-    ctx.fillText(ex.length>30?ex.slice(0,28)+'…':ex, 60, y);
-
-    // Series pills
-    let px = 60;
-    series.forEach(s=>{
-      const txt = `${s.carga}kg×${s.reps||'?'}`;
-      const tw = ctx.measureText(txt).width + 30;
-      const isPR = s.carga===maxEx[ex];
-      ctx.fillStyle = isPR?accent:primary;
-      roundRect(ctx, px, y+12, tw, 36, 8);
-      ctx.fillStyle = isDark?'#0f1117':'#fff';
-      ctx.font = 'bold 24px Barlow, sans-serif';
-      ctx.fillText(txt, px+15, y+36);
-      px += tw+10;
-    });
-
-    y += 80;
-    if(y > H-180) return;
-  });
-
-  // Volume total
-  const vol = regs.reduce((a,r)=>a+(volumeRegistro(r)),0);
-  ctx.fillStyle = border;
-  ctx.fillRect(60, H-120, W-120, 1);
-  ctx.font = 'bold 34px Barlow Condensed, sans-serif';
-  ctx.fillStyle = muted;
-  ctx.fillText(`Volume total: ${(vol/1000).toFixed(2)}t · ${regs.length} séries`, 60, H-70);
-
-  // Bottom branding
-  ctx.font = '26px Barlow, sans-serif';
-  ctx.fillStyle = border;
-  ctx.fillText('Registrado no TreinoApp', W-350, H-30);
-
-  // Show preview
-  const img = document.getElementById('sharePreview');
-  img.src = canvas.toDataURL('image/png');
-  document.getElementById('modalCompartilhar').classList.add('open');
+function abrirCompartilhar(sessionKey=null) {
+  const hist=getHist();if(!hist.length)return toast('Nenhum treino para compartilhar','error');
+  const sessions=Object.entries(agruparSessoes(hist)).sort((a,b)=>getSessionTimestamp(b[1])-getSessionTimestamp(a[1]));
+  const preferred=sessionKey||window._lastFinishedSessionId;const found=(preferred?sessions.find(([k])=>k===preferred):null)||sessions[0];
+  if(!found)return toast('Sessão não encontrada','error');
+  const [sid,regs]=found,_shareSessionKey=sid;window._shareSessionKey=_shareSessionKey;
+  const dataBr=(regs[0]?.data||'').split('-').reverse().join('/'),name=regs.find(r=>r.templateNome)?.templateNome||'Treino',health=getHealthLinks()[sid]||{},samples=normalizarAmostrasHealth(health),b=boundsSessao(regs),vol=volumeSessao(regs),prs=contarPrsDaSessao(sid,regs);
+  const canvas=document.getElementById('shareCanvas'),ctx=canvas.getContext('2d'),W=1080,H=1350;canvas.width=W;canvas.height=H;
+  const isDark=(window._temaEfetivo||temaAtual)!=='light',bg=isDark?'#0f1117':'#f0f2fa',surface=isDark?'#1a1d27':'#ffffff',border=isDark?'#2e3350':'#d0d5ee',text=isDark?'#eef0fa':'#1e2340',muted=isDark?'#8b92b5':'#6b7280',primary=isDark?'#4f8ef7':'#2563eb',accent=isDark?'#f7c94f':'#d97706',success='#4fd39a',hrColor='#ef5b8b';
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);ctx.fillStyle=primary;ctx.fillRect(0,0,W,10);
+  ctx.fillStyle=primary;ctx.font='bold 54px sans-serif';ctx.fillText('TREINOAPP',58,82);ctx.fillStyle=text;ctx.font='bold 46px sans-serif';ctx.fillText(name.length>30?name.slice(0,29)+'…':name,58,145);ctx.fillStyle=muted;ctx.font='28px sans-serif';ctx.fillText(`${dataBr} · ${fmtHealthTime(b.startMs)}–${fmtHealthTime(b.endMs)}`,58,186);
+  function statBox(x,y,w,label,value,color=text){ctx.fillStyle=surface;roundRect(ctx,x,y,w,112,18);ctx.strokeStyle=border;ctx.lineWidth=2;ctx.stroke();ctx.fillStyle=color;ctx.font='bold 36px sans-serif';ctx.fillText(String(value),x+20,y+47);ctx.fillStyle=muted;ctx.font='22px sans-serif';ctx.fillText(label,x+20,y+82);}
+  const gap=16,boxW=(W-116-gap*3)/4;statBox(58,220,boxW,'Duração',formatarDuracaoTreino(b.durationSec));statBox(58+boxW+gap,220,boxW,'Séries',regs.length);statBox(58+(boxW+gap)*2,220,boxW,'Volume',(vol/1000).toFixed(2)+' t');statBox(58+(boxW+gap)*3,220,boxW,'PRs',prs,prs?accent:text);
+  let y=360;
+  if(health.recordId||health.sourceApp){ctx.fillStyle=surface;roundRect(ctx,58,y,W-116,214,20);ctx.strokeStyle=success;ctx.lineWidth=2;ctx.stroke();ctx.fillStyle=success;ctx.font='bold 28px sans-serif';ctx.fillText(healthSourceLabel(health.sourceApp),80,y+42);ctx.fillStyle=muted;ctx.font='21px sans-serif';ctx.fillText(`${fmtHealthTime(health.startMs)}–${fmtHealthTime(health.endMs)} · ${Math.round((Number(health.confidence)||1)*100)}% de correspondência`,80,y+72);ctx.fillStyle=text;ctx.font='bold 34px sans-serif';ctx.fillText(`${health.avgHr?Math.round(health.avgHr):'—'} bpm média`,80,y+120);ctx.fillText(`${health.maxHr?Math.round(health.maxHr):'—'} bpm máx.`,330,y+120);ctx.fillText(`${health.kcal?Math.round(health.kcal):'—'} kcal`,590,y+120);
+    if(samples.length>1){const gx=80,gy=y+148,gw=W-160,gh=42,min=Math.min(...samples.map(p=>p.bpm)),max=Math.max(...samples.map(p=>p.bpm)),range=Math.max(1,max-min);ctx.strokeStyle=hrColor;ctx.lineWidth=3;ctx.beginPath();samples.forEach((p,i)=>{const px=gx+(i/(samples.length-1))*gw,py=gy+gh-((p.bpm-min)/range)*gh;i?ctx.lineTo(px,py):ctx.moveTo(px,py)});ctx.stroke();}
+    y+=242;
+  }
+  const exs={};regs.forEach(r=>(exs[r.exercicio]||(exs[r.exercicio]=[])).push(r));const maxEx=calcularMaxPorEx(hist);ctx.fillStyle=text;ctx.font='bold 30px sans-serif';ctx.fillText('Exercícios',58,y);y+=30;
+  Object.entries(exs).slice(0,7).forEach(([ex,series])=>{if(y>H-170)return;ctx.fillStyle=surface;roundRect(ctx,58,y,W-116,92,14);ctx.fillStyle=text;ctx.font='bold 27px sans-serif';ctx.fillText(ex.length>33?ex.slice(0,32)+'…':ex,78,y+35);let px=78;series.sort((a,b)=>(a.numSerie||0)-(b.numSerie||0)).slice(0,6).forEach(r=>{const t=`${r.carga}kg×${r.reps||0}`,tw=Math.max(112,ctx.measureText(t).width+24);ctx.fillStyle=r.carga===maxEx[ex]?accent:primary;roundRect(ctx,px,y+49,tw,30,8);ctx.fillStyle=isDark?'#10131c':'#fff';ctx.font='bold 18px sans-serif';ctx.fillText(t,px+12,y+70);px+=tw+8;});y+=104;});
+  ctx.strokeStyle=border;ctx.beginPath();ctx.moveTo(58,H-74);ctx.lineTo(W-58,H-74);ctx.stroke();ctx.fillStyle=muted;ctx.font='22px sans-serif';ctx.fillText('Dados do treino: TreinoApp · sinais fisiológicos: Health Connect',58,H-36);
+  const img=document.getElementById('sharePreview');img.src=canvas.toDataURL('image/png');document.getElementById('modalCompartilhar').classList.add('open');
 }
+
 
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
@@ -4277,7 +4346,7 @@ function verificarBackupAuto() {
   }
 }
 
-function gerarObjetoBackup(){return {app:'TreinoApp',appVersion:APP_VERSION,build:APP_BUILD,schemaVersion:DATA_SCHEMA_VERSION,exportedAt:new Date().toISOString(),pesoCorporal:localStorage.getItem('pesoCorporal'),historicoTreinoV3:localStorage.getItem('historicoTreinoV3'),exerciciosCustomizadosV3:localStorage.getItem('exerciciosCustomizadosV3'),treinosTemplates:localStorage.getItem('treinosTemplates'),temaPreferido:localStorage.getItem('temaPreferido'),userProfile:localStorage.getItem('userProfile'),treinoMetas:localStorage.getItem('treinoMetas'),conquistasDesbloqueadas:localStorage.getItem('conquistasDesbloqueadas'),perfilPublico:localStorage.getItem('perfilPublico'),treinoScores:localStorage.getItem('treinoScores'),timerSom:localStorage.getItem('timerSom'),backupConfig:localStorage.getItem('backupConfig'),descansoPadrao:localStorage.getItem('descansoPadrao'),wakeLockEnabled:localStorage.getItem('wakeLockEnabled'),academiaModeEnabled:localStorage.getItem('academiaModeEnabled'),plateBarWeight:localStorage.getItem('plateBarWeight'),platePreset:localStorage.getItem('platePreset')};}
+function gerarObjetoBackup(){return {app:'TreinoApp',appVersion:APP_VERSION,build:APP_BUILD,schemaVersion:DATA_SCHEMA_VERSION,exportedAt:new Date().toISOString(),pesoCorporal:localStorage.getItem('pesoCorporal'),historicoTreinoV3:localStorage.getItem('historicoTreinoV3'),exerciciosCustomizadosV3:localStorage.getItem('exerciciosCustomizadosV3'),treinosTemplates:localStorage.getItem('treinosTemplates'),temaPreferido:localStorage.getItem('temaPreferido'),userProfile:localStorage.getItem('userProfile'),treinoMetas:localStorage.getItem('treinoMetas'),conquistasDesbloqueadas:localStorage.getItem('conquistasDesbloqueadas'),perfilPublico:localStorage.getItem('perfilPublico'),treinoScores:localStorage.getItem('treinoScores'),timerSom:localStorage.getItem('timerSom'),backupConfig:localStorage.getItem('backupConfig'),descansoPadrao:localStorage.getItem('descansoPadrao'),wakeLockEnabled:localStorage.getItem('wakeLockEnabled'),academiaModeEnabled:localStorage.getItem('academiaModeEnabled'),plateBarWeight:localStorage.getItem('plateBarWeight'),platePreset:localStorage.getItem('platePreset'),healthLinksV12:localStorage.getItem('healthLinksV12'),healthHrMax:localStorage.getItem('healthHrMax'),healthAutoSync:localStorage.getItem('healthAutoSync'),healthWriteEnabled:localStorage.getItem('healthWriteEnabled')};}
 async function compartilharBackup(){
   const dados=gerarObjetoBackup(),conteudo=JSON.stringify(dados),nome=`treinoapp_backup_v${APP_VERSION}_${hoje()}.json`;
   if(isNativeAndroid()&&window.TreinoNativeBridge?.shareTextFile){
@@ -4715,6 +4784,34 @@ function gerarHTMLRelatorio() {
     volSemHtml = '<table style="width:100%;border-collapse:collapse;font-size:.82em;"><tr>'+semanas.map(s=>'<th style="text-align:center;color:#7b82a8;font-weight:400;padding:4px;">'+s.label+'</th>').join('')+'</tr><tr>'+semanas.map(s=>'<td style="text-align:center;font-weight:700;color:#4f8ef7;padding:4px;">'+(s.vol>0?(s.vol/1000).toFixed(1)+'t':'-')+'</td>').join('')+'</tr><tr>'+semanas.map(s=>'<td style="text-align:center;font-size:.85em;color:'+(s.dias>=3?'#4ff79a':s.dias>=1?'#7b82a8':'#2e3350')+';padding:4px;">'+s.dias+'d</td>').join('')+'</tr></table>';
   }
 
+  // Health Connect / Galaxy Watch — resumo fisiológico no relatório
+  const healthLinksRel = getHealthLinks();
+  const sessoesAgrupadasRel = Object.entries(agruparSessoes(hist))
+    .map(([sessionId,regs])=>({sessionId,regs,ts:getSessionTimestamp(regs),health:healthLinksRel[sessionId]}))
+    .sort((a,b)=>b.ts-a.ts);
+  const sessoesHealthRel = sessoesAgrupadasRel.filter(x=>x.health && (x.health.recordId||x.health.sourceApp||x.health.writtenByTreinoApp));
+  const corte30Rel = Date.now()-30*86400000;
+  const health30Rel = sessoesHealthRel.filter(x=>x.ts>=corte30Rel);
+  const kcal30Rel = health30Rel.reduce((a,x)=>a+(Number(x.health.kcal)||0),0);
+  const hrs30Rel = health30Rel.map(x=>Number(x.health.avgHr)).filter(v=>v>0);
+  const hrMedia30Rel = hrs30Rel.length?hrs30Rel.reduce((a,b)=>a+b,0)/hrs30Rel.length:0;
+  const min30Rel = health30Rel.reduce((a,x)=>a+((Number(x.health.durationSec)||boundsSessao(x.regs).durationSec||0)/60),0);
+  let healthRelHtml='';
+  if(sessoesHealthRel.length){
+    const rows=sessoesHealthRel.slice(0,15).map(x=>{
+      const h=x.health||{},b=boundsSessao(x.regs),data=(x.regs[0]?.data||'').split('-').reverse().join('/'),nome=x.regs.find(r=>r.templateNome)?.templateNome||'Treino';
+      return '<tr><td><strong>'+esc(nome)+'</strong><div style="font-size:.75em;color:#7b82a8;">'+data+' · '+esc(healthSourceLabel(h.sourceApp))+'</div></td><td style="text-align:center;">'+(h.avgHr?Math.round(h.avgHr)+' bpm':'—')+'</td><td style="text-align:center;">'+(h.maxHr?Math.round(h.maxHr)+' bpm':'—')+'</td><td style="text-align:center;">'+(h.kcal?Math.round(h.kcal)+' kcal':'—')+'</td><td style="text-align:right;">'+formatarDuracaoTreino(Number(h.durationSec)||b.durationSec)+'</td></tr>';
+    }).join('');
+    healthRelHtml='<div class="card" style="border-color:#315f50;"><div class="card-title">Galaxy Watch / Health Connect</div>'
+      +'<p style="font-size:.75em;color:#7b82a8;margin-bottom:12px;line-height:1.5;">Sinais fisiológicos importados do Health Connect. Calorias de wearables são estimativas e a frequência cardíaca deve ser interpretada no contexto da sessão.</p>'
+      +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;text-align:center;">'
+      +'<div style="background:#12151e;border-radius:8px;padding:10px;"><div style="font-size:1.35em;font-weight:800;color:#4ff79a;">'+health30Rel.length+'</div><div style="font-size:.62em;color:#7b82a8;">SESSÕES / 30D</div></div>'
+      +'<div style="background:#12151e;border-radius:8px;padding:10px;"><div style="font-size:1.35em;font-weight:800;color:#ef5b8b;">'+(hrMedia30Rel?Math.round(hrMedia30Rel)+' bpm':'—')+'</div><div style="font-size:.62em;color:#7b82a8;">FC MÉDIA</div></div>'
+      +'<div style="background:#12151e;border-radius:8px;padding:10px;"><div style="font-size:1.35em;font-weight:800;color:#f7c94f;">'+Math.round(kcal30Rel)+'</div><div style="font-size:.62em;color:#7b82a8;">KCAL / 30D</div></div>'
+      +'</div><div style="font-size:.72em;color:#7b82a8;margin-bottom:8px;">Tempo monitorado nos últimos 30 dias: '+Math.round(min30Rel)+' min</div>'
+      +'<div style="overflow-x:auto;"><table><tr><th>Treino</th><th style="text-align:center;">FC média</th><th style="text-align:center;">FC máx.</th><th style="text-align:center;">kcal</th><th style="text-align:right;">Duração</th></tr>'+rows+'</table></div></div>';
+  }
+
   // Últimas 10 sessões
   const ultimasDatas = diasTreino.slice(-10).reverse();
   let sessoesHtml = '';
@@ -4759,6 +4856,7 @@ function gerarHTMLRelatorio() {
     + '</div></div>'
     + (pesoHtml ? '<div class="card"><div class="card-title">\u2696\ufe0f Peso Corporal</div>'+pesoHtml+'</div>' : '')
     + (volSemHtml ? '<div class="card"><div class="card-title">\ud83d\udcca Volume Semanal (8 semanas)</div>'+volSemHtml+'</div>' : '')
+    + healthRelHtml
     + (evolRows ? '<div class="card"><div class="card-title">\ud83d\udcc8 Evolu\u00e7\u00e3o de Carga</div><div style="overflow-x:auto;"><table><tr><th>Exerc\u00edcio</th><th style="text-align:center;">1\u00aa</th><th style="text-align:center;">Atual</th><th style="text-align:center;">\u0394</th><th>Sess\u00f5es</th></tr>'+evolRows+'</table></div></div>' : '')
     + '<div class="card"><div class="card-title">\ud83c\udfc6 Recordes Pessoais ('+Object.keys(maxEx).length+')</div><table><tr><th>Exerc\u00edcio</th><th style="text-align:right;">Carga</th><th style="text-align:right;">Data</th></tr>'+prsRows+'</table></div>'
     + (plateauHtml ? '<div class="card" style="border-color:#4a2a0a;"><div class="card-title" style="color:#f7874f;">\ud83d\udcc9 Exerc\u00edcios em Plateau</div><p style="font-size:.75em;color:#7b82a8;margin-bottom:8px;">Sem progress\u00e3o nas \u00faltimas 3 sess\u00f5es</p>'+plateauHtml+'</div>' : '')
@@ -5004,7 +5102,7 @@ function salvarSnapshotDiario(){const d=hoje();if(localStorage.getItem('_lastSna
 async function listarSnapshotsSeguro(){try{const db=await openSafeDB();const arr=await new Promise((res,rej)=>{const r=db.transaction('snapshots').objectStore('snapshots').getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error);});db.close();return arr.sort((a,b)=>b.createdAt-a.createdAt);}catch(e){return[];}}
 async function excluirSnapshotSeguro(id){try{const db=await openSafeDB();await new Promise((res,rej)=>{const tx=db.transaction('snapshots','readwrite');tx.objectStore('snapshots').delete(id);tx.oncomplete=res;tx.onerror=()=>rej(tx.error);});db.close();}catch(e){}}
 async function abrirSnapshots(){const el=document.getElementById('snapshotList');document.getElementById('modalSnapshots').classList.add('open');if(!el)return;el.innerHTML='<div style="color:var(--text-muted);font-size:.82em;">Carregando...</div>';const arr=await listarSnapshotsSeguro();if(!arr.length){el.innerHTML='<div class="empty-state" style="padding:20px 0;"><p>Nenhum snapshot interno ainda.</p></div>';return;}el.innerHTML=arr.map(x=>`<div class="snapshot-item"><div><strong>${new Date(x.createdAt).toLocaleString('pt-BR')}</strong><div class="snapshot-meta">${esc(x.motivo||'snapshot')} · v${esc(x.version||'?')}</div></div><div style="display:flex;gap:5px;"><button class="btn btn-outline btn-sm" style="width:auto;" onclick="restaurarSnapshotSeguro('${x.id}')">Restaurar</button><button class="btn btn-danger btn-sm btn-icon" onclick="excluirSnapshotSeguro('${x.id}').then(abrirSnapshots)">×</button></div></div>`).join('');}
-async function restaurarSnapshotSeguro(id){const arr=await listarSnapshotsSeguro(),snap=arr.find(x=>x.id===id);if(!snap)return toast('Snapshot não encontrado','error');if(!confirm('Restaurar este snapshot? Os dados atuais serão substituídos.'))return;await salvarSnapshotSeguro('antes_restauracao');const d=snap.data||{},keys=['pesoCorporal','historicoTreinoV3','exerciciosCustomizadosV3','treinosTemplates','temaPreferido','userProfile','treinoMetas','conquistasDesbloqueadas','perfilPublico','treinoScores','timerSom','backupConfig','descansoPadrao','wakeLockEnabled','academiaModeEnabled','plateBarWeight','platePreset'];keys.forEach(k=>{if(d[k]!==undefined&&d[k]!==null)localStorage.setItem(k,String(d[k]));});invalidarCache();toast('Snapshot restaurado. Recarregando...','success');setTimeout(()=>location.reload(),900);}
+async function restaurarSnapshotSeguro(id){const arr=await listarSnapshotsSeguro(),snap=arr.find(x=>x.id===id);if(!snap)return toast('Snapshot não encontrado','error');if(!confirm('Restaurar este snapshot? Os dados atuais serão substituídos.'))return;await salvarSnapshotSeguro('antes_restauracao');const d=snap.data||{},keys=['pesoCorporal','historicoTreinoV3','exerciciosCustomizadosV3','treinosTemplates','temaPreferido','userProfile','treinoMetas','conquistasDesbloqueadas','perfilPublico','treinoScores','timerSom','backupConfig','descansoPadrao','wakeLockEnabled','academiaModeEnabled','plateBarWeight','platePreset','healthLinksV12','healthHrMax','healthAutoSync','healthWriteEnabled'];keys.forEach(k=>{if(d[k]!==undefined&&d[k]!==null)localStorage.setItem(k,String(d[k]));});invalidarCache();toast('Snapshot restaurado. Recarregando...','success');setTimeout(()=>location.reload(),900);}
 
 // ════════════════════════════════════════════════
 // V11 — BUILD/DEPLOY E REPARO DO APP
@@ -5035,16 +5133,25 @@ async function iniciarServicoNativoTreino(payload){
   }catch(e){console.warn('Serviço nativo indisponível; o treino continua no app',e);toast('O treino continua, mas a notificação em segundo plano não pôde ser iniciada','warn');}
 }
 function getHealthLinks(){return parseJSONSeguro(localStorage.getItem('healthLinksV12')||'{}',{},'healthLinksV12');}
-function setHealthLink(sessionId,data){
-  const m=getHealthLinks();m[sessionId]={...data,linkedAt:Date.now()};localStorage.setItem('healthLinksV12',JSON.stringify(m));removerHealthPendente(sessionId);renderHealthLastMatch();
-  if(isNativeAndroid())window.TreinoNativeBridge.saveHealthLink({sessionId,state:'linked',...data,confidence:Number(data?.confidence)||1}).catch(()=>{});
+function normalizarHealthLinkData(data){
+  const out={...(data||{})};
+  if(!Array.isArray(out.heartRateSamples)&&out.heartRateSamplesJson){try{out.heartRateSamples=JSON.parse(out.heartRateSamplesJson)||[]}catch(_){out.heartRateSamples=[]}}
+  if(Array.isArray(out.heartRateSamples)){out.heartRateSamples=out.heartRateSamples.map(x=>({timeMs:Number(x.timeMs)||0,bpm:Number(x.bpm)||0})).filter(x=>x.timeMs>0&&x.bpm>0);out.heartRateSampleCount=Number(out.heartRateSampleCount)||out.heartRateSamples.length;}
+  delete out.heartRateSamplesJson;return out;
+}
+function setHealthLink(sessionId,data,persistNative=true){
+  const normalized=normalizarHealthLinkData(data),m=getHealthLinks();m[sessionId]={...m[sessionId],...normalized,linkedAt:Number(normalized.linkedAt)||Date.now()};localStorage.setItem('healthLinksV12',JSON.stringify(m));removerHealthPendente(sessionId);renderHealthLastMatch();renderizarHistorico();renderHealthPerformance();
+  if(window._detalheSessaoKey===sessionId&&document.getElementById('modalDetalhesSessao')?.classList.contains('open'))setTimeout(()=>abrirDetalhesTreino(sessionId),30);
+  atualizarResumoPosTreinoHealth(sessionId,{found:true,...m[sessionId]});
+  if(persistNative&&isNativeAndroid())window.TreinoNativeBridge.saveHealthLink({sessionId,state:'linked',...m[sessionId],confidence:Number(m[sessionId]?.confidence)||1}).catch(()=>{});
 }
 function getHealthPending(){return parseJSONSeguro(localStorage.getItem('healthPendingV12')||'{}',{},'healthPendingV12');}
 function setHealthPendente(summary){const p=getHealthPending();p[summary.sessionId]={...summary,pendingSince:p[summary.sessionId]?.pendingSince||Date.now(),lastCheckAt:Date.now()};localStorage.setItem('healthPendingV12',JSON.stringify(p));renderHealthLastMatch();}
 function removerHealthPendente(sessionId){const p=getHealthPending();if(p[sessionId]){delete p[sessionId];localStorage.setItem('healthPendingV12',JSON.stringify(p));}}
 function getHealthAuto(){return localStorage.getItem('healthAutoSync')!=='0';}
 function getHealthWrite(){return localStorage.getItem('healthWriteEnabled')!=='0';}
-function salvarHealthConfig(){const a=document.getElementById('selHealthAuto'),w=document.getElementById('selHealthWrite');if(a)localStorage.setItem('healthAutoSync',a.value);if(w)w.value!==undefined&&localStorage.setItem('healthWriteEnabled',w.value);}
+function getHealthHrMax(){const n=Number(localStorage.getItem('healthHrMax'));return n>=100&&n<=240?n:0;}
+function salvarHealthConfig(){const a=document.getElementById('selHealthAuto'),w=document.getElementById('selHealthWrite'),hr=document.getElementById('healthHrMax');if(a)localStorage.setItem('healthAutoSync',a.value);if(w)w.value!==undefined&&localStorage.setItem('healthWriteEnabled',w.value);if(hr){const n=Number(hr.value);if(!hr.value)localStorage.removeItem('healthHrMax');else if(n>=100&&n<=240)localStorage.setItem('healthHrMax',String(Math.round(n)));else toast('Informe uma FC máxima entre 100 e 240 bpm','warn');}renderHealthPerformance();}
 function fmtHealthTime(ms){if(!ms)return '—';try{return new Date(Number(ms)).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});}catch(_){return '—';}}
 function fmtHealthDateTime(ms){if(!ms)return '—';try{return new Date(Number(ms)).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});}catch(_){return '—';}}
 function healthSourceLabel(x){const s=String(x||'');if(s.includes('shealth'))return 'Samsung Health';if(s.includes('treinoapp'))return 'TreinoApp';return s||'Health Connect';}
@@ -5064,7 +5171,7 @@ async function inicializarNativeUI(){
   window.TreinoNativeBridge.onWorkoutFinished=nativeWorkoutFinishedImpl;
   const card=document.getElementById('nativeIntegrationCard');if(card)card.style.display='block';
   const installCard=document.querySelector('#btnInstallPWA')?.closest('.card');if(installCard)installCard.style.display='none';
-  const a=document.getElementById('selHealthAuto'),w=document.getElementById('selHealthWrite');if(a)a.value=getHealthAuto()?'1':'0';if(w)w.value=getHealthWrite()?'1':'0';
+  const a=document.getElementById('selHealthAuto'),w=document.getElementById('selHealthWrite'),hr=document.getElementById('healthHrMax');if(a)a.value=getHealthAuto()?'1':'0';if(w)w.value=getHealthWrite()?'1':'0';if(hr)hr.value=getHealthHrMax()||'';
   try{const info=await window.TreinoNativeBridge.getNativeInfo();_nativeChannel=info.channel||'stable';const badge=document.getElementById('nativeChannelBadge'),txt=document.getElementById('nativeStatusText');if(badge)badge.textContent=String(_nativeChannel).toUpperCase();if(txt)txt.innerHTML=`<strong>Android ${esc(info.versionName||APP_VERSION)}</strong> · código ${info.versionCode||'?'} · ${esc(_nativeChannel)}<br>Pacote: ${esc(info.packageName||'')}<br>Commit: ${esc(String(info.commit||'local').slice(0,10))} · build: ${esc(info.buildTime||'local')}<br>Notificação persistente, timer nativo, widget, Health Connect e banco Android disponíveis.`;}catch(e){}
   await importarResultadosHealthNativos();await atualizarHealthStatus();renderHealthLastMatch();await atualizarStorageStatus();atualizarDiagnosticoUI();
   if(localStorage.getItem('_nativeDbSyncedSchema')!==String(DATA_SCHEMA_VERSION))setTimeout(()=>sincronizarBancoNativo(false),1000);
@@ -5082,7 +5189,7 @@ function renderHealthLastMatch(){
   if(pendingEntries.length){const [sid,p]=pendingEntries[0];html+=`<div class="health-match pending"><strong>${pendingEntries.length} sessão(ões) aguardando sincronização</strong><br>${esc(p.name||'Treino')} · ${fmtHealthTime(p.startMs)}–${fmtHealthTime(p.endMs)}<br><span style="color:var(--text-muted)">Última tentativa: ${fmtHealthDateTime(p.lastCheckAt)}</span><div class="row" style="margin-top:8px;gap:6px;"><button class="btn btn-outline btn-sm" style="flex:1" onclick="diagnosticarHealthConnect()">Ver sessões do Health</button>${getHealthWrite()?`<button class="btn btn-ghost btn-sm" style="flex:1" onclick="gravarSessaoPendenteNoHealth('${sid.replace(/'/g,'')}')">Gravar pelo TreinoApp</button>`:''}</div></div>`;}
   el.innerHTML=html;
 }
-async function importarResultadosHealthNativos(){if(!isNativeAndroid())return;try{const r=await window.TreinoNativeBridge.getHealthSyncResults();for(const x of (r?.results||[])){if(x?.sessionId&&!getHealthLinks()[x.sessionId]&&x.state==='linked')setHealthLink(x.sessionId,{...x,confidence:Number(x.confidence)||1,linkedAt:Number(x.linkedAt)||Date.now()});}}catch(e){console.warn('Resultados Health nativos indisponíveis',e);}}
+async function importarResultadosHealthNativos(){if(!isNativeAndroid())return;try{const r=await window.TreinoNativeBridge.getHealthSyncResults();for(const x of (r?.results||[])){if(x?.sessionId&&x.state==='linked')setHealthLink(x.sessionId,{...x,confidence:Number(x.confidence)||1,linkedAt:Number(x.linkedAt)||Date.now()},false);}}catch(e){console.warn('Resultados Health nativos indisponíveis',e);}}
 async function processarHealthParaSessao(summary,manual=false){
   if(!isNativeAndroid()||!getHealthAuto())return null;
   try{
@@ -5146,7 +5253,8 @@ function copiarDiagnosticoHealth(){
 async function associarHealthDiagnostico(i){
   const x=_healthDiagRecords[i],sid=x?.targetSid;if(!x||!sid)return toast('Nenhuma sessão pendente selecionada','warn');
   if(!confirm(`Associar ${healthSourceLabel(x.sourceApp)} · ${x.title||'Exercício'} (${fmtHealthTime(x.startMs)}–${fmtHealthTime(x.endMs)}) ao treino pendente?`))return;
-  setHealthLink(sid,{...x,confidence:Number(x.confidence)||.5});
+  let detail={};try{detail=await window.TreinoNativeBridge.getHealthExerciseDetail({recordId:x.recordId,startMs:x.startMs,endMs:x.endMs})||{};}catch(e){console.warn('Detalhes Health',e)}
+  setHealthLink(sid,{...x,...detail,confidence:Number(x.confidence)||Number(detail.confidence)||.5});
   document.getElementById('healthDiagnosticPanel').innerHTML='';toast('Sessão associada manualmente','success');
 }
 async function gravarSessaoPendenteNoHealth(sessionId){
@@ -5158,12 +5266,12 @@ async function gravarSessaoPendenteNoHealth(sessionId){
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&isNativeAndroid()&&getHealthAuto())setTimeout(()=>{importarResultadosHealthNativos();reconciliarHealthPendentes(false);},700);});
 window.addEventListener('focus',()=>{if(isNativeAndroid()&&getHealthAuto())setTimeout(()=>reconciliarHealthPendentes(false),600);});
 async function sincronizarPesoHealth(){if(!isNativeAndroid())return toast('Disponível no APK Android','info');try{const peso=getPeso(),entries=Object.entries(peso).sort((a,b)=>b[0].localeCompare(a[0]));const r=await window.TreinoNativeBridge.syncWeight({localWeights:entries.slice(0,50).map(([date,kg])=>({date,kg:Number(kg)}))});if(r?.latestKg&&r?.latestDate){const p=getPeso();p[r.latestDate]=Number(r.latestKg);localStorage.setItem('pesoCorporal',JSON.stringify(p));invalidarCache();}toast(`Peso sincronizado${r?.latestKg?' · '+r.latestKg+' kg':''}`,'success');}catch(e){toast('Falha ao sincronizar peso','warn');}}
-async function sincronizarBancoNativo(showToast=true){if(!isNativeAndroid())return;try{const hist=getHist(),chunk=250;if(!hist.length){localStorage.setItem('_nativeDbSyncedSchema',String(DATA_SCHEMA_VERSION));return;}for(let i=0;i<hist.length;i+=chunk)await window.TreinoNativeBridge.syncNativeDatabase({records:hist.slice(i,i+chunk),replace:i===0});localStorage.setItem('_nativeDbSyncedSchema',String(DATA_SCHEMA_VERSION));if(showToast)toast('Banco Android sincronizado','success');}catch(e){if(showToast)toast('Não foi possível sincronizar o banco Android','warn');}}
+async function sincronizarBancoNativo(showToast=true){if(!isNativeAndroid())return;try{const hist=getHist(),chunk=250;if(!hist.length){localStorage.setItem('_nativeDbSyncedSchema',String(DATA_SCHEMA_VERSION));return;}for(let i=0;i<hist.length;i+=chunk)await window.TreinoNativeBridge.syncNativeDatabase({records:hist.slice(i,i+chunk),replace:i===0});const sessions=Object.entries(agruparSessoes(hist)).sort((a,b)=>getSessionTimestamp(b[1])-getSessionTimestamp(a[1])).slice(0,30);for(const [sid,regs] of sessions){const b=boundsSessao(regs);if(!b.startMs||!b.endMs||b.endMs<=b.startMs)continue;await window.TreinoNativeBridge.saveWorkoutMirror({sessionId:sid,templateId:regs.find(r=>r.templateId)?.templateId||null,name:regs.find(r=>r.templateNome)?.templateNome||'Treino',startMs:b.startMs,endMs:b.endMs,durationSec:b.durationSec,completedSets:regs.length,totalSets:regs.length,sets:regs.map(r=>({id:r.id||gerarId('native'),exercise:r.exercicio||'',setNumber:Number(r.numSerie)||0,weight:Number(r.carga)||0,reps:Number(r.reps)||0,setType:r.setType||'workset',completedAt:Number(r.completedAt)||b.endMs}))});}localStorage.setItem('_nativeDbSyncedSchema',String(DATA_SCHEMA_VERSION));if(showToast)toast('Banco Android e horários das sessões sincronizados','success');}catch(e){if(showToast)toast('Não foi possível sincronizar o banco Android','warn');}}
 function resumoNativoAtual(){if(!treinoAtivoTemplate)return null;const rows=[...document.querySelectorAll('#exerciciosAtivos .serie-row')].filter(r=>!r.closest('.exercicio-card')?.classList.contains('skipped')),done=rows.filter(r=>r.querySelector('.serie-check')?.classList.contains('checked')),active=getExerciseCards().find(c=>c.classList.contains('focus-active'))||getExerciseCards().find(c=>!c.classList.contains('skipped'));const nr=active?[...active.querySelectorAll('.serie-row')].findIndex(r=>!r.querySelector('.serie-check')?.classList.contains('checked'))+1:0;return{sessionId:window._treinoSessionId,name:treinoAtivoTemplate.nome||'Treino',startedAt:window._treinoStartedAt,totalSets:rows.length,completedSets:done.length,currentExercise:active?.dataset.ex||'',currentSet:Math.max(1,nr),paused:!!window._treinoPaused};}
 let _nativeUpdateTimer=null;function agendarUpdateNativo(){if(!isNativeAndroid())return;clearTimeout(_nativeUpdateTimer);_nativeUpdateTimer=setTimeout(()=>{const s=resumoNativoAtual();if(s)window.TreinoNativeBridge.updateWorkout(s).catch(()=>{});atualizarWidgetNativo();},120);}
 async function atualizarWidgetNativo(){if(!isNativeAndroid())return;try{const hist=getHist(),streak=calcularStreakAtual(hist),d=gerarDesafio(hist),next=treinoAtivoTemplate?.nome||getTreinosSalvos()[0]?.nome||'Treino';await window.TreinoNativeBridge.updateWidgetState({nextWorkout:next,weeklyDone:d.tipo==='frequencia'?d.prog:new Set(hist.filter(r=>{const x=new Date();x.setDate(x.getDate()-6);return r.data>=localDate(x)}).map(r=>r.data)).size,weeklyTarget:d.tipo==='frequencia'?d.alvo:4,streak,active:resumoNativoAtual()});}catch(e){}}
 async function reconciliarEstadoNativo(){if(!isNativeAndroid())return;try{const st=await window.TreinoNativeBridge.getWorkoutState();if(treinoAtivoTemplate&&typeof st?.paused==='boolean'&&st.paused!==!!window._treinoPaused){if(st.paused){window._treinoPaused=true;window._treinoPauseStartedAt=window._treinoPauseStartedAt||Date.now();}else{if(window._treinoPaused&&window._treinoPauseStartedAt)window._treinoTotalPausedMs=(Number(window._treinoTotalPausedMs)||0)+Math.max(0,Date.now()-Number(window._treinoPauseStartedAt));window._treinoPaused=false;window._treinoPauseStartedAt=null;}atualizarEstadoPausaUI();salvarRascunho();}if(st?.restEndAt&&Number(st.restEndAt)>Date.now()){_timerEndTime=Number(st.restEndAt);_timerFired=false;const restante=Math.max(0,Math.ceil((_timerEndTime-Date.now())/1000));timerRestante=restante;atualizarTimerUI(restante);}else if(st?.restEndAt&&Number(st.restEndAt)<=Date.now()&&timerRestante>0){_v12OriginalStopTimer.call(window);}}catch(e){}}
-async function nativeWorkoutFinishedImpl(summary){try{await window.TreinoNativeBridge.finishWorkout(summary);await window.TreinoNativeBridge.saveWorkoutMirror(summary);setHealthPendente(summary);await processarHealthParaSessao(summary,false,false);await atualizarWidgetNativo();}catch(e){console.warn('Finalização nativa',e);}}
+async function nativeWorkoutFinishedImpl(summary){try{await window.TreinoNativeBridge.finishWorkout(summary);await window.TreinoNativeBridge.saveWorkoutMirror(summary);setHealthPendente(summary);const match=await processarHealthParaSessao(summary,false,false);if(match?.found&&Number(match.confidence)>=.78)atualizarResumoPosTreinoHealth(summary.sessionId,match);await atualizarWidgetNativo();renderHealthPerformance();}catch(e){console.warn('Finalização nativa',e);}}
 const _v12OriginalProgress=atualizarProgressoTreino;atualizarProgressoTreino=function(){const r=_v12OriginalProgress.apply(this,arguments);agendarUpdateNativo();return r;};
 const _v12OriginalTimer=iniciarTimer;iniciarTimer=function(seg){const r=_v12OriginalTimer.apply(this,arguments);if(isNativeAndroid()){const active=getExerciseCards().find(c=>c.classList.contains('focus-active'));const lastDone=[...(active?.querySelectorAll('.serie-row.done')||[])].at(-1);window.TreinoNativeBridge.startRest({seconds:Number(seg),exercise:active?.dataset.ex||'',setNumber:Number(lastDone?.querySelector('.ativo-carga')?.dataset.serie)||0}).catch(()=>{});}return r;};
 const _v12OriginalStopTimer=pararTimer;pararTimer=function(){const r=_v12OriginalStopTimer.apply(this,arguments);if(isNativeAndroid())window.TreinoNativeBridge.skipRest().catch(()=>{});return r;};

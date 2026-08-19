@@ -33,6 +33,7 @@ window.TreinoNativeBridge = {
   requestHealthPermissions: () => call('requestHealthPermissions'),
   getHealthSyncResults: () => call('getHealthSyncResults'),
   listHealthExercises: data => call('listHealthExercises', data || {}),
+  getHealthExerciseDetail: data => call('getHealthExerciseDetail', data || {}),
   probeHealthConnect: () => call('probeHealthConnect'),
   saveHealthLink: data => call('saveHealthLink', data || {}),
   findHealthMatch: data => call('findHealthMatch', data),

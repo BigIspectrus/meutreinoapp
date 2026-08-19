@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit
 /**
  * Procura automaticamente uma sessão do Samsung Health/Galaxy Watch que coincida
  * com uma sessão finalizada no TreinoApp. Só associa sem intervenção quando a
- * confiança é >= 85%. Casos ambíguos continuam pendentes para confirmação no app.
+ * confiança é >= 78%. Casos ambíguos continuam pendentes para confirmação no app.
  */
 class HealthSyncWorker(
     appContext: Context,
@@ -43,7 +43,14 @@ class HealthSyncWorker(
                     confidence = match.confidence,
                     avgHr = match.avgHr,
                     maxHr = match.maxHr,
+                    minHr = match.minHr,
                     kcal = match.kcal,
+                    healthStartMs = match.startMs,
+                    healthEndMs = match.endMs,
+                    healthTitle = match.title,
+                    healthExerciseType = match.exerciseType,
+                    heartRateSampleCount = match.heartRateSampleCount,
+                    heartRateSamplesJson = match.heartRateSamples.joinToString(prefix = "[", postfix = "]") { point -> "{\"timeMs\":${point.timeMs},\"bpm\":${point.bpm}}" },
                 )
             }
         }

@@ -57,6 +57,8 @@ class HealthConnectRepository(private val context: Context) {
 
     suspend fun hasRequiredPermissions(): Boolean = grantedPermissions().containsAll(requiredPermissions)
 
+    data class HeartRatePoint(val timeMs: Long, val bpm: Long)
+
     data class Match(
         val found: Boolean,
         val confidence: Double = 0.0,
@@ -69,7 +71,10 @@ class HealthConnectRepository(private val context: Context) {
         val durationMin: Long? = null,
         val avgHr: Double? = null,
         val maxHr: Double? = null,
+        val minHr: Double? = null,
         val kcal: Double? = null,
+        val heartRateSampleCount: Int = 0,
+        val heartRateSamples: List<HeartRatePoint> = emptyList(),
         val candidateCount: Int = 0,
         val overlapRatio: Double = 0.0,
         val startDiffMin: Double? = null,
@@ -90,9 +95,18 @@ class HealthConnectRepository(private val context: Context) {
         val endDiffMin: Double?,
         val avgHr: Double?,
         val maxHr: Double?,
+        val minHr: Double?,
         val kcal: Double?,
     )
 
+    private data class DetailedMetrics(
+        val avgHr: Double?,
+        val maxHr: Double?,
+        val minHr: Double?,
+        val kcal: Double?,
+        val heartRateSampleCount: Int,
+        val heartRateSamples: List<HeartRatePoint>,
+    )
 
     data class HealthProbe(
         val available: Boolean,
@@ -217,7 +231,7 @@ class HealthConnectRepository(private val context: Context) {
         val ranked = candidates.map { rankRecord(it, startMs, endMs) }.sortedByDescending { it.confidence }
         val best = ranked.first()
         val r = best.record
-        val metrics = aggregateMetrics(client(), r.startTime, r.endTime, r.metadata.dataOrigin)
+        val metrics = readDetailedMetrics(client(), r.startTime, r.endTime, r.metadata.dataOrigin)
 
         // "found" agora significa que existe uma sessão candidata real. A decisão
         // de associar automaticamente continua sendo feita por limiar de confiança.
@@ -231,9 +245,12 @@ class HealthConnectRepository(private val context: Context) {
             startMs = r.startTime.toEpochMilli(),
             endMs = r.endTime.toEpochMilli(),
             durationMin = max(1L, (r.endTime.toEpochMilli() - r.startTime.toEpochMilli()) / 60_000L),
-            avgHr = metrics.first,
-            maxHr = metrics.second,
-            kcal = metrics.third,
+            avgHr = metrics.avgHr,
+            maxHr = metrics.maxHr,
+            minHr = metrics.minHr,
+            kcal = metrics.kcal,
+            heartRateSampleCount = metrics.heartRateSampleCount,
+            heartRateSamples = metrics.heartRateSamples,
             candidateCount = candidates.size,
             overlapRatio = best.overlapRatio,
             startDiffMin = best.startDiffMin,
@@ -251,7 +268,7 @@ class HealthConnectRepository(private val context: Context) {
             val ranked = if (targetStartMs != null && targetEndMs != null && targetEndMs > targetStartMs) {
                 rankRecord(r, targetStartMs, targetEndMs)
             } else null
-            val metrics = aggregateMetrics(client(), r.startTime, r.endTime, r.metadata.dataOrigin)
+            val metrics = readDetailedMetrics(client(), r.startTime, r.endTime, r.metadata.dataOrigin, includeSamples = false)
             out += ExerciseCandidate(
                 recordId = r.metadata.id,
                 sourceApp = sourceLabel(r.metadata.dataOrigin.packageName),
@@ -264,12 +281,42 @@ class HealthConnectRepository(private val context: Context) {
                 overlapRatio = ranked?.overlapRatio,
                 startDiffMin = ranked?.startDiffMin,
                 endDiffMin = ranked?.endDiffMin,
-                avgHr = metrics.first,
-                maxHr = metrics.second,
-                kcal = metrics.third,
+                avgHr = metrics.avgHr,
+                maxHr = metrics.maxHr,
+                minHr = metrics.minHr,
+                kcal = metrics.kcal,
             )
         }
         return out
+    }
+
+    suspend fun getExerciseDetail(recordId: String, startMs: Long, endMs: Long): Match? {
+        if (!isAvailable() || !hasRequiredPermissions() || startMs <= 0L || endMs <= startMs) return null
+        val records = readExerciseRecords(
+            Instant.ofEpochMilli(startMs).minusSeconds(5 * 60L),
+            Instant.ofEpochMilli(endMs).plusSeconds(5 * 60L),
+        )
+        val record = records.firstOrNull { it.metadata.id == recordId }
+            ?: records.minByOrNull { abs(it.startTime.toEpochMilli() - startMs) + abs(it.endTime.toEpochMilli() - endMs) }
+            ?: return null
+        val metrics = readDetailedMetrics(client(), record.startTime, record.endTime, record.metadata.dataOrigin)
+        return Match(
+            found = true,
+            confidence = 1.0,
+            recordId = record.metadata.id,
+            sourceApp = sourceLabel(record.metadata.dataOrigin.packageName),
+            title = record.title?.toString(),
+            exerciseType = record.exerciseType,
+            startMs = record.startTime.toEpochMilli(),
+            endMs = record.endTime.toEpochMilli(),
+            durationMin = max(1L, (record.endTime.toEpochMilli() - record.startTime.toEpochMilli()) / 60_000L),
+            avgHr = metrics.avgHr,
+            maxHr = metrics.maxHr,
+            minHr = metrics.minHr,
+            kcal = metrics.kcal,
+            heartRateSampleCount = metrics.heartRateSampleCount,
+            heartRateSamples = metrics.heartRateSamples,
+        )
     }
 
     private fun Throwable.debugMessage(): String =
@@ -332,38 +379,86 @@ class HealthConnectRepository(private val context: Context) {
         )
     }
 
-    private suspend fun aggregateMetrics(
+    private suspend fun readDetailedMetrics(
         hc: HealthConnectClient,
         start: Instant,
         end: Instant,
         dataOrigin: DataOrigin,
-    ): Triple<Double?, Double?, Double?> {
-        return try {
-            val granted = grantedPermissions()
-            val hrAllowed = granted.contains(HealthPermission.getReadPermission(HeartRateRecord::class))
-            val kcalAllowed = granted.contains(HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class))
+        includeSamples: Boolean = true,
+    ): DetailedMetrics {
+        val granted = grantedPermissions()
+        val hrAllowed = granted.contains(HealthPermission.getReadPermission(HeartRateRecord::class))
+        val kcalAllowed = granted.contains(HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class))
+
+        var avgHr: Double? = null
+        var maxHr: Double? = null
+        var minHr: Double? = null
+        var kcal: Double? = null
+        try {
             val metrics = buildSet {
                 if (hrAllowed) {
                     add(HeartRateRecord.BPM_AVG)
                     add(HeartRateRecord.BPM_MAX)
+                    add(HeartRateRecord.BPM_MIN)
                 }
                 if (kcalAllowed) add(TotalCaloriesBurnedRecord.ENERGY_TOTAL)
             }
-            if (metrics.isEmpty()) return Triple(null, null, null)
-            val result: AggregationResult = hc.aggregate(
-                AggregateRequest(
-                    metrics = metrics,
+            if (metrics.isNotEmpty()) {
+                val result: AggregationResult = hc.aggregate(
+                    AggregateRequest(
+                        metrics = metrics,
+                        timeRangeFilter = TimeRangeFilter.between(start, end),
+                        dataOriginFilter = setOf(dataOrigin),
+                    )
+                )
+                if (hrAllowed) {
+                    avgHr = result[HeartRateRecord.BPM_AVG]?.toDouble()
+                    maxHr = result[HeartRateRecord.BPM_MAX]?.toDouble()
+                    minHr = result[HeartRateRecord.BPM_MIN]?.toDouble()
+                }
+                if (kcalAllowed) kcal = result[TotalCaloriesBurnedRecord.ENERGY_TOTAL]?.inKilocalories
+            }
+        } catch (_: Throwable) {
+            // Mantemos os dados parciais; a leitura das amostras abaixo ainda pode funcionar.
+        }
+
+        if (!hrAllowed || !includeSamples) return DetailedMetrics(avgHr, maxHr, minHr, kcal, 0, emptyList())
+
+        return try {
+            val records = hc.readRecords(
+                ReadRecordsRequest<HeartRateRecord>(
                     timeRangeFilter = TimeRangeFilter.between(start, end),
                     dataOriginFilter = setOf(dataOrigin),
+                    ascendingOrder = true,
+                    pageSize = 1000,
                 )
-            )
-            Triple(
-                if (hrAllowed) result[HeartRateRecord.BPM_AVG]?.toDouble() else null,
-                if (hrAllowed) result[HeartRateRecord.BPM_MAX]?.toDouble() else null,
-                if (kcalAllowed) result[TotalCaloriesBurnedRecord.ENERGY_TOTAL]?.inKilocalories else null,
+            ).records
+            val raw = records.flatMap { record ->
+                record.samples.mapNotNull { sample ->
+                    val timeMs = sample.time.toEpochMilli()
+                    if (timeMs in start.toEpochMilli()..end.toEpochMilli()) HeartRatePoint(timeMs, sample.beatsPerMinute) else null
+                }
+            }.sortedBy { it.timeMs }
+
+            // O gráfico não precisa transportar milhares de pontos pelo bridge. Mantemos
+            // no máximo ~360 pontos distribuídos ao longo da sessão.
+            val sampled = if (raw.size <= 360) raw else {
+                val stride = kotlin.math.ceil(raw.size / 360.0).toInt().coerceAtLeast(1)
+                raw.filterIndexed { index, _ -> index % stride == 0 }.take(360)
+            }
+            val fallbackAvg = if (raw.isNotEmpty()) raw.map { it.bpm }.average() else null
+            val fallbackMax = raw.maxOfOrNull { it.bpm }?.toDouble()
+            val fallbackMin = raw.minOfOrNull { it.bpm }?.toDouble()
+            DetailedMetrics(
+                avgHr = avgHr ?: fallbackAvg,
+                maxHr = maxHr ?: fallbackMax,
+                minHr = minHr ?: fallbackMin,
+                kcal = kcal,
+                heartRateSampleCount = raw.size,
+                heartRateSamples = sampled,
             )
         } catch (_: Throwable) {
-            Triple(null, null, null)
+            DetailedMetrics(avgHr, maxHr, minHr, kcal, 0, emptyList())
         }
     }
 

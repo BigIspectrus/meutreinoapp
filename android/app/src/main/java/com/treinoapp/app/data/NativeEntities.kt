@@ -20,7 +20,14 @@ data class WorkoutSessionEntity(
     val healthConfidence: Double? = null,
     val healthAvgHr: Double? = null,
     val healthMaxHr: Double? = null,
+    val healthMinHr: Double? = null,
     val healthKcal: Double? = null,
+    val healthStartMs: Long? = null,
+    val healthEndMs: Long? = null,
+    val healthTitle: String? = null,
+    val healthExerciseType: Int? = null,
+    val healthSampleCount: Int = 0,
+    val healthSamplesJson: String? = null,
     val healthSyncedAt: Long? = null,
 )
 

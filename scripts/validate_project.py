@@ -76,6 +76,23 @@ for token in ['PARTIAL_WAKE_LOCK','FOREGROUND_SERVICE_TYPE_HEALTH','HealthConnec
     ok(token in kt or token in gradle, f'Recurso nativo esperado ausente: {token}')
 ok('replaceAllLegacy' in kt, 'Sincronização do histórico legado ausente')
 
+
+# Integração Health avançada / v12.1
+plugin=read('android/app/src/main/java/com/treinoapp/app/nativebridge/TreinoNativePlugin.kt')
+repo=read('android/app/src/main/java/com/treinoapp/app/nativebridge/HealthConnectRepository.kt')
+dbkt=read('android/app/src/main/java/com/treinoapp/app/data/TreinoDatabase.kt')
+for bad in ['call.getDouble("startMs"','call.getDouble("endMs"','call.getDouble("startedAt"','call.getDouble("targetStartMs"','call.getDouble("targetEndMs"']:
+    ok(bad not in plugin, 'Timestamp ainda lido via getDouble no bridge: '+bad)
+for token in ['longArgOrNull','getHealthExerciseDetail','heartRateSamples','heartRateSampleCount']:
+    ok(token in plugin, f'Bridge Health avançado ausente: {token}')
+for token in ['HeartRatePoint','readDetailedMetrics','BPM_MIN','heartRateSamples','getExerciseDetail']:
+    ok(token in repo, f'Leitura Health detalhada ausente: {token}')
+ok('version = 2' in dbkt and 'MIGRATION_1_2' in dbkt and '.addMigrations(MIGRATION_1_2)' in dbkt, 'Migração Room 1->2 ausente')
+for token in ['modalDetalhesSessao','abrirDetalhesTreino','compartilharSessaoDetalhada','renderHealthPerformance','healthPerformanceChart','calcularZonasFc','calcularFcPorExercicio','normalizarAmostrasHealth','healthRelHtml','Galaxy Watch / Health Connect']:
+    ok(token in html, f'UI de detalhes/performance/relatório ausente: {token}')
+ok('healthLinksV12:localStorage.getItem' in html, 'Backup não inclui vínculos Health')
+ok('DATA_SCHEMA_VERSION = 13' in html or 'DATA_SCHEMA_VERSION=13' in html, 'Schema web v13 esperado para reparo/backup Health')
+
 if errors:
     print('VALIDAÇÃO FALHOU')
     for e in errors: print(' -',e)

@@ -104,7 +104,7 @@ class TreinoNativePlugin : Plugin() {
             WorkoutForegroundService.send(context, WorkoutForegroundService.ACTION_START) {
                 putExtra(WorkoutForegroundService.EXTRA_SESSION, call.getString("sessionId", UUID.randomUUID().toString()))
                 putExtra(WorkoutForegroundService.EXTRA_NAME, call.getString("name", "Treino"))
-                putExtra(WorkoutForegroundService.EXTRA_STARTED, (call.getDouble("startedAt", System.currentTimeMillis().toDouble()) ?: System.currentTimeMillis().toDouble()).toLong())
+                putExtra(WorkoutForegroundService.EXTRA_STARTED, longArg(call, "startedAt", System.currentTimeMillis()))
                 putExtra(WorkoutForegroundService.EXTRA_TOTAL, call.getInt("totalSets", 0) ?: 0)
                 putExtra(WorkoutForegroundService.EXTRA_DONE, call.getInt("completedSets", 0) ?: 0)
                 putExtra(WorkoutForegroundService.EXTRA_EXERCISE, call.getString("currentExercise", ""))
@@ -302,8 +302,8 @@ class TreinoNativePlugin : Plugin() {
 
     @PluginMethod
     fun findHealthMatch(call: PluginCall) {
-        val start = (call.getDouble("startMs", 0.0) ?: 0.0).toLong()
-        val end = (call.getDouble("endMs", 0.0) ?: 0.0).toLong()
+        val start = longArg(call, "startMs")
+        val end = longArg(call, "endMs")
         scope.launch {
             try { resolve(call, matchToJs(health.findBestExerciseMatch(start, end))) }
             catch (e: Exception) { reject(call, "Falha ao buscar treino no Health Connect", e) }
@@ -313,8 +313,8 @@ class TreinoNativePlugin : Plugin() {
     @PluginMethod
     fun listHealthExercises(call: PluginCall) {
         val hours = call.getInt("hours", 12) ?: 12
-        val targetStart = call.getDouble("targetStartMs")?.toLong()
-        val targetEnd = call.getDouble("targetEndMs")?.toLong()
+        val targetStart = longArgOrNull(call, "targetStartMs")
+        val targetEnd = longArgOrNull(call, "targetEndMs")
         scope.launch {
             try {
                 val rows = health.listRecentExerciseSessions(hours, targetStart, targetEnd)
@@ -334,11 +334,26 @@ class TreinoNativePlugin : Plugin() {
                         put("endDiffMin", r.endDiffMin)
                         put("avgHr", r.avgHr)
                         put("maxHr", r.maxHr)
+                        put("minHr", r.minHr)
                         put("kcal", r.kcal)
                     })
                 }
                 resolve(call, JSObject().apply { put("records", arr); put("count", rows.size) })
             } catch (e: Exception) { reject(call, "Falha ao listar exercícios do Health Connect", e) }
+        }
+    }
+
+    @PluginMethod
+    fun getHealthExerciseDetail(call: PluginCall) {
+        val recordId = call.getString("recordId") ?: return call.reject("recordId obrigatório")
+        val start = longArg(call, "startMs")
+        val end = longArg(call, "endMs")
+        scope.launch {
+            try {
+                val detail = health.getExerciseDetail(recordId, start, end)
+                if (detail == null) resolve(call, JSObject().apply { put("found", false) })
+                else resolve(call, matchToJs(detail))
+            } catch (e: Exception) { reject(call, "Falha ao carregar detalhes da sessão Health", e) }
         }
     }
 
@@ -382,7 +397,14 @@ class TreinoNativePlugin : Plugin() {
                     confidence = call.getDouble("confidence", 1.0) ?: 1.0,
                     avgHr = call.getDouble("avgHr"),
                     maxHr = call.getDouble("maxHr"),
+                    minHr = call.getDouble("minHr"),
                     kcal = call.getDouble("kcal"),
+                    healthStartMs = longArgOrNull(call, "startMs"),
+                    healthEndMs = longArgOrNull(call, "endMs"),
+                    healthTitle = call.getString("title"),
+                    healthExerciseType = call.getInt("exerciseType"),
+                    heartRateSampleCount = call.getInt("heartRateSampleCount", 0) ?: 0,
+                    heartRateSamplesJson = call.getArray("heartRateSamples")?.toString(),
                 )
                 resolve(call, JSObject().apply { put("saved", true) })
             } catch (e: Exception) { reject(call, "Falha ao salvar vínculo Health Connect", e) }
@@ -399,8 +421,11 @@ class TreinoNativePlugin : Plugin() {
                     arr.put(JSObject().apply {
                         put("sessionId", r.sessionId); put("state", r.healthState); put("recordId", r.healthRecordId)
                         put("sourceApp", r.healthSourceApp); put("confidence", r.healthConfidence)
-                        put("avgHr", r.healthAvgHr); put("maxHr", r.healthMaxHr); put("kcal", r.healthKcal)
-                        put("durationMin", ((r.endMs-r.startMs)/60_000L).coerceAtLeast(1L)); put("linkedAt", r.healthSyncedAt)
+                        put("avgHr", r.healthAvgHr); put("maxHr", r.healthMaxHr); put("minHr", r.healthMinHr); put("kcal", r.healthKcal)
+                        put("startMs", r.healthStartMs); put("endMs", r.healthEndMs); put("title", r.healthTitle); put("exerciseType", r.healthExerciseType)
+                        put("heartRateSampleCount", r.healthSampleCount); put("heartRateSamplesJson", r.healthSamplesJson)
+                        val ds = r.healthStartMs ?: r.startMs; val de = r.healthEndMs ?: r.endMs
+                        put("durationMin", ((de-ds)/60_000L).coerceAtLeast(1L)); put("linkedAt", r.healthSyncedAt)
                     })
                 }
                 resolve(call, JSObject().apply { put("results", arr) })
@@ -412,13 +437,18 @@ class TreinoNativePlugin : Plugin() {
     fun writeHealthSession(call: PluginCall) {
         val sid = call.getString("sessionId") ?: return call.reject("sessionId obrigatório")
         val name = call.getString("name", "TreinoApp") ?: "TreinoApp"
-        val start = (call.getDouble("startMs", 0.0) ?: 0.0).toLong()
-        val end = (call.getDouble("endMs", 0.0) ?: 0.0).toLong()
+        val start = longArg(call, "startMs")
+        val end = longArg(call, "endMs")
         scope.launch {
             try {
                 val result = health.writeStrengthSession(sid, name, start, end)
                 if (result.written && result.recordId != null) {
-                    db.workoutDao().updateHealthLink(sid, "written", result.recordId, context.packageName, 1.0, null, null, null)
+                    db.workoutDao().updateHealthLink(
+                        sessionId = sid, state = "written", recordId = result.recordId, sourceApp = context.packageName,
+                        confidence = 1.0, avgHr = null, maxHr = null, minHr = null, kcal = null,
+                        healthStartMs = start, healthEndMs = end, healthTitle = name, healthExerciseType = ExerciseSessionRecord.EXERCISE_TYPE_STRENGTH_TRAINING,
+                        heartRateSampleCount = 0, heartRateSamplesJson = null,
+                    )
                 }
                 resolve(call, JSObject().apply {
                     put("written", result.written); put("recordId", result.recordId); put("reason", result.reason); put("errorClass", result.errorClass)
@@ -455,8 +485,8 @@ class TreinoNativePlugin : Plugin() {
                     sessionId = sid,
                     templateId = call.getString("templateId"),
                     name = call.getString("name", "Treino") ?: "Treino",
-                    startMs = (call.getDouble("startMs", 0.0) ?: 0.0).toLong(),
-                    endMs = (call.getDouble("endMs", 0.0) ?: 0.0).toLong(),
+                    startMs = longArg(call, "startMs"),
+                    endMs = longArg(call, "endMs"),
                     durationSec = (call.getInt("durationSec", 0) ?: 0).toLong(),
                     completedSets = call.getInt("completedSets", sets.length()) ?: sets.length(),
                     totalSets = call.getInt("totalSets", sets.length()) ?: sets.length(),
@@ -510,6 +540,18 @@ class TreinoNativePlugin : Plugin() {
         }
     }
 
+
+    private fun longArgOrNull(call: PluginCall, key: String): Long? {
+        val raw = call.data.opt(key)
+        return when (raw) {
+            is Number -> raw.toLong()
+            is String -> raw.toLongOrNull() ?: raw.toDoubleOrNull()?.toLong()
+            else -> null
+        }
+    }
+
+    private fun longArg(call: PluginCall, key: String, default: Long = 0L): Long =
+        longArgOrNull(call, key) ?: default
 
     private fun sanitizeFileName(name: String): String {
         val cleaned = name.map { ch ->
@@ -607,7 +649,13 @@ class TreinoNativePlugin : Plugin() {
         put("found", m.found); put("confidence", m.confidence); put("recordId", m.recordId)
         put("sourceApp", m.sourceApp); put("title", m.title); put("exerciseType", m.exerciseType)
         put("startMs", m.startMs); put("endMs", m.endMs); put("durationMin", m.durationMin)
-        put("avgHr", m.avgHr); put("maxHr", m.maxHr); put("kcal", m.kcal)
+        put("avgHr", m.avgHr); put("maxHr", m.maxHr); put("minHr", m.minHr); put("kcal", m.kcal)
+        put("heartRateSampleCount", m.heartRateSampleCount)
+        val hr = JSArray()
+        m.heartRateSamples.forEach { point ->
+            hr.put(JSObject().apply { put("timeMs", point.timeMs); put("bpm", point.bpm) })
+        }
+        put("heartRateSamples", hr)
         put("candidateCount", m.candidateCount); put("overlapRatio", m.overlapRatio)
         put("startDiffMin", m.startDiffMin); put("endDiffMin", m.endDiffMin)
     }

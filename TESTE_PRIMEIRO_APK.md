@@ -52,7 +52,7 @@ Aquecimento não deve ser tratado da mesma forma que uma série de trabalho nas 
 3. Finalize os dois em horários próximos.
 4. Aguarde a sincronização Samsung Health → Health Connect.
 5. Abra o TreinoApp e use Sincronizar sessões recentes.
-6. Se a correspondência temporal for >=85%, deve vincular automaticamente.
+6. Se a correspondência temporal for >=78%, deve vincular automaticamente.
 7. Se houver dúvida, o app deve manter como pendente e solicitar confirmação no fluxo manual.
 8. Confira FC média/máxima, kcal e duração quando esses dados estiverem disponíveis no Health Connect.
 

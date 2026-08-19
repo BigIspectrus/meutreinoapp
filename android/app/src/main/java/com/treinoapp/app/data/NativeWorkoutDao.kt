@@ -43,7 +43,14 @@ interface NativeWorkoutDao {
           healthConfidence = :confidence,
           healthAvgHr = :avgHr,
           healthMaxHr = :maxHr,
+          healthMinHr = :minHr,
           healthKcal = :kcal,
+          healthStartMs = :healthStartMs,
+          healthEndMs = :healthEndMs,
+          healthTitle = :healthTitle,
+          healthExerciseType = :healthExerciseType,
+          healthSampleCount = :heartRateSampleCount,
+          healthSamplesJson = :heartRateSamplesJson,
           healthSyncedAt = :syncedAt
         WHERE sessionId = :sessionId
     """)
@@ -55,7 +62,14 @@ interface NativeWorkoutDao {
         confidence: Double?,
         avgHr: Double?,
         maxHr: Double?,
+        minHr: Double?,
         kcal: Double?,
+        healthStartMs: Long?,
+        healthEndMs: Long?,
+        healthTitle: String?,
+        healthExerciseType: Int?,
+        heartRateSampleCount: Int,
+        heartRateSamplesJson: String?,
         syncedAt: Long = System.currentTimeMillis(),
     )
 

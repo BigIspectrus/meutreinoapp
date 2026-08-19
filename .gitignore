@@ -27,3 +27,10 @@ Thumbs.db
 # Temporários
 *.tmp
 *.log
+
+# Artefatos baixados do GitHub Actions para teste local
+apk-teste/
+apk-beta-*/
+apk-stable-*/
+artifacts/
+dist/

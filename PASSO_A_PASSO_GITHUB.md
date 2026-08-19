@@ -1,4 +1,4 @@
-# Passo a passo — primeiro APK do TreinoApp
+# Passo a passo — TreinoApp Android
 
 Repositório alvo: `https://github.com/BigIspectrus/meutreinoapp`
 
@@ -117,34 +117,32 @@ git push -u origin beta
 
 Toda implementação experimental deve ser feita primeiro nessa branch. Push em `beta` aciona o workflow **TreinoApp Beta APK**, gerando um APK assinado com package `com.treinoapp.beta`. Stable e Beta podem ficar instalados simultaneamente e têm dados separados.
 
-## 11. Fluxo de novas versões
+## 11. Fluxo da v12.1.0 Beta
 
-Para uma feature nova:
+A v12.1.0 deste pacote já está com `VERSION = 12.1.0` e `versionCode = 120100`. Para testar primeiro na Beta:
 
 ```powershell
 git checkout beta
-# altera/testa código
+# copie o patch v12.1.0 por cima do repositório
+python .\scripts\validate_project.py
 git add -A
-git commit -m "Nova feature"
+git commit -m "TreinoApp v12.1.0 Beta - Health detalhado e performance"
 git push origin beta
 ```
 
-Baixe o APK Beta em **Actions > TreinoApp Beta APK > Artifacts** e teste.
+Baixe o APK em **Actions > TreinoApp Beta APK > Artifacts** e instale por cima da Beta atual. Não desinstale a Beta anterior.
 
-Quando estiver validado:
+Quando a v12.1.0 estiver validada no aparelho e você decidir promovê-la para Stable:
 
 ```powershell
 git checkout main
 git merge beta
-node scripts/bump-version.mjs 12.1.0
-git add -A
-git commit -m "TreinoApp v12.1.0"
 git push origin main
 git tag v12.1.0
 git push origin v12.1.0
 ```
 
-O novo `TreinoApp-v12.1.0.apk`, por ter o mesmo package e a mesma assinatura, instala por cima da v12.0.0 e preserva os dados.
+Não execute novamente o bump para `12.1.0`, pois este pacote já está nessa versão. O APK Stable gerado com `com.treinoapp.app`, mesma chave e versionCode maior que a Stable anterior poderá ser instalado por cima preservando os dados.
 
 ## 12. Regra obrigatória para não perder a capacidade de atualizar
 

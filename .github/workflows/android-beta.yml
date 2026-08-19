@@ -20,7 +20,7 @@ jobs:
       - uses: android-actions/setup-android@v3
       - uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.13'
+          gradle-version: '8.14.3'
       - run: npm install --no-audit --no-fund
       - run: npm run build:web
       - run: python scripts/validate_project.py
