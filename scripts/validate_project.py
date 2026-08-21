@@ -112,6 +112,13 @@ for token in ['NotificationManagerCompat','setBridgeTag','ACTION_TEST_REST_ALERT
     ok(token in service, f'Correção Wear OS v12.4.1 ausente: {token}')
 ok('testRestAlert' in plugin and 'testRestAlert' in read('src/native-bridge.js'), 'Teste nativo de aviso para relógio ausente')
 
+# Início de série pelo Galaxy Watch / v12.4.2
+for token in ['testarBotaoGalaxyWatch','aplicarInicioSeriePrecisao','localizarSeriePendenteNativa','pendingSetStartedAt','acknowledgeSetStart','nextOrdinal']:
+    ok(token in html or token in plugin or token in read('src/native-bridge.js'), f'Recurso v12.4.2 ausente: {token}')
+for token in ['ACTION_START_NEXT_SET','ACTION_TEST_WATCH_SET_ALERT','KEY_PENDING_SET_STARTED_AT','KEY_NEXT_TOKEN','targetPendingIntent','addAction','WATCH_CONFIRMATION_NOTIFICATION_ID']:
+    ok(token in service, f'Ação Wear OS v12.4.2 ausente: {token}')
+ok('testWatchSetAction' in plugin and 'testWatchSetAction' in read('src/native-bridge.js'), 'Teste nativo do botão do relógio ausente')
+
 # Interface focada / v12.3
 for token in ['serie-compact-trigger','atualizarFocoSeries','data-settings-group','dashboardSecondary','selEffortMode','Evolução &amp; Health']:
     ok(token in html, f'Recurso v12.3 ausente: {token}')

@@ -993,12 +993,12 @@
 <!-- MODAL NOVIDADES -->
 <div class="modal-overlay" id="modalNovidades">
   <div class="modal" style="max-width:500px;">
-    <div class="modal-title">TreinoApp v12.4.1 Beta</div>
+    <div class="modal-title">TreinoApp v12.4.2 Beta</div>
     <div style="font-size:.88em;line-height:1.6;color:var(--text-muted);">
       <p style="color:var(--text);font-weight:700;margin-bottom:8px;">Principais novidades desta versão</p>
-      <p>Os detalhes do treino agora começam com uma leitura curta que combina volume, RIR/RPE, descanso, contexto e dados de FC já sincronizados.</p>
-      <p style="margin-top:8px;">As comparações usam até cinco sessões do mesmo treino, mostram a confiança da análise e deixam gráficos e tabelas recolhidos.</p>
-      <p style="margin-top:8px;">O aviso do descanso ganhou encaminhamento Wear OS reforçado e um botão de teste direto nas Preferências.</p>
+      <p>Quando o descanso termina, o aviso no Galaxy Watch oferece “Iniciar série” para registrar o começo da próxima série sem pegar o celular.</p>
+      <p style="margin-top:8px;">O horário iniciado no relógio é guardado no Android e sincronizado com a série correta ao abrir ou voltar ao treino.</p>
+      <p style="margin-top:8px;">Preferências agora separa “Testar aviso” e “Testar botão”; o segundo teste é isolado e nunca altera um treino real.</p>
     </div>
     <div class="modal-footer"><button class="btn btn-primary" onclick="fecharNovidades()">Entendi</button></div>
   </div>
@@ -1689,9 +1689,10 @@
       <select id="selRestNotificationSound" style="width:auto;padding:6px 10px;font-size:.83em;" onchange="salvarAlertasDescanso()"><option value="1">Ativado</option><option value="0">Silencioso</option></select>
     </div>
     <div class="config-item native-card" id="watchNotificationConfig" style="display:none;align-items:flex-start;">
-      <div style="flex:1;"><div class="config-label">Aviso no Galaxy Watch</div><div class="config-sub">Teste o encaminhamento sem iniciar um treino. Se aparecer apenas no celular, permita o TreinoApp Beta em Galaxy Wearable → Configurações do relógio → Notificações.</div></div>
+      <div style="flex:1;"><div class="config-label">Galaxy Watch</div><div class="config-sub">“Testar aviso” confere o encaminhamento. “Testar botão” envia uma ação segura e não altera nenhum treino. Se aparecer apenas no celular, permita o TreinoApp Beta em Galaxy Wearable → Configurações do relógio → Notificações.</div></div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
-        <button class="btn btn-primary btn-sm" style="width:auto;" onclick="testarAvisoGalaxyWatch()">Testar</button>
+        <button class="btn btn-primary btn-sm" style="width:auto;" onclick="testarAvisoGalaxyWatch()">Testar aviso</button>
+        <button class="btn btn-outline btn-sm" style="width:auto;" onclick="testarBotaoGalaxyWatch()">Testar botão</button>
         <button class="btn btn-outline btn-sm" style="width:auto;" onclick="abrirConfigNotificacoesAndroid()">Revisar</button>
       </div>
     </div>
@@ -1796,14 +1797,14 @@
 </div>
 
 <script>
-const APP_VERSION = '12.4.1';
-const APP_BUILD = '2026.08.21.2';
+const APP_VERSION = '12.4.2';
+const APP_BUILD = '2026.08.21.3';
 const DATA_SCHEMA_VERSION = 15;
 const GITHUB_REPO='BigIspectrus/meutreinoapp';
 const GITHUB_PAGES_BASE='https://bigispectrus.github.io/meutreinoapp';
 let _latestAndroidReleaseUrl='';
 let _nativeChannel='web';
-const APP_CACHE_VERSION = 'treinoapp-v12.4.1-202608212';
+const APP_CACHE_VERSION = 'treinoapp-v12.4.2-202608213';
 
 const SET_TYPES={workset:'Work set',warmup:'Aquecimento',topset:'Top set',backoff:'Back-off',dropset:'Drop set',cluster:'Cluster set',fst7:'FST-7',restpause:'Rest-pause',myoreps:'Myo-reps',amrap:'AMRAP'};
 function normalizarSetType(v){return SET_TYPES[v]?v:'workset';}
@@ -4230,6 +4231,7 @@ function carregarAlertasDescanso(syncNative=false){const vib=document.getElement
 async function salvarAlertasDescanso(){const vib=document.getElementById('selRestVibration')?.value||'medium',sound=document.getElementById('selRestNotificationSound')?.value!=='0';localStorage.setItem('restVibration',['off','light','medium','long'].includes(vib)?vib:'medium');localStorage.setItem('restNotificationSound',sound?'1':'0');await sincronizarAlertasNativos();toast('Avisos de descanso atualizados','success');}
 async function abrirConfigNotificacoesAndroid(){if(!isNativeAndroid())return toast('Disponível no APK Android','info');try{await window.TreinoNativeBridge.openNotificationSettings();}catch(e){toast('Não foi possível abrir as notificações do Android','warn');}}
 async function testarAvisoGalaxyWatch(){if(!isNativeAndroid())return toast('O teste está disponível no APK Android','info');try{await sincronizarAlertasNativos();await window.TreinoNativeBridge.testRestAlert();toast('Aviso enviado. Confira o celular e o relógio.','success');}catch(e){toast('Não foi possível publicar o aviso de teste','warn');}}
+async function testarBotaoGalaxyWatch(){if(!isNativeAndroid())return toast('O teste está disponível no APK Android','info');try{await sincronizarAlertasNativos();await window.TreinoNativeBridge.testWatchSetAction();toast('Teste enviado. Toque em “Testar botão” no relógio.','success');}catch(e){toast('Não foi possível publicar o teste do botão','warn');}}
 function tocarSom(tipo, vezes=3) {
   if(tipo==='silencioso') return;
   try {
@@ -5344,15 +5346,21 @@ function atualizarEstadoTimingSerie(row){
   btn.disabled=done;
   btn.textContent=done?'Horários registrados':started?`Série iniciada · ${new Date(started).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}`:'Iniciar série · medir descanso';
 }
-function iniciarSeriePrecisao(btn){
-  const row=btn?.closest('.serie-row');if(!row||row.querySelector('.serie-check.checked'))return;
-  if(Number(row.dataset.setStartedAt)>0){atualizarEstadoTimingSerie(row);return;}
-  const now=Date.now(),rows=[...document.querySelectorAll('#exerciciosAtivos .serie-row')].filter(r=>!r.closest('.exercicio-card')?.classList.contains('skipped')),idx=rows.indexOf(row),prev=rows.slice(0,Math.max(0,idx)).reverse().find(r=>Number(r.dataset.completedAt)>0);
+function linhasValidasTreino(){return [...document.querySelectorAll('#exerciciosAtivos .serie-row')].filter(r=>!r.closest('.exercicio-card')?.classList.contains('skipped'));}
+function dadosSerieNativa(row){const input=row?.querySelector('.ativo-carga'),rows=linhasValidasTreino();return{exercise:input?.dataset.ex||row?.closest('.exercicio-card')?.dataset.ex||'',setNumber:Number(input?.dataset.serie)||0,ordinal:rows.indexOf(row)};}
+function aplicarInicioSeriePrecisao(row,startedAt=Date.now(),source='phone'){
+  if(!row||(row.querySelector('.serie-check.checked')&&source!=='watch'))return false;
+  const nativeData=dadosSerieNativa(row),confirmarNoNativo=()=>{if(source==='phone'&&isNativeAndroid()&&window.TreinoNativeBridge?.acknowledgeSetStart)window.TreinoNativeBridge.acknowledgeSetStart(nativeData).catch(()=>{});};
+  if(Number(row.dataset.setStartedAt)>0){atualizarEstadoTimingSerie(row);confirmarNoNativo();return false;}
+  const now=Number(startedAt)>0?Number(startedAt):Date.now(),rows=linhasValidasTreino(),idx=rows.indexOf(row),prev=rows.slice(0,Math.max(0,idx)).reverse().find(r=>Number(r.dataset.completedAt)>0);
   row.dataset.setStartedAt=String(now);
   if(prev){row.dataset.restBeforeSec=String(Math.max(0,Math.round((now-Number(prev.dataset.completedAt))/1000)));row.dataset.timingQuality='exact';}
   else{delete row.dataset.restBeforeSec;row.dataset.timingQuality='first_set';}
-  if(_timerEndTime>Date.now()||timerRestante>0)pararTimer();
-  atualizarEstadoTimingSerie(row);salvarRascunho();haptic(35);
+  if(_timerEndTime>0||timerRestante>0)pararTimer();
+  atualizarEstadoTimingSerie(row);salvarRascunho();haptic(35);confirmarNoNativo();return true;
+}
+function iniciarSeriePrecisao(btn){
+  aplicarInicioSeriePrecisao(btn?.closest('.serie-row'),Date.now(),'phone');
 }
 
 function toggleSerieCheck(el){
@@ -5361,7 +5369,7 @@ function toggleSerieCheck(el){
   el.classList.toggle('checked');const checked=el.classList.contains('checked');
   if(row){row.classList.toggle('done',checked);row.classList.toggle('pending',!checked&&!!row.querySelector('.ativo-carga')?.value);if(checked){row.dataset.completedAt=String(Date.now());if(!row.dataset.setStartedAt)row.dataset.timingQuality='completion_only';row.classList.remove('serie-manual');}else{delete row.dataset.completedAt;row.classList.add('serie-manual');}atualizarEstadoTimingSerie(row);}
   atualizarFocoSeries(card);marcarDadosNaoSalvos();salvarRascunho();haptic(20);atualizarProgressoTreino();atualizarEstadoCardExercicio(card);
-  if(checked){const descanso=Number(row?.dataset.rest)||getDescansoPadrao();if(descanso>0)iniciarTimer(descanso);setTimeout(()=>focarProximaSerie(row),180);}
+  if(checked){const descanso=Number(row?.dataset.rest)||getDescansoPadrao();if(descanso>0)iniciarTimer(descanso,{completedRow:row});setTimeout(()=>focarProximaSerie(row),180);}
 }
 function focarProximaSerie(atual){
   const card=atual?.closest('.exercicio-card'),dentro=[...card?.querySelectorAll('.serie-row')||[]],idxDentro=dentro.indexOf(atual),proxDentro=dentro.slice(idxDentro+1).find(r=>!r.querySelector('.serie-check')?.classList.contains('checked'));
@@ -5533,6 +5541,7 @@ async function inicializarNativeUI(){
   const a=document.getElementById('selHealthAuto'),w=document.getElementById('selHealthWrite'),hr=document.getElementById('healthHrMax');if(a)a.value=getHealthAuto()?'1':'0';if(w)w.value=getHealthWrite()?'1':'0';if(hr)hr.value=getHealthHrMax()||'';
   try{const info=await window.TreinoNativeBridge.getNativeInfo();_nativeChannel=info.channel||'stable';const badge=document.getElementById('nativeChannelBadge'),txt=document.getElementById('nativeStatusText');if(badge)badge.textContent=String(_nativeChannel).toUpperCase();if(txt)txt.innerHTML=`<strong>Android ${esc(info.versionName||APP_VERSION)}</strong> · código ${info.versionCode||'?'} · ${esc(_nativeChannel)}<br>Pacote: ${esc(info.packageName||'')}<br>Commit: ${esc(String(info.commit||'local').slice(0,10))} · build: ${esc(info.buildTime||'local')}<br>Notificação persistente, timer nativo, widget, Health Connect e banco Android disponíveis.`;}catch(e){}
   await importarResultadosHealthNativos();await atualizarHealthStatus();renderHealthLastMatch();await atualizarStorageStatus();atualizarDiagnosticoUI();
+  await reconciliarEstadoNativo();
   if(localStorage.getItem('_nativeDbSyncedSchema')!==String(DATA_SCHEMA_VERSION))setTimeout(()=>sincronizarBancoNativo(false),1000);
   setTimeout(()=>reconciliarHealthPendentes(false),1800);
 }
@@ -5626,13 +5635,16 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&isNativeA
 window.addEventListener('focus',()=>{if(isNativeAndroid()&&getHealthAuto())setTimeout(()=>reconciliarHealthPendentes(false),600);});
 async function sincronizarPesoHealth(){if(!isNativeAndroid())return toast('Disponível no APK Android','info');try{const peso=getPeso(),entries=Object.entries(peso).sort((a,b)=>b[0].localeCompare(a[0]));const r=await window.TreinoNativeBridge.syncWeight({localWeights:entries.slice(0,50).map(([date,kg])=>({date,kg:Number(kg)}))});if(r?.latestKg&&r?.latestDate){const p=getPeso();p[r.latestDate]=Number(r.latestKg);localStorage.setItem('pesoCorporal',JSON.stringify(p));invalidarCache();}toast(`Peso sincronizado${r?.latestKg?' · '+r.latestKg+' kg':''}`,'success');}catch(e){toast('Falha ao sincronizar peso','warn');}}
 async function sincronizarBancoNativo(showToast=true){if(!isNativeAndroid())return;try{const hist=getHist(),chunk=250;if(!hist.length){localStorage.setItem('_nativeDbSyncedSchema',String(DATA_SCHEMA_VERSION));return;}for(let i=0;i<hist.length;i+=chunk)await window.TreinoNativeBridge.syncNativeDatabase({records:hist.slice(i,i+chunk),replace:i===0});const sessions=Object.entries(agruparSessoes(hist)).sort((a,b)=>getSessionTimestamp(b[1])-getSessionTimestamp(a[1])).slice(0,30);for(const [sid,regs] of sessions){const b=boundsSessao(regs),meta=regs.find(r=>r.sessionRpe!=null||r.sessionNote||r.sessionContext?.length)||regs[0];if(!b.startMs||!b.endMs||b.endMs<=b.startMs)continue;await window.TreinoNativeBridge.saveWorkoutMirror({sessionId:sid,templateId:regs.find(r=>r.templateId)?.templateId||null,name:regs.find(r=>r.templateNome)?.templateNome||'Treino',startMs:b.startMs,endMs:b.endMs,durationSec:b.durationSec,completedSets:regs.length,totalSets:regs.length,sessionRpe:meta?.sessionRpe??null,contextTags:Array.isArray(meta?.sessionContext)?meta.sessionContext:[],sessionNote:meta?.sessionNote||'',sets:regs.map(r=>({id:r.id||gerarId('native'),exercise:r.exercicio||'',setNumber:Number(r.numSerie)||0,weight:Number(r.carga)||0,reps:Number(r.reps)||0,setType:r.setType||'workset',rir:r.rir??null,rpe:r.rpe??null,startedAt:Number(r.setStartedAt)||null,completedAt:Number(r.completedAt)||b.endMs,restBeforeSec:r.restBeforeSec??null,timingQuality:r.timingQuality||'legacy'}))});}localStorage.setItem('_nativeDbSyncedSchema',String(DATA_SCHEMA_VERSION));if(showToast)toast('Banco Android, contexto e horários das sessões sincronizados','success');}catch(e){if(showToast)toast('Não foi possível sincronizar o banco Android','warn');}}
-function resumoNativoAtual(){if(!treinoAtivoTemplate)return null;const rows=[...document.querySelectorAll('#exerciciosAtivos .serie-row')].filter(r=>!r.closest('.exercicio-card')?.classList.contains('skipped')),done=rows.filter(r=>r.querySelector('.serie-check')?.classList.contains('checked')),active=getExerciseCards().find(c=>c.classList.contains('focus-active'))||getExerciseCards().find(c=>!c.classList.contains('skipped'));const nr=active?[...active.querySelectorAll('.serie-row')].findIndex(r=>!r.querySelector('.serie-check')?.classList.contains('checked'))+1:0;return{sessionId:window._treinoSessionId,name:treinoAtivoTemplate.nome||'Treino',startedAt:window._treinoStartedAt,totalSets:rows.length,completedSets:done.length,currentExercise:active?.dataset.ex||'',currentSet:Math.max(1,nr),paused:!!window._treinoPaused};}
+function resumoNativoAtual(){if(!treinoAtivoTemplate)return null;const rows=linhasValidasTreino(),done=rows.filter(r=>r.querySelector('.serie-check')?.classList.contains('checked')),active=getExerciseCards().find(c=>c.classList.contains('focus-active'))||getExerciseCards().find(c=>!c.classList.contains('skipped'));const nr=active?[...active.querySelectorAll('.serie-row')].findIndex(r=>!r.querySelector('.serie-check')?.classList.contains('checked'))+1:0;return{sessionId:window._treinoSessionId,name:treinoAtivoTemplate.nome||'Treino',startedAt:window._treinoStartedAt,totalSets:rows.length,completedSets:done.length,currentExercise:active?.dataset.ex||'',currentSet:Math.max(1,nr),paused:!!window._treinoPaused};}
 let _nativeUpdateTimer=null;function agendarUpdateNativo(){if(!isNativeAndroid())return;clearTimeout(_nativeUpdateTimer);_nativeUpdateTimer=setTimeout(()=>{const s=resumoNativoAtual();if(s)window.TreinoNativeBridge.updateWorkout(s).catch(()=>{});atualizarWidgetNativo();},120);}
 async function atualizarWidgetNativo(){if(!isNativeAndroid())return;try{const hist=getHist(),streak=calcularStreakAtual(hist),d=gerarDesafio(hist),next=treinoAtivoTemplate?.nome||getTreinoPlanejadoHoje()?.nome||getTreinosSalvos()[0]?.nome||'Treino';await window.TreinoNativeBridge.updateWidgetState({nextWorkout:next,weeklyDone:d.tipo==='frequencia'?d.prog:new Set(hist.filter(r=>{const x=new Date();x.setDate(x.getDate()-6);return r.data>=localDate(x)}).map(r=>r.data)).size,weeklyTarget:d.tipo==='frequencia'?d.alvo:4,streak,active:resumoNativoAtual()});}catch(e){}}
-async function reconciliarEstadoNativo(){if(!isNativeAndroid())return;try{const st=await window.TreinoNativeBridge.getWorkoutState();if(treinoAtivoTemplate&&typeof st?.paused==='boolean'&&st.paused!==!!window._treinoPaused){if(st.paused){window._treinoPaused=true;window._treinoPauseStartedAt=window._treinoPauseStartedAt||Date.now();}else{if(window._treinoPaused&&window._treinoPauseStartedAt)window._treinoTotalPausedMs=(Number(window._treinoTotalPausedMs)||0)+Math.max(0,Date.now()-Number(window._treinoPauseStartedAt));window._treinoPaused=false;window._treinoPauseStartedAt=null;}atualizarEstadoPausaUI();salvarRascunho();}if(st?.restEndAt&&Number(st.restEndAt)>Date.now()){_timerEndTime=Number(st.restEndAt);_timerFired=false;const restante=Math.max(0,Math.ceil((_timerEndTime-Date.now())/1000));timerRestante=restante;atualizarTimerUI(restante);}else if(st?.restEndAt&&Number(st.restEndAt)<=Date.now()&&timerRestante>0){_v12OriginalStopTimer.call(window);}}catch(e){}}
+function localizarSeriePendenteNativa(st){const rows=linhasValidasTreino(),ordinal=Number(st?.pendingSetOrdinal),matches=row=>{const d=dadosSerieNativa(row);return d.exercise===String(st?.pendingSetExercise||'')&&d.setNumber===Number(st?.pendingSetNumber);};if(Number.isInteger(ordinal)&&ordinal>=0&&rows[ordinal]&&matches(rows[ordinal]))return rows[ordinal];return rows.find(r=>matches(r)&&!r.querySelector('.serie-check.checked'))||rows.find(matches)||null;}
+let _nativeReconciling=false;
+async function reconciliarEstadoNativo(){if(!isNativeAndroid()||_nativeReconciling)return;_nativeReconciling=true;try{const st=await window.TreinoNativeBridge.getWorkoutState();if(treinoAtivoTemplate&&typeof st?.paused==='boolean'&&st.paused!==!!window._treinoPaused){if(st.paused){window._treinoPaused=true;window._treinoPauseStartedAt=window._treinoPauseStartedAt||Date.now();}else{if(window._treinoPaused&&window._treinoPauseStartedAt)window._treinoTotalPausedMs=(Number(window._treinoTotalPausedMs)||0)+Math.max(0,Date.now()-Number(window._treinoPauseStartedAt));window._treinoPaused=false;window._treinoPauseStartedAt=null;}atualizarEstadoPausaUI();salvarRascunho();}if(treinoAtivoTemplate&&Number(st?.pendingSetStartedAt)>0&&String(st?.pendingSetSession||'')===String(window._treinoSessionId||'')){const row=localizarSeriePendenteNativa(st);if(row){const applied=aplicarInicioSeriePrecisao(row,Number(st.pendingSetStartedAt),'watch');await window.TreinoNativeBridge.acknowledgeSetStart({requestId:st.pendingSetRequestId||'',exercise:st.pendingSetExercise||'',setNumber:Number(st.pendingSetNumber)||0,ordinal:Number(st.pendingSetOrdinal)});if(applied){const d=dadosSerieNativa(row);toast(`Série iniciada pelo relógio · ${d.exercise} ${d.setNumber}`,'success');}}}if(st?.restEndAt&&Number(st.restEndAt)>Date.now()){_timerEndTime=Number(st.restEndAt);_timerFired=false;const restante=Math.max(0,Math.ceil((_timerEndTime-Date.now())/1000));timerRestante=restante;atualizarTimerUI(restante);}else if(st?.restEndAt&&Number(st.restEndAt)<=Date.now()&&timerRestante>0){_v12OriginalStopTimer.call(window);}}catch(e){}finally{_nativeReconciling=false;}}
 async function nativeWorkoutFinishedImpl(summary){try{await window.TreinoNativeBridge.finishWorkout(summary);await window.TreinoNativeBridge.saveWorkoutMirror(summary);setHealthPendente(summary);const match=await processarHealthParaSessao(summary,false,false);if(match?.found&&Number(match.confidence)>=.78)atualizarResumoPosTreinoHealth(summary.sessionId,match);await atualizarWidgetNativo();renderHealthPerformance();}catch(e){console.warn('Finalização nativa',e);}}
 const _v12OriginalProgress=atualizarProgressoTreino;atualizarProgressoTreino=function(){const r=_v12OriginalProgress.apply(this,arguments);agendarUpdateNativo();return r;};
-const _v12OriginalTimer=iniciarTimer;iniciarTimer=function(seg){const r=_v12OriginalTimer.apply(this,arguments);if(isNativeAndroid()){const active=getExerciseCards().find(c=>c.classList.contains('focus-active'));const lastDone=[...(active?.querySelectorAll('.serie-row.done')||[])].at(-1);window.TreinoNativeBridge.startRest({seconds:Number(seg),exercise:active?.dataset.ex||'',setNumber:Number(lastDone?.querySelector('.ativo-carga')?.dataset.serie)||0}).catch(()=>{});}return r;};
+function proximaSeriePendenteNativa(completedRow){const rows=linhasValidasTreino(),idx=completedRow?rows.indexOf(completedRow):-1,target=rows.slice(Math.max(0,idx+1)).find(r=>!r.querySelector('.serie-check.checked'))||rows.find(r=>!r.querySelector('.serie-check.checked'));return target?{row:target,...dadosSerieNativa(target)}:null;}
+const _v12OriginalTimer=iniciarTimer;iniciarTimer=function(seg,nativeContext=null){const r=_v12OriginalTimer.apply(this,arguments);if(isNativeAndroid()){const rows=linhasValidasTreino(),completed=nativeContext?.completedRow||rows.filter(x=>x.querySelector('.serie-check.checked')).sort((a,b)=>(Number(a.dataset.completedAt)||0)-(Number(b.dataset.completedAt)||0)).at(-1)||null,completedData=dadosSerieNativa(completed),next=proximaSeriePendenteNativa(completed);window.TreinoNativeBridge.startRest({seconds:Number(seg),sessionId:window._treinoSessionId||'',exercise:completedData.exercise||next?.exercise||'',setNumber:completedData.setNumber||0,nextExercise:next?.exercise||'',nextSetNumber:next?.setNumber||0,nextOrdinal:Number.isInteger(next?.ordinal)?next.ordinal:-1}).catch(()=>{});}return r;};
 const _v12OriginalStopTimer=pararTimer;pararTimer=function(){const r=_v12OriginalStopTimer.apply(this,arguments);if(isNativeAndroid())window.TreinoNativeBridge.skipRest().catch(()=>{});return r;};
 const _v12OrigPause=typeof pausarRetomarTreino==='function'?pausarRetomarTreino:null;if(_v12OrigPause){pausarRetomarTreino=function(){const before=!!window._treinoPaused;const r=_v12OrigPause.apply(this,arguments);if(isNativeAndroid()){(before?window.TreinoNativeBridge.resumeWorkout():window.TreinoNativeBridge.pauseWorkout()).catch(()=>{});}return r;};}
 
@@ -5913,6 +5925,7 @@ setTimeout(()=>{aplicarRuntimeAndroidUI();renderizarTreinoPlanejadoDashboard();}
 
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){reconciliarEstadoNativo();reconciliarHealthPendentes(false);}});
 window.addEventListener('load',()=>setTimeout(inicializarNativeUI,350));
+setInterval(()=>{if(isNativeAndroid()&&treinoAtivoTemplate&&!document.hidden)reconciliarEstadoNativo();},1500);
 
 </script>
 </body>

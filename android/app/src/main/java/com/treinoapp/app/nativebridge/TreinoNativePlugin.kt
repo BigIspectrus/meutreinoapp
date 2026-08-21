@@ -148,6 +148,10 @@ class TreinoNativePlugin : Plugin() {
                 putExtra(WorkoutForegroundService.EXTRA_SECONDS, (call.getInt("seconds", 0) ?: 0).toLong())
                 putExtra(WorkoutForegroundService.EXTRA_EXERCISE, call.getString("exercise", ""))
                 putExtra(WorkoutForegroundService.EXTRA_SET, call.getInt("setNumber", 0) ?: 0)
+                putExtra(WorkoutForegroundService.EXTRA_NEXT_EXERCISE, call.getString("nextExercise", ""))
+                putExtra(WorkoutForegroundService.EXTRA_NEXT_SET, call.getInt("nextSetNumber", 0) ?: 0)
+                putExtra(WorkoutForegroundService.EXTRA_NEXT_ORDINAL, call.getInt("nextOrdinal", -1) ?: -1)
+                putExtra(WorkoutForegroundService.EXTRA_SESSION, call.getString("sessionId", ""))
             }
             call.resolve()
         } catch (e: Exception) { call.reject("Falha ao iniciar descanso", e) }
@@ -190,6 +194,27 @@ class TreinoNativePlugin : Plugin() {
     }
 
     @PluginMethod
+    fun testWatchSetAction(call: PluginCall) {
+        try {
+            WorkoutForegroundService.send(context, WorkoutForegroundService.ACTION_TEST_WATCH_SET_ALERT)
+            call.resolve(JSObject().apply { put("posted", true) })
+        } catch (e: Exception) { call.reject("Falha ao testar o botão do relógio", e) }
+    }
+
+    @PluginMethod
+    fun acknowledgeSetStart(call: PluginCall) {
+        try {
+            WorkoutForegroundService.send(context, WorkoutForegroundService.ACTION_ACK_SET_START) {
+                putExtra(WorkoutForegroundService.EXTRA_REQUEST_ID, call.getString("requestId", ""))
+                putExtra(WorkoutForegroundService.EXTRA_NEXT_EXERCISE, call.getString("exercise", ""))
+                putExtra(WorkoutForegroundService.EXTRA_NEXT_SET, call.getInt("setNumber", 0) ?: 0)
+                putExtra(WorkoutForegroundService.EXTRA_NEXT_ORDINAL, call.getInt("ordinal", -1) ?: -1)
+            }
+            call.resolve(JSObject().apply { put("acknowledged", true) })
+        } catch (e: Exception) { call.reject("Falha ao confirmar início da série", e) }
+    }
+
+    @PluginMethod
     fun openNotificationSettings(call: PluginCall) {
         try {
             val intent = Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
@@ -215,6 +240,12 @@ class TreinoNativePlugin : Plugin() {
             put("currentSet", p.getInt(WorkoutForegroundService.KEY_SET, 0))
             put("restEndAt", p.getLong(WorkoutForegroundService.KEY_REST_END, 0L))
             put("paused", p.getBoolean(WorkoutForegroundService.KEY_PAUSED, false))
+            put("pendingSetStartedAt", p.getLong(WorkoutForegroundService.KEY_PENDING_SET_STARTED_AT, 0L))
+            put("pendingSetExercise", p.getString(WorkoutForegroundService.KEY_PENDING_SET_EXERCISE, null))
+            put("pendingSetNumber", p.getInt(WorkoutForegroundService.KEY_PENDING_SET_NUMBER, 0))
+            put("pendingSetOrdinal", p.getInt(WorkoutForegroundService.KEY_PENDING_SET_ORDINAL, -1))
+            put("pendingSetSession", p.getString(WorkoutForegroundService.KEY_PENDING_SET_SESSION, null))
+            put("pendingSetRequestId", p.getString(WorkoutForegroundService.KEY_PENDING_REQUEST_ID, null))
         })
     }
 

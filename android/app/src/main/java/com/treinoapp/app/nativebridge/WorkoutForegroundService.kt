@@ -46,7 +46,15 @@ class WorkoutForegroundService : Service() {
         when (intent?.action) {
             ACTION_START -> saveWorkoutFromIntent(intent, reset = true)
             ACTION_UPDATE -> saveWorkoutFromIntent(intent, reset = false)
-            ACTION_START_REST -> startRest(intent.getLongExtra(EXTRA_SECONDS, 0L), intent.getStringExtra(EXTRA_EXERCISE).orEmpty(), intent.getIntExtra(EXTRA_SET, 0))
+            ACTION_START_REST -> startRest(
+                seconds = intent.getLongExtra(EXTRA_SECONDS, 0L),
+                exercise = intent.getStringExtra(EXTRA_EXERCISE).orEmpty(),
+                setNumber = intent.getIntExtra(EXTRA_SET, 0),
+                nextExercise = intent.getStringExtra(EXTRA_NEXT_EXERCISE).orEmpty(),
+                nextSetNumber = intent.getIntExtra(EXTRA_NEXT_SET, 0),
+                nextOrdinal = intent.getIntExtra(EXTRA_NEXT_ORDINAL, -1),
+                sessionId = intent.getStringExtra(EXTRA_SESSION).orEmpty(),
+            )
             ACTION_ADJUST_REST -> adjustRest(intent.getLongExtra(EXTRA_DELTA, 0L))
             ACTION_SKIP_REST -> clearRest()
             ACTION_CONFIGURE_ALERTS -> configureRestAlerts(
@@ -57,6 +65,15 @@ class WorkoutForegroundService : Service() {
                 exercise = "Teste do Galaxy Watch",
                 set = 0,
                 isTest = true,
+            )
+            ACTION_TEST_WATCH_SET_ALERT -> postWatchSetActionTest()
+            ACTION_START_NEXT_SET -> startNextSetFromWatch(intent.getStringExtra(EXTRA_TARGET_TOKEN).orEmpty())
+            ACTION_CONFIRM_WATCH_SET_TEST -> postWatchActionConfirmation(isTest = true)
+            ACTION_ACK_SET_START -> acknowledgeSetStart(
+                requestId = intent.getStringExtra(EXTRA_REQUEST_ID).orEmpty(),
+                exercise = intent.getStringExtra(EXTRA_NEXT_EXERCISE).orEmpty(),
+                setNumber = intent.getIntExtra(EXTRA_NEXT_SET, 0),
+                ordinal = intent.getIntExtra(EXTRA_NEXT_ORDINAL, -1),
             )
             ACTION_PAUSE -> pauseWorkout()
             ACTION_RESUME -> resumeWorkout()
@@ -71,7 +88,15 @@ class WorkoutForegroundService : Service() {
             handler.postDelayed(widgetTicker, 60_000L)
             return START_STICKY
         }
-        if (intent?.action == ACTION_CONFIGURE_ALERTS || intent?.action == ACTION_TEST_REST_ALERT) stopSelf(startId)
+        if (intent?.action in setOf(
+                ACTION_CONFIGURE_ALERTS,
+                ACTION_TEST_REST_ALERT,
+                ACTION_TEST_WATCH_SET_ALERT,
+                ACTION_CONFIRM_WATCH_SET_TEST,
+                ACTION_START_NEXT_SET,
+                ACTION_ACK_SET_START,
+            )
+        ) stopSelf(startId)
         return START_NOT_STICKY
     }
 
@@ -82,6 +107,18 @@ class WorkoutForegroundService : Service() {
                 .putBoolean(KEY_PAUSED, false)
                 .putLong(KEY_PAUSED_AT, 0L)
                 .putLong(KEY_PAUSED_TOTAL, 0L)
+                .remove(KEY_NEXT_EXERCISE)
+                .remove(KEY_NEXT_SET)
+                .remove(KEY_NEXT_ORDINAL)
+                .remove(KEY_NEXT_SESSION)
+                .remove(KEY_NEXT_TOKEN)
+                .remove(KEY_PENDING_SET_STARTED_AT)
+                .remove(KEY_PENDING_SET_EXERCISE)
+                .remove(KEY_PENDING_SET_NUMBER)
+                .remove(KEY_PENDING_SET_ORDINAL)
+                .remove(KEY_PENDING_SET_SESSION)
+                .remove(KEY_PENDING_REQUEST_ID)
+                .remove(KEY_PENDING_TARGET_TOKEN)
         }
         intent.getStringExtra(EXTRA_SESSION)?.let { editor.putString(KEY_SESSION, it) }
         intent.getStringExtra(EXTRA_NAME)?.let { editor.putString(KEY_NAME, it) }
@@ -94,10 +131,32 @@ class WorkoutForegroundService : Service() {
         editor.apply()
     }
 
-    private fun startRest(seconds: Long, exercise: String, setNumber: Int) {
+    private fun startRest(
+        seconds: Long,
+        exercise: String,
+        setNumber: Int,
+        nextExercise: String,
+        nextSetNumber: Int,
+        nextOrdinal: Int,
+        sessionId: String,
+    ) {
         if (seconds <= 0) return
         val end = System.currentTimeMillis() + seconds * 1000L
-        prefs.edit().putLong(KEY_REST_END, end).putString(KEY_EXERCISE, exercise).putInt(KEY_SET, setNumber).apply()
+        val resolvedSession = sessionId.ifBlank { prefs.getString(KEY_SESSION, "").orEmpty() }
+        val targetToken = if (nextExercise.isNotBlank() && nextSetNumber > 0) {
+            "$resolvedSession|$nextOrdinal|$nextExercise|$nextSetNumber|$end"
+        } else ""
+        prefs.edit()
+            .putLong(KEY_REST_END, end)
+            .putString(KEY_EXERCISE, exercise)
+            .putInt(KEY_SET, setNumber)
+            .putString(KEY_NEXT_EXERCISE, nextExercise)
+            .putInt(KEY_NEXT_SET, nextSetNumber)
+            .putInt(KEY_NEXT_ORDINAL, nextOrdinal)
+            .putString(KEY_NEXT_SESSION, resolvedSession)
+            .putString(KEY_NEXT_TOKEN, targetToken)
+            .apply()
+        NotificationManagerCompat.from(this).cancel(REST_NOTIFICATION_ID)
         scheduleRestAlarmIfNeeded()
         updateNotification()
     }
@@ -115,7 +174,15 @@ class WorkoutForegroundService : Service() {
         restFinishRunnable?.let(handler::removeCallbacks)
         restFinishRunnable = null
         releaseRestWakeLock()
-        prefs.edit().putLong(KEY_REST_END, 0L).apply()
+        prefs.edit()
+            .putLong(KEY_REST_END, 0L)
+            .remove(KEY_NEXT_EXERCISE)
+            .remove(KEY_NEXT_SET)
+            .remove(KEY_NEXT_ORDINAL)
+            .remove(KEY_NEXT_SESSION)
+            .remove(KEY_NEXT_TOKEN)
+            .apply()
+        NotificationManagerCompat.from(this).cancel(REST_NOTIFICATION_ID)
         updateNotification()
     }
 
@@ -139,7 +206,22 @@ class WorkoutForegroundService : Service() {
         restFinishRunnable = null
         handler.removeCallbacks(widgetTicker)
         releaseRestWakeLock()
-        prefs.edit().putBoolean(KEY_ACTIVE, false).putLong(KEY_REST_END, 0L).apply()
+        prefs.edit().putBoolean(KEY_ACTIVE, false).putLong(KEY_REST_END, 0L)
+            .remove(KEY_NEXT_EXERCISE)
+            .remove(KEY_NEXT_SET)
+            .remove(KEY_NEXT_ORDINAL)
+            .remove(KEY_NEXT_SESSION)
+            .remove(KEY_NEXT_TOKEN)
+            .remove(KEY_PENDING_SET_STARTED_AT)
+            .remove(KEY_PENDING_SET_EXERCISE)
+            .remove(KEY_PENDING_SET_NUMBER)
+            .remove(KEY_PENDING_SET_ORDINAL)
+            .remove(KEY_PENDING_SET_SESSION)
+            .remove(KEY_PENDING_REQUEST_ID)
+            .remove(KEY_PENDING_TARGET_TOKEN)
+            .apply()
+        NotificationManagerCompat.from(this).cancel(REST_NOTIFICATION_ID)
+        NotificationManagerCompat.from(this).cancel(WATCH_CONFIRMATION_NOTIFICATION_ID)
         TreinoAppWidgetProvider.updateAll(this)
         ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
         stopSelf()
@@ -177,13 +259,20 @@ class WorkoutForegroundService : Service() {
     private fun onRestFinished() {
         releaseRestWakeLock()
         prefs.edit().putLong(KEY_REST_END, 0L).apply()
-        val exercise = prefs.getString(KEY_EXERCISE, "Exercício") ?: "Exercício"
-        val set = prefs.getInt(KEY_SET, 0)
-        postRestFinishedAlert(exercise, set, isTest = false)
+        val nextExercise = prefs.getString(KEY_NEXT_EXERCISE, "").orEmpty()
+        val nextSet = prefs.getInt(KEY_NEXT_SET, 0)
+        val targetToken = prefs.getString(KEY_NEXT_TOKEN, "").orEmpty()
+        val fallbackExercise = prefs.getString(KEY_EXERCISE, "Exercício") ?: "Exercício"
+        postRestFinishedAlert(
+            exercise = nextExercise.ifBlank { fallbackExercise },
+            set = nextSet,
+            isTest = false,
+            targetToken = targetToken,
+        )
         updateNotification()
     }
 
-    private fun postRestFinishedAlert(exercise: String, set: Int, isTest: Boolean) {
+    private fun postRestFinishedAlert(exercise: String, set: Int, isTest: Boolean, targetToken: String = "") {
         val vibration = normalizedVibration(prefs.getString(KEY_REST_VIBRATION, "medium"))
         val sound = prefs.getBoolean(KEY_REST_SOUND, true)
         val channelId = createRestAlertChannel(vibration, sound)
@@ -191,8 +280,19 @@ class WorkoutForegroundService : Service() {
         val title = if (isTest) "Teste de aviso do TreinoApp" else "Descanso concluído"
         val message = when {
             isTest -> "Se este aviso apareceu no relógio, o espelhamento está funcionando."
-            set > 0 -> "$exercise · próxima série ${set + 1}"
+            set > 0 -> "$exercise · série $set pronta para iniciar"
             else -> exercise
+        }
+        val canStartSet = !isTest && targetToken.isNotBlank() && exercise.isNotBlank() && set > 0
+        val wearable = NotificationCompat.WearableExtender()
+            .setBridgeTag(REST_BRIDGE_TAG)
+            .setDismissalId("treinoapp-rest-$now")
+        if (canStartSet) {
+            wearable.addAction(NotificationCompat.Action.Builder(
+                R.drawable.ic_stat_treino,
+                "Iniciar série",
+                targetPendingIntent(ACTION_START_NEXT_SET, targetToken),
+            ).build())
         }
         val alert = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.ic_stat_treino)
@@ -209,11 +309,7 @@ class WorkoutForegroundService : Service() {
             .setOnlyAlertOnce(false)
             .setAutoCancel(true)
             .setContentIntent(openAppIntent())
-            .extend(
-                NotificationCompat.WearableExtender()
-                    .setBridgeTag(REST_BRIDGE_TAG)
-                    .setDismissalId("treinoapp-rest-$now")
-            )
+            .extend(wearable)
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             alert.setVibrate(vibrationPattern(vibration))
             if (sound) alert.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
@@ -221,6 +317,150 @@ class WorkoutForegroundService : Service() {
         }
         // O gerenciador compatível preserva os metadados do WearableExtender ao publicar.
         NotificationManagerCompat.from(this).notify(REST_NOTIFICATION_ID, alert.build())
+    }
+
+    private fun postWatchSetActionTest() {
+        val vibration = normalizedVibration(prefs.getString(KEY_REST_VIBRATION, "medium"))
+        val sound = prefs.getBoolean(KEY_REST_SOUND, true)
+        val now = System.currentTimeMillis()
+        val action = NotificationCompat.Action.Builder(
+            R.drawable.ic_stat_treino,
+            "Testar botão",
+            servicePendingIntent(ACTION_CONFIRM_WATCH_SET_TEST),
+        ).build()
+        val wearable = NotificationCompat.WearableExtender()
+            .addAction(action)
+            .setBridgeTag(REST_BRIDGE_TAG)
+            .setDismissalId("treinoapp-watch-test-$now")
+        val message = "Toque em “Testar botão”. Nenhum treino será alterado."
+        val alert = NotificationCompat.Builder(this, createRestAlertChannel(vibration, sound))
+            .setSmallIcon(R.drawable.ic_stat_treino)
+            .setContentTitle("Teste do botão no Galaxy Watch")
+            .setContentText(message)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+            .setSubText("TreinoApp Beta")
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setLocalOnly(false)
+            .setWhen(now)
+            .setShowWhen(true)
+            .setAutoCancel(true)
+            .setContentIntent(openAppIntent())
+            .extend(wearable)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            alert.setVibrate(vibrationPattern(vibration))
+            if (sound) alert.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
+            else alert.setSound(null)
+        }
+        NotificationManagerCompat.from(this).notify(REST_NOTIFICATION_ID, alert.build())
+    }
+
+    private fun startNextSetFromWatch(targetToken: String) {
+        if (targetToken.isBlank()) return
+        val existingToken = prefs.getString(KEY_PENDING_TARGET_TOKEN, "").orEmpty()
+        if (existingToken == targetToken && prefs.getLong(KEY_PENDING_SET_STARTED_AT, 0L) > 0L) {
+            postWatchActionConfirmation(isTest = false)
+            return
+        }
+        if (!prefs.getBoolean(KEY_ACTIVE, false) || targetToken != prefs.getString(KEY_NEXT_TOKEN, "").orEmpty()) return
+        val exercise = prefs.getString(KEY_NEXT_EXERCISE, "").orEmpty()
+        val setNumber = prefs.getInt(KEY_NEXT_SET, 0)
+        val ordinal = prefs.getInt(KEY_NEXT_ORDINAL, -1)
+        val session = prefs.getString(KEY_NEXT_SESSION, "").orEmpty()
+        if (exercise.isBlank() || setNumber <= 0 || session != prefs.getString(KEY_SESSION, "").orEmpty()) return
+        val startedAt = System.currentTimeMillis()
+        val requestId = "$targetToken|$startedAt"
+        restFinishRunnable?.let(handler::removeCallbacks)
+        restFinishRunnable = null
+        releaseRestWakeLock()
+        prefs.edit()
+            .putLong(KEY_REST_END, 0L)
+            .putString(KEY_EXERCISE, exercise)
+            .putInt(KEY_SET, setNumber)
+            .putLong(KEY_PENDING_SET_STARTED_AT, startedAt)
+            .putString(KEY_PENDING_SET_EXERCISE, exercise)
+            .putInt(KEY_PENDING_SET_NUMBER, setNumber)
+            .putInt(KEY_PENDING_SET_ORDINAL, ordinal)
+            .putString(KEY_PENDING_SET_SESSION, session)
+            .putString(KEY_PENDING_REQUEST_ID, requestId)
+            .putString(KEY_PENDING_TARGET_TOKEN, targetToken)
+            .remove(KEY_NEXT_EXERCISE)
+            .remove(KEY_NEXT_SET)
+            .remove(KEY_NEXT_ORDINAL)
+            .remove(KEY_NEXT_SESSION)
+            .remove(KEY_NEXT_TOKEN)
+            .apply()
+        NotificationManagerCompat.from(this).cancel(REST_NOTIFICATION_ID)
+        postWatchActionConfirmation(isTest = false)
+        updateNotification()
+    }
+
+    private fun acknowledgeSetStart(requestId: String, exercise: String, setNumber: Int, ordinal: Int) {
+        val pendingRequest = prefs.getString(KEY_PENDING_REQUEST_ID, "").orEmpty()
+        if (requestId.isNotBlank() && requestId != pendingRequest) return
+        val pendingMatches = requestId.isNotBlank() || (
+            exercise.isNotBlank() && exercise == prefs.getString(KEY_PENDING_SET_EXERCISE, "").orEmpty() &&
+                setNumber == prefs.getInt(KEY_PENDING_SET_NUMBER, 0) &&
+                (ordinal < 0 || ordinal == prefs.getInt(KEY_PENDING_SET_ORDINAL, -1))
+            )
+        val nextMatches = exercise.isNotBlank() && exercise == prefs.getString(KEY_NEXT_EXERCISE, "").orEmpty() &&
+            setNumber == prefs.getInt(KEY_NEXT_SET, 0) &&
+            (ordinal < 0 || ordinal == prefs.getInt(KEY_NEXT_ORDINAL, -1))
+        val editor = prefs.edit()
+        if (pendingMatches) editor
+            .remove(KEY_PENDING_SET_STARTED_AT)
+            .remove(KEY_PENDING_SET_EXERCISE)
+            .remove(KEY_PENDING_SET_NUMBER)
+            .remove(KEY_PENDING_SET_ORDINAL)
+            .remove(KEY_PENDING_SET_SESSION)
+            .remove(KEY_PENDING_REQUEST_ID)
+            .remove(KEY_PENDING_TARGET_TOKEN)
+        if (nextMatches) editor
+            .remove(KEY_NEXT_EXERCISE)
+            .remove(KEY_NEXT_SET)
+            .remove(KEY_NEXT_ORDINAL)
+            .remove(KEY_NEXT_SESSION)
+            .remove(KEY_NEXT_TOKEN)
+        editor.apply()
+        if (pendingMatches || nextMatches) NotificationManagerCompat.from(this).cancel(REST_NOTIFICATION_ID)
+    }
+
+    private fun postWatchActionConfirmation(isTest: Boolean) {
+        val exercise = prefs.getString(KEY_PENDING_SET_EXERCISE, "").orEmpty()
+        val setNumber = prefs.getInt(KEY_PENDING_SET_NUMBER, 0)
+        val title = if (isTest) "Botão do relógio funcionando" else "Série iniciada"
+        val message = if (isTest) {
+            "O comando chegou ao celular sem alterar nenhum treino."
+        } else {
+            listOfNotNull(
+                exercise.takeIf { it.isNotBlank() },
+                setNumber.takeIf { it > 0 }?.let { "série $it" },
+                "conclua pelo celular",
+            ).joinToString(" · ")
+        }
+        val now = System.currentTimeMillis()
+        val notification = NotificationCompat.Builder(this, CHANNEL_WATCH_ACTION)
+            .setSmallIcon(R.drawable.ic_stat_treino)
+            .setContentTitle(title)
+            .setContentText(message)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setCategory(NotificationCompat.CATEGORY_STATUS)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setLocalOnly(false)
+            .setOnlyAlertOnce(true)
+            .setAutoCancel(true)
+            .setTimeoutAfter(15_000L)
+            .setContentIntent(openAppIntent())
+            .extend(
+                NotificationCompat.WearableExtender()
+                    .setBridgeTag(WATCH_ACTION_BRIDGE_TAG)
+                    .setDismissalId("treinoapp-watch-confirm-$now")
+            )
+            .build()
+        NotificationManagerCompat.from(this).cancel(REST_NOTIFICATION_ID)
+        NotificationManagerCompat.from(this).notify(WATCH_CONFIRMATION_NOTIFICATION_ID, notification)
     }
 
     private fun configureRestAlerts(rawVibration: String?, sound: Boolean) {
@@ -350,12 +590,28 @@ class WorkoutForegroundService : Service() {
         return PendingIntent.getService(this, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
     }
 
+    private fun targetPendingIntent(action: String, targetToken: String): PendingIntent {
+        val requestCode = (action + targetToken).hashCode()
+        val intent = Intent(this, WorkoutForegroundService::class.java).apply {
+            this.action = action
+            putExtra(EXTRA_TARGET_TOKEN, targetToken)
+        }
+        return PendingIntent.getService(this, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+    }
+
     private fun createChannels() {
         val nm = getSystemService(NotificationManager::class.java)
         nm.createNotificationChannel(NotificationChannel(CHANNEL_WORKOUT, "Treino em andamento", NotificationManager.IMPORTANCE_LOW).apply {
             description = "Mantém o treino e o cronômetro ativos em segundo plano"
             setSound(null, null)
             enableVibration(false)
+        })
+        nm.createNotificationChannel(NotificationChannel(CHANNEL_WATCH_ACTION, "Comandos do Galaxy Watch", NotificationManager.IMPORTANCE_DEFAULT).apply {
+            description = "Confirma comandos iniciados pelo relógio"
+            setShowBadge(false)
+            setSound(null, null)
+            enableVibration(false)
+            lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
         })
         createRestAlertChannel(
             normalizedVibration(prefs.getString(KEY_REST_VIBRATION, "medium")),
@@ -388,6 +644,18 @@ class WorkoutForegroundService : Service() {
         const val KEY_PAUSED_TOTAL = "pausedTotal"
         const val KEY_REST_VIBRATION = "restVibration"
         const val KEY_REST_SOUND = "restSound"
+        const val KEY_NEXT_EXERCISE = "nextExercise"
+        const val KEY_NEXT_SET = "nextSet"
+        const val KEY_NEXT_ORDINAL = "nextOrdinal"
+        const val KEY_NEXT_SESSION = "nextSession"
+        const val KEY_NEXT_TOKEN = "nextToken"
+        const val KEY_PENDING_SET_STARTED_AT = "pendingSetStartedAt"
+        const val KEY_PENDING_SET_EXERCISE = "pendingSetExercise"
+        const val KEY_PENDING_SET_NUMBER = "pendingSetNumber"
+        const val KEY_PENDING_SET_ORDINAL = "pendingSetOrdinal"
+        const val KEY_PENDING_SET_SESSION = "pendingSetSession"
+        const val KEY_PENDING_REQUEST_ID = "pendingSetRequestId"
+        const val KEY_PENDING_TARGET_TOKEN = "pendingTargetToken"
 
         const val ACTION_START = "com.treinoapp.action.START"
         const val ACTION_UPDATE = "com.treinoapp.action.UPDATE"
@@ -396,6 +664,10 @@ class WorkoutForegroundService : Service() {
         const val ACTION_SKIP_REST = "com.treinoapp.action.SKIP_REST"
         const val ACTION_CONFIGURE_ALERTS = "com.treinoapp.action.CONFIGURE_ALERTS"
         const val ACTION_TEST_REST_ALERT = "com.treinoapp.action.TEST_REST_ALERT"
+        const val ACTION_TEST_WATCH_SET_ALERT = "com.treinoapp.action.TEST_WATCH_SET_ALERT"
+        const val ACTION_START_NEXT_SET = "com.treinoapp.action.START_NEXT_SET"
+        const val ACTION_CONFIRM_WATCH_SET_TEST = "com.treinoapp.action.CONFIRM_WATCH_SET_TEST"
+        const val ACTION_ACK_SET_START = "com.treinoapp.action.ACK_SET_START"
         const val ACTION_PAUSE = "com.treinoapp.action.PAUSE"
         const val ACTION_RESUME = "com.treinoapp.action.RESUME"
         const val ACTION_FINISH = "com.treinoapp.action.FINISH"
@@ -413,11 +685,19 @@ class WorkoutForegroundService : Service() {
         const val EXTRA_PAUSED_BOOL = "paused"
         const val EXTRA_VIBRATION = "vibration"
         const val EXTRA_SOUND = "sound"
+        const val EXTRA_NEXT_EXERCISE = "nextExercise"
+        const val EXTRA_NEXT_SET = "nextSetNumber"
+        const val EXTRA_NEXT_ORDINAL = "nextOrdinal"
+        const val EXTRA_TARGET_TOKEN = "targetToken"
+        const val EXTRA_REQUEST_ID = "requestId"
 
         private const val CHANNEL_WORKOUT = "treinoapp_workout"
+        private const val CHANNEL_WATCH_ACTION = "treinoapp_watch_action_v1"
         private const val WORKOUT_NOTIFICATION_ID = 12001
         private const val REST_NOTIFICATION_ID = 12002
+        private const val WATCH_CONFIRMATION_NOTIFICATION_ID = 12003
         private const val REST_BRIDGE_TAG = "treinoapp-rest-alert"
+        private const val WATCH_ACTION_BRIDGE_TAG = "treinoapp-watch-action"
 
         fun send(context: Context, action: String, configure: Intent.() -> Unit = {}) {
             val intent = Intent(context, WorkoutForegroundService::class.java).apply {
