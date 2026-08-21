@@ -741,12 +741,22 @@
     .context-chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}.context-chip{padding:9px 11px;font-size:.78em}
     .timing-quality{font-size:.72em;color:var(--text-muted);text-align:center;margin-top:4px}.timing-quality strong{color:var(--success)}
 
+    /* v12.4.1 - leitura simples dos dados do treino */
+    .smart-insight-card{margin:12px 0 14px;padding:15px;border:1px solid color-mix(in srgb,var(--primary) 65%,var(--border));border-radius:16px;background:linear-gradient(145deg,var(--surface),var(--primary-dim));box-shadow:0 8px 24px rgba(0,0,0,.12)}
+    .smart-insight-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:9px}.smart-insight-kicker{font-size:.68em;font-weight:850;letter-spacing:.65px;text-transform:uppercase;color:var(--primary)}.smart-insight-title{font-size:1.05em;font-weight:900;line-height:1.25;margin-top:2px}
+    .smart-confidence{flex:none;border:1px solid var(--border);border-radius:999px;padding:5px 8px;font-size:.64em;font-weight:850;color:var(--text-muted);background:var(--surface2)}.smart-confidence.high{border-color:var(--success);color:var(--success);background:var(--success-dim)}.smart-confidence.medium{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+    .smart-insight-list{display:grid;gap:7px;margin:10px 0}.smart-insight-item{display:grid;grid-template-columns:8px 1fr;gap:8px;align-items:start;font-size:.78em;line-height:1.42}.smart-insight-dot{width:7px;height:7px;border-radius:50%;background:var(--primary);margin-top:5px}
+    .smart-next-step{padding:10px 11px;border-radius:11px;background:var(--surface2);font-size:.77em;line-height:1.43}.smart-next-step strong{display:block;color:var(--accent);margin-bottom:2px}.smart-evidence{margin-top:9px;font-size:.66em;line-height:1.4;color:var(--text-muted)}
+    .smart-technical{margin:10px 0 0;border:1px solid var(--border);border-radius:13px;background:var(--surface2);overflow:hidden}.smart-technical>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;list-style:none;padding:12px 13px;cursor:pointer;font-size:.78em;font-weight:800;color:var(--text-muted)}.smart-technical>summary::-webkit-details-marker{display:none}.smart-technical>summary::after{content:'⌄';font-size:1.15em}.smart-technical[open]>summary::after{content:'⌃'}.smart-technical-content{padding:0 10px 10px}.smart-technical-content>.session-health-card,.smart-technical-content>.health-match{margin-top:2px}
+    .post-health-summary.smart-insight-card{margin-top:12px;text-align:left}
+
     @media(max-width:520px){
       .tab-content{padding:12px}
       .card{padding:15px;margin-bottom:11px}
       .app-header{padding:10px 12px}
       .timer-compact .tmini{display:none}
       .settings-hub{grid-template-columns:1fr 1fr}
+      .smart-insight-card{padding:13px}.smart-insight-title{font-size:.98em}.smart-insight-head{gap:7px}
     }
 
 </style>
@@ -983,12 +993,12 @@
 <!-- MODAL NOVIDADES -->
 <div class="modal-overlay" id="modalNovidades">
   <div class="modal" style="max-width:500px;">
-    <div class="modal-title">TreinoApp v12.4.0 Beta</div>
+    <div class="modal-title">TreinoApp v12.4.1 Beta</div>
     <div style="font-size:.88em;line-height:1.6;color:var(--text-muted);">
       <p style="color:var(--text);font-weight:700;margin-bottom:8px;">Principais novidades desta versão</p>
-      <p>Agora você pode marcar o início da série para medir o descanso real, registrar o RPE geral e anotar o contexto do dia ao concluir o treino.</p>
-      <p style="margin-top:8px;">O aviso de fim do descanso ganhou vibração configurável e foi preparado para aparecer em relógios pareados por meio das notificações do Android.</p>
-      <p style="margin-top:8px;">A frequência cardíaca continua sendo analisada após a sincronização do Galaxy Watch, sem prometer acompanhamento em tempo real.</p>
+      <p>Os detalhes do treino agora começam com uma leitura curta que combina volume, RIR/RPE, descanso, contexto e dados de FC já sincronizados.</p>
+      <p style="margin-top:8px;">As comparações usam até cinco sessões do mesmo treino, mostram a confiança da análise e deixam gráficos e tabelas recolhidos.</p>
+      <p style="margin-top:8px;">O aviso do descanso ganhou encaminhamento Wear OS reforçado e um botão de teste direto nas Preferências.</p>
     </div>
     <div class="modal-footer"><button class="btn btn-primary" onclick="fecharNovidades()">Entendi</button></div>
   </div>
@@ -1679,8 +1689,11 @@
       <select id="selRestNotificationSound" style="width:auto;padding:6px 10px;font-size:.83em;" onchange="salvarAlertasDescanso()"><option value="1">Ativado</option><option value="0">Silencioso</option></select>
     </div>
     <div class="config-item native-card" id="watchNotificationConfig" style="display:none;align-items:flex-start;">
-      <div style="flex:1;"><div class="config-label">Aviso no Galaxy Watch</div><div class="config-sub">O fim do descanso é enviado como notificação espelhável. No Galaxy Wearable, permita notificações do TreinoApp Beta.</div></div>
-      <button class="btn btn-outline btn-sm" style="width:auto;" onclick="abrirConfigNotificacoesAndroid()">Revisar</button>
+      <div style="flex:1;"><div class="config-label">Aviso no Galaxy Watch</div><div class="config-sub">Teste o encaminhamento sem iniciar um treino. Se aparecer apenas no celular, permita o TreinoApp Beta em Galaxy Wearable → Configurações do relógio → Notificações.</div></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+        <button class="btn btn-primary btn-sm" style="width:auto;" onclick="testarAvisoGalaxyWatch()">Testar</button>
+        <button class="btn btn-outline btn-sm" style="width:auto;" onclick="abrirConfigNotificacoesAndroid()">Revisar</button>
+      </div>
     </div>
     <div class="config-item" style="margin-top:10px;">
       <div><div class="config-label">Descanso automático</div><div class="config-sub">Iniciar ao concluir uma série</div></div>
@@ -1783,14 +1796,14 @@
 </div>
 
 <script>
-const APP_VERSION = '12.4.0';
-const APP_BUILD = '2026.08.21.1';
+const APP_VERSION = '12.4.1';
+const APP_BUILD = '2026.08.21.2';
 const DATA_SCHEMA_VERSION = 15;
 const GITHUB_REPO='BigIspectrus/meutreinoapp';
 const GITHUB_PAGES_BASE='https://bigispectrus.github.io/meutreinoapp';
 let _latestAndroidReleaseUrl='';
 let _nativeChannel='web';
-const APP_CACHE_VERSION = 'treinoapp-v12.4.0-202608211';
+const APP_CACHE_VERSION = 'treinoapp-v12.4.1-202608212';
 
 const SET_TYPES={workset:'Work set',warmup:'Aquecimento',topset:'Top set',backoff:'Back-off',dropset:'Drop set',cluster:'Cluster set',fst7:'FST-7',restpause:'Rest-pause',myoreps:'Myo-reps',amrap:'AMRAP'};
 function normalizarSetType(v){return SET_TYPES[v]?v:'workset';}
@@ -3968,12 +3981,12 @@ function abrirCompartilhar(sessionKey=null) {
   const preferred=sessionKey||window._lastFinishedSessionId;const found=(preferred?sessions.find(([k])=>k===preferred):null)||sessions[0];
   if(!found)return toast('Sessão não encontrada','error');
   const [sid,regs]=found,_shareSessionKey=sid;window._shareSessionKey=_shareSessionKey;
-  const dataBr=(regs[0]?.data||'').split('-').reverse().join('/'),name=regs.find(r=>r.templateNome)?.templateNome||'Treino',health=getHealthLinks()[sid]||{},samples=normalizarAmostrasHealth(health),b=boundsSessao(regs),vol=volumeSessao(regs),prs=contarPrsDaSessao(sid,regs);
+  const dataBr=(regs[0]?.data||'').split('-').reverse().join('/'),name=regs.find(r=>r.templateNome)?.templateNome||'Treino',health=getHealthLinks()[sid]||{},samples=normalizarAmostrasHealth(health),b=boundsSessao(regs),vol=volumeSessao(regs),prs=contarPrsDaSessao(sid,regs),smart=gerarAnaliseSessaoV1241(sid,regs,health);
   const exs={};regs.forEach(r=>(exs[r.exercicio]||(exs[r.exercicio]=[])).push(r));
   const exerciseEntries=Object.entries(exs).map(([ex,series])=>[ex,series.slice().sort((a,b)=>(a.numSerie||0)-(b.numSerie||0))]);
-  const hasHealth=!!(health.recordId||health.sourceApp),setsPerLine=6;
+  const hasHealth=!!(health.recordId||health.sourceApp),setsPerLine=6,smartHeight=smart?242:0;
   const exerciseCardsHeight=exerciseEntries.reduce((total,[,series])=>total+92+Math.max(0,Math.ceil(series.length/setsPerLine)-1)*40+12,0);
-  const exerciseStartY=360+(hasHealth?242:0)+30;
+  const exerciseStartY=360+(hasHealth?242:0)+smartHeight+30;
   const canvas=document.getElementById('shareCanvas'),ctx=canvas.getContext('2d'),W=1080,H=Math.max(1350,exerciseStartY+exerciseCardsHeight+100);canvas.width=W;canvas.height=H;
   const isDark=(window._temaEfetivo||temaAtual)!=='light',bg=isDark?'#0f1117':'#f0f2fa',surface=isDark?'#1a1d27':'#ffffff',border=isDark?'#2e3350':'#d0d5ee',text=isDark?'#eef0fa':'#1e2340',muted=isDark?'#8b92b5':'#6b7280',primary=isDark?'#4f8ef7':'#2563eb',accent=isDark?'#f7c94f':'#d97706',success='#4fd39a',hrColor='#ef5b8b';
   ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);ctx.fillStyle=primary;ctx.fillRect(0,0,W,10);
@@ -3985,6 +3998,15 @@ function abrirCompartilhar(sessionKey=null) {
     if(samples.length>1){const gx=80,gy=y+148,gw=W-160,gh=42,min=Math.min(...samples.map(p=>p.bpm)),max=Math.max(...samples.map(p=>p.bpm)),range=Math.max(1,max-min);ctx.strokeStyle=hrColor;ctx.lineWidth=3;ctx.beginPath();samples.forEach((p,i)=>{const px=gx+(i/(samples.length-1))*gw,py=gy+gh-((p.bpm-min)/range)*gh;i?ctx.lineTo(px,py):ctx.moveTo(px,py)});ctx.stroke();}
     y+=242;
   }
+  if(smart){
+    ctx.fillStyle=surface;roundRect(ctx,58,y,W-116,220,20);ctx.strokeStyle=primary;ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle=primary;ctx.font='bold 24px sans-serif';ctx.fillText('COMO FOI SEU TREINO',80,y+38);
+    ctx.fillStyle=muted;ctx.font='bold 20px sans-serif';ctx.fillText(smart.confidenceLabel.toUpperCase(),780,y+38);
+    ctx.fillStyle=text;ctx.font='bold 27px sans-serif';linhasCanvasV1241(ctx,smart.lead,W-160,2).forEach((line,i)=>ctx.fillText(line,80,y+78+i*31));
+    ctx.fillStyle=accent;ctx.font='bold 20px sans-serif';ctx.fillText('PRÓXIMA SESSÃO',80,y+145);
+    ctx.fillStyle=muted;ctx.font='22px sans-serif';linhasCanvasV1241(ctx,smart.next,W-160,2).forEach((line,i)=>ctx.fillText(line,80,y+176+i*27));
+    y+=242;
+  }
   const maxEx=calcularMaxPorEx(hist);ctx.fillStyle=text;ctx.font='bold 30px sans-serif';ctx.fillText(`Exercícios (${exerciseEntries.length})`,58,y);y+=30;
   const pillGap=8,pillW=(W-156-pillGap*(setsPerLine-1))/setsPerLine;
   exerciseEntries.forEach(([ex,series])=>{const pillRows=Math.max(1,Math.ceil(series.length/setsPerLine)),cardH=92+(pillRows-1)*40;ctx.fillStyle=surface;roundRect(ctx,58,y,W-116,cardH,14);ctx.fillStyle=text;ctx.font='bold 27px sans-serif';ctx.fillText(ex.length>42?ex.slice(0,41)+'…':ex,78,y+35);series.forEach((r,i)=>{const col=i%setsPerLine,row=Math.floor(i/setsPerLine),px=78+col*(pillW+pillGap),py=y+49+row*40,t=`${r.carga}kg×${r.reps||0}`;ctx.fillStyle=Number(r.carga)===Number(maxEx[ex])?accent:primary;roundRect(ctx,px,py,pillW,30,8);ctx.fillStyle=isDark?'#10131c':'#fff';ctx.font='bold 18px sans-serif';ctx.fillText(t,px+10,py+21,pillW-20);});y+=cardH+12;});
@@ -3992,6 +4014,14 @@ function abrirCompartilhar(sessionKey=null) {
   const img=document.getElementById('sharePreview');img.src=canvas.toDataURL('image/png');document.getElementById('modalCompartilhar').classList.add('open');
 }
 
+
+function linhasCanvasV1241(ctx,text,maxWidth,maxLines=2){
+  const words=String(text||'').split(/\s+/).filter(Boolean),lines=[];let line='';
+  words.forEach(word=>{const candidate=line?line+' '+word:word;if(ctx.measureText(candidate).width<=maxWidth||!line)line=candidate;else{lines.push(line);line=word;}});
+  if(line)lines.push(line);
+  if(lines.length>maxLines){lines.length=maxLines;let last=lines[maxLines-1];while(last&&ctx.measureText(last+'…').width>maxWidth)last=last.slice(0,-1);lines[maxLines-1]=last.replace(/[\s,.;:]+$/,'')+'…';}
+  return lines;
+}
 
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
@@ -4199,6 +4229,7 @@ async function sincronizarAlertasNativos(){if(!isNativeAndroid()||!window.Treino
 function carregarAlertasDescanso(syncNative=false){const vib=document.getElementById('selRestVibration'),sound=document.getElementById('selRestNotificationSound'),watch=document.getElementById('watchNotificationConfig');if(vib)vib.value=getRestVibration();if(sound)sound.value=getRestNotificationSound()?'1':'0';if(watch)watch.style.display=isNativeAndroid()?'flex':'none';if(syncNative)sincronizarAlertasNativos();}
 async function salvarAlertasDescanso(){const vib=document.getElementById('selRestVibration')?.value||'medium',sound=document.getElementById('selRestNotificationSound')?.value!=='0';localStorage.setItem('restVibration',['off','light','medium','long'].includes(vib)?vib:'medium');localStorage.setItem('restNotificationSound',sound?'1':'0');await sincronizarAlertasNativos();toast('Avisos de descanso atualizados','success');}
 async function abrirConfigNotificacoesAndroid(){if(!isNativeAndroid())return toast('Disponível no APK Android','info');try{await window.TreinoNativeBridge.openNotificationSettings();}catch(e){toast('Não foi possível abrir as notificações do Android','warn');}}
+async function testarAvisoGalaxyWatch(){if(!isNativeAndroid())return toast('O teste está disponível no APK Android','info');try{await sincronizarAlertasNativos();await window.TreinoNativeBridge.testRestAlert();toast('Aviso enviado. Confira o celular e o relógio.','success');}catch(e){toast('Não foi possível publicar o aviso de teste','warn');}}
 function tocarSom(tipo, vezes=3) {
   if(tipo==='silencioso') return;
   try {
@@ -5681,6 +5712,196 @@ let _exerciseInsightsChart=null;
 function desenharInsightsExercicio(ex,groups){const c=document.getElementById('exerciseInsightsChart');if(!c||typeof Chart==='undefined')return;if(_exerciseInsightsChart){_exerciseInsightsChart.destroy();_exerciseInsightsChart=null;}const labels=groups.map(([,rs])=>(rs[0]?.data||'').slice(5).split('-').reverse().join('/')),loads=groups.map(([,rs])=>Math.max(...rs.map(r=>Number(r.carga)||0))),e1=groups.map(([,rs])=>Math.max(...rs.map(calcE1rm)));_exerciseInsightsChart=new Chart(c.getContext('2d'),{type:'line',data:{labels,datasets:[{label:'Carga máx.',data:loads,borderColor:'#4f8ef7',backgroundColor:'rgba(79,142,247,.08)',tension:.25},{label:'e1RM',data:e1,borderColor:'#f7c94f',backgroundColor:'rgba(247,201,79,.08)',tension:.25}]},options:{responsive:true,animation:false,plugins:{legend:{labels:{boxWidth:10}}},scales:{y:{ticks:{callback:v=>v+' kg'},grid:{color:'rgba(120,130,170,.1)'}},x:{grid:{display:false}}}}});}
 
 function atualizarResumoPosTreinoHealth(sessionId,health){if(window._lastFinishedSessionId!==sessionId)return;const el=document.getElementById('resumoSessaoContent');if(!el||!health?.found)return;const old=el.querySelector('.post-health-summary');if(old)old.remove();const regs=getHist().filter(r=>getSessionKey(r)===sessionId),samples=normalizarAmostrasHealth(health),rec=calcularRecuperacaoSeries(regs,samples).map(x=>x.rec60).filter(x=>x!=null),avgRec=rec.length?rec.reduce((a,b)=>a+b,0)/rec.length:null,rir=regs.map(r=>Number(r.rir)).filter(Number.isFinite),avgRir=rir.length?rir.reduce((a,b)=>a+b,0)/rir.length:null;const div=document.createElement('div');div.className='post-health-summary health-match ok';div.innerHTML=`<strong>${esc(healthSourceLabel(health.sourceApp))} associado</strong><br>${health.avgHr?Math.round(health.avgHr)+' bpm médio · ':''}${health.maxHr?Math.round(health.maxHr)+' bpm máx. · ':''}${health.kcal?Math.round(health.kcal)+' kcal · ':''}${Math.round((Number(health.confidence)||1)*100)}% de correspondência${avgRec!=null?`<br>Queda média de FC aos 60s: ${Math.round(avgRec)} bpm em ${rec.length} série(s)`:''}${avgRir!=null?` · RIR médio ${avgRir.toFixed(1)}`:''}`;el.appendChild(div);}
+
+// ════════════════════════════════════════════════
+// V12.4.1 — RESUMO INTELIGENTE E COMPARAÇÃO PESSOAL
+// ════════════════════════════════════════════════
+function mediaV1241(values){
+  const nums=(values||[]).filter(v=>v!==null&&v!==undefined&&String(v)!=='').map(Number).filter(Number.isFinite);
+  return nums.length?nums.reduce((a,b)=>a+b,0)/nums.length:null;
+}
+function pctV1241(current,baseline){
+  if(current==null||baseline==null||!Number.isFinite(Number(current))||!Number.isFinite(Number(baseline))||Number(baseline)===0)return null;
+  return (Number(current)-Number(baseline))/Number(baseline)*100;
+}
+function nomeComparavelV1241(value){
+  return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+}
+function fadigaIntraSessaoV1241(regs){
+  const map={};
+  (regs||[]).filter(r=>setContaParaPR(r)).forEach(r=>(map[r.exercicio]||(map[r.exercicio]=[])).push(r));
+  const casos=[];
+  Object.entries(map).forEach(([ex,items])=>{
+    const a=items.slice().sort((x,y)=>(Number(x.numSerie)||0)-(Number(y.numSerie)||0));
+    if(a.length<3)return;
+    const first=a[0],last=a[a.length-1],w1=Number(first.carga)||0,w2=Number(last.carga)||0,r1=Number(first.reps)||0,r2=Number(last.reps)||0;
+    if(!w1||!r1||Math.abs(w2-w1)/w1>.05)return;
+    const drop=(r1-r2)/r1*100;
+    const rir1=first.rir==null?null:Number(first.rir),rir2=last.rir==null?null:Number(last.rir);
+    casos.push({ex,drop,rirDrop:rir1!=null&&rir2!=null?rir1-rir2:null});
+  });
+  return {
+    eligible:casos.length,
+    avgDrop:mediaV1241(casos.map(x=>x.drop)),
+    avgRirDrop:mediaV1241(casos.map(x=>x.rirDrop)),
+    affected:casos.filter(x=>x.drop>=10).map(x=>x.ex)
+  };
+}
+function metricasSessaoV1241(sessionKey,regs,healthOverride=null){
+  const links=getHealthLinks(),health=healthOverride||links[sessionKey]||{},samples=normalizarAmostrasHealth(health),recovery=calcularRecuperacaoSeries(regs,samples),rec60=recovery.map(x=>x.rec60).filter(x=>x!=null);
+  const rir=(regs||[]).map(r=>r.rir==null?null:Number(r.rir)).filter(Number.isFinite),rpe=(regs||[]).map(r=>r.rpe==null?null:Number(r.rpe)).filter(Number.isFinite);
+  const exact=(regs||[]).filter(r=>r.timingQuality==='exact'&&Number.isFinite(Number(r.restBeforeSec))),meta=(regs||[]).find(r=>r.sessionRpe!=null||r.sessionNote||r.sessionContext?.length)||(regs||[])[0]||{};
+  const hasHealth=!!(health.recordId||health.sourceApp||Number(health.avgHr)),bounds=boundsSessao(regs);
+  return {
+    sessionKey,regs,health,samples,recovery,
+    volume:volumeSessao(regs),durationSec:bounds.durationSec,sets:(regs||[]).length,
+    avgHr:Number.isFinite(Number(health.avgHr))?Number(health.avgHr):null,
+    maxHr:Number.isFinite(Number(health.maxHr))?Number(health.maxHr):null,
+    avgRir:mediaV1241(rir),avgRpe:mediaV1241(rpe),
+    effortCount:new Set((regs||[]).filter(r=>r.rir!=null||r.rpe!=null).map(r=>r.id||String(r.numSerie)+'|'+r.exercicio)).size,
+    exactCount:exact.length,avgRest:mediaV1241(exact.map(r=>r.restBeforeSec)),
+    avgRec60:mediaV1241(rec60),recCount:rec60.length,
+    sessionRpe:meta.sessionRpe==null?null:Number(meta.sessionRpe),
+    contextTags:Array.isArray(meta.sessionContext)?meta.sessionContext:[],
+    sampleCount:Number(health.heartRateSampleCount)||samples.length,
+    healthConfidence:Number.isFinite(Number(health.confidence))?Number(health.confidence):null,
+    hasHealth,fatigue:fadigaIntraSessaoV1241(regs)
+  };
+}
+function basesComparaveisV1241(sessionKey,regs){
+  const currentTs=getSessionTimestamp(regs),templateId=(regs||[]).find(r=>r.templateId)?.templateId||null,name=nomeComparavelV1241((regs||[]).find(r=>r.templateNome)?.templateNome),currentExercises=new Set((regs||[]).map(r=>nomeComparavelV1241(r.exercicio)).filter(Boolean));
+  const previous=Object.entries(agruparSessoes(getHist())).filter(([sid,a])=>sid!==sessionKey&&getSessionTimestamp(a)<currentTs);
+  let matched=previous.filter(([,a])=>{
+    const otherId=a.find(r=>r.templateId)?.templateId||null,otherName=nomeComparavelV1241(a.find(r=>r.templateNome)?.templateNome);
+    return templateId?String(otherId)===String(templateId):!!name&&otherName===name;
+  });
+  let kind='sessões do mesmo treino';
+  if(!matched.length){
+    matched=previous.filter(([,a])=>{
+      const other=new Set(a.map(r=>nomeComparavelV1241(r.exercicio)).filter(Boolean)),shared=[...currentExercises].filter(x=>other.has(x)).length,den=Math.max(1,Math.max(currentExercises.size,other.size));
+      return shared/den>=.7;
+    });
+    kind='sessões com exercícios semelhantes';
+  }
+  return {kind,items:matched.sort((a,b)=>getSessionTimestamp(b[1])-getSessionTimestamp(a[1])).slice(0,5)};
+}
+function gerarAnaliseSessaoV1241(sessionKey,regsOverride=null,healthOverride=null){
+  const regs=regsOverride||getHist().filter(r=>getSessionKey(r)===sessionKey);if(!regs.length)return null;
+  const current=metricasSessaoV1241(sessionKey,regs,healthOverride),baseInfo=basesComparaveisV1241(sessionKey,regs),base=baseInfo.items.map(([sid,a])=>metricasSessaoV1241(sid,a));
+  const baseAvg=key=>mediaV1241(base.map(x=>x[key])),volumeBase=baseAvg('volume'),hrBase=baseAvg('avgHr'),recBase=baseAvg('avgRec60'),restBase=baseAvg('avgRest');
+  const volumePct=pctV1241(current.volume,volumeBase),hrDelta=current.avgHr!=null&&hrBase!=null?current.avgHr-hrBase:null,recDelta=current.avgRec60!=null&&recBase!=null?current.avgRec60-recBase:null;
+  const effortCoverage=current.sets?current.effortCount/current.sets:0,exactCoverage=current.sets?current.exactCount/current.sets:0;
+  const hard=(current.sessionRpe!=null&&current.sessionRpe>=8)||(current.avgRir!=null&&current.avgRir<=1)||(current.avgRpe!=null&&current.avgRpe>=9);
+  const fatigueHigh=(current.fatigue.avgDrop!=null&&current.fatigue.avgDrop>=10)||(current.fatigue.avgRirDrop!=null&&current.fatigue.avgRirDrop>=1);
+  let lead='Treino registrado com consistência.';
+  if(fatigueHigh&&hard)lead='Sessão exigente, com fadiga perceptível nas séries finais.';
+  else if(hard&&volumePct!=null&&volumePct>=-5)lead='Sessão de esforço alto, com o trabalho planejado bem sustentado.';
+  else if(volumePct!=null&&volumePct>=8)lead='Sessão produtiva, com volume acima do seu padrão recente.';
+  else if(base.length>=2&&volumePct!=null&&Math.abs(volumePct)<8)lead='Sessão estável e próxima do seu padrão recente.';
+  else if(!current.hasHealth&&effortCoverage<.4)lead='O treino foi salvo, mas ainda faltam sinais para uma leitura mais completa.';
+
+  const insights=[];
+  if(base.length){
+    const direction=volumePct==null?'sem comparação válida':Math.abs(volumePct)<5?'praticamente igual':volumePct>0?Math.round(Math.abs(volumePct))+'% acima':Math.round(Math.abs(volumePct))+'% abaixo';
+    insights.push('Volume '+direction+' da média de '+base.length+' '+baseInfo.kind+'.');
+  }else insights.push('Este treino inicia uma nova referência pessoal de volume e duração.');
+
+  if(current.sessionRpe!=null||current.avgRir!=null||current.avgRpe!=null){
+    const parts=[];
+    if(current.sessionRpe!=null)parts.push('RPE geral '+Math.round(current.sessionRpe)+'/10');
+    if(current.avgRir!=null)parts.push('RIR médio '+current.avgRir.toFixed(1));
+    else if(current.avgRpe!=null)parts.push('RPE médio das séries '+current.avgRpe.toFixed(1));
+    insights.push(parts.join(' · ')+(hard?' — esforço alto para esta sessão.':'.'));
+  }else insights.push('Sem RIR/RPE suficiente para interpretar o esforço muscular.');
+
+  if(current.hasHealth){
+    if(hrDelta!=null&&base.filter(x=>x.avgHr!=null).length>=2){
+      const hrText=Math.abs(hrDelta)<4?'próxima do habitual':hrDelta>0?Math.round(hrDelta)+' bpm acima do habitual':Math.round(Math.abs(hrDelta))+' bpm abaixo do habitual';
+      insights.push('FC média '+Math.round(current.avgHr)+' bpm, '+hrText+' em treinos comparáveis.');
+    }else if(current.avgHr!=null)insights.push('FC média '+Math.round(current.avgHr)+' bpm; ainda há pouca base comparável para classificar esse valor.');
+    if(current.avgRec60!=null){
+      const recText=recDelta==null?'primeira referência mensurável':Math.abs(recDelta)<4?'próxima do seu padrão':recDelta>0?Math.round(recDelta)+' bpm mais rápida que o padrão':Math.round(Math.abs(recDelta))+' bpm mais lenta que o padrão';
+      insights.push('Queda média da FC em 60s: '+Math.round(current.avgRec60)+' bpm em '+current.recCount+' série(s), '+recText+'.');
+    }else insights.push('A FC foi sincronizada, mas não houve janelas limpas suficientes para medir recuperação em 60s.');
+  }else insights.push('Aguardando a associação do Galaxy Watch para acrescentar FC e recuperação pós-série.');
+
+  if(current.fatigue.eligible){
+    if(fatigueHigh)insights.push('Séries comparáveis perderam cerca de '+Math.max(0,Math.round(current.fatigue.avgDrop||0))+'% de repetições até o fim, sinal de fadiga acumulada nesta sessão.');
+    else insights.push('As repetições permaneceram estáveis nos exercícios com carga comparável entre a primeira e a última série.');
+  }
+  if(current.contextTags.length){
+    const labels=current.contextTags.map(contextoLabel);
+    insights.push('Contexto registrado: '+labels.join(', ')+'. Ele ajuda a explicar variações, mas não prova a causa.');
+  }
+
+  let next='Mantenha a estrutura atual e colete mais uma sessão comparável antes de mudar carga ou descanso.';
+  if(recDelta!=null&&recDelta<=-5&&current.avgRest!=null)next='Na próxima sessão, teste acrescentar 30–45s de descanso nos exercícios mais exigentes e observe se RIR e repetições se estabilizam.';
+  else if(fatigueHigh&&hard)next='Priorize consolidar repetições e técnica antes de aumentar carga; nos exercícios que caíram mais, teste mais 30s de descanso.';
+  else if(current.exactCount<2)next='Use “Iniciar série” em mais séries para o aplicativo diferenciar descanso real de horário aproximado.';
+  else if(effortCoverage<.5)next='Registre RIR ou RPE em pelo menos metade das séries para tornar a próxima recomendação mais confiável.';
+  else if(base.length>=2&&(!fatigueHigh)&&(recDelta==null||recDelta>=-3))next='O descanso atual parece compatível com seu desempenho. Mantenha-o e use as sugestões por exercício para decidir progressão.';
+  else if(restBase!=null&&current.avgRest!=null&&current.avgRest<restBase*.8)next='Seu descanso ficou abaixo do habitual. Se a técnica ou as repetições caíram, recupere cerca de '+Math.round(restBase-current.avgRest)+'s antes das séries principais.';
+
+  let score=0;
+  if(current.sets>=4)score+=1;if(effortCoverage>=.6)score+=1;if(current.exactCount>=2)score+=1;if(current.hasHealth)score+=1;if(current.sampleCount>=30)score+=1;if(current.recCount>=2)score+=1;if(base.length>=2)score+=2;
+  const confidence=score>=6?'high':score>=3?'medium':'limited',confidenceLabel=confidence==='high'?'Confiança alta':confidence==='medium'?'Confiança média':'Confiança limitada';
+  const evidence=[
+    current.sets+' séries',
+    current.effortCount+' com RIR/RPE',
+    current.exactCount+' descansos exatos',
+    current.hasHealth?current.sampleCount+' amostras de FC':'sem FC associada',
+    base.length+' sessões de referência'
+  ].join(' · ');
+  return {lead,insights:insights.slice(0,5),next,confidence,confidenceLabel,evidence,current,baseCount:base.length,baseKind:baseInfo.kind,volumePct,hrDelta,recDelta};
+}
+function htmlAnaliseSessaoV1241(analysis,options={}){
+  if(!analysis)return '';
+  const items=(options.compact?analysis.insights.slice(0,3):analysis.insights).map(text=>'<div class="smart-insight-item"><span class="smart-insight-dot"></span><span>'+esc(text)+'</span></div>').join('');
+  return '<div class="'+(options.post?'post-health-summary ':'')+'smart-insight-card">'+
+    '<div class="smart-insight-head"><div><div class="smart-insight-kicker">Como foi seu treino</div><div class="smart-insight-title">'+esc(analysis.lead)+'</div></div><span class="smart-confidence '+analysis.confidence+'">'+esc(analysis.confidenceLabel)+'</span></div>'+
+    '<div class="smart-insight-list">'+items+'</div>'+
+    '<div class="smart-next-step"><strong>Para a próxima sessão</strong>'+esc(analysis.next)+'</div>'+
+    '<div class="smart-evidence">Base desta leitura: '+esc(analysis.evidence)+'. Comparações são pessoais e não representam diagnóstico médico.</div></div>';
+}
+const _v1240CalcularSugestaoProgressao=calcularSugestaoProgressaoExercicio;
+calcularSugestaoProgressaoExercicio=function(ex,regs){
+  const original=_v1240CalcularSugestaoProgressao.apply(this,arguments);
+  if(!String(original?.title||'').includes('+'))return original;
+  const meta=(regs||[]).find(r=>r.sessionRpe!=null||r.sessionContext?.length)||(regs||[])[0]||{},tags=Array.isArray(meta.sessionContext)?meta.sessionContext:[],fatigue=fadigaIntraSessaoV1241(regs),rir=mediaV1241((regs||[]).map(r=>r.rir));
+  if(tags.includes('dor_desconforto'))return{title:'Sugestão: não subir ainda',text:'Apesar da faixa de repetições concluída, houve dor ou desconforto registrado. Consolide uma sessão sem esse contexto antes de testar mais carga.'};
+  if((Number(meta.sessionRpe)>=9)||(rir!=null&&rir<=.5))return{title:'Sugestão: consolidar a carga',text:'A faixa foi concluída com esforço muito alto. Repita a carga buscando técnica estável e alguma reserva antes do incremento.'};
+  if(fatigue.avgDrop!=null&&fatigue.avgDrop>=10)return{title:'Sugestão: manter e recuperar melhor',text:'As repetições caíram nas séries finais. Mantenha a carga e teste mais descanso antes de considerar o próximo incremento.'};
+  if(tags.includes('sono_ruim')||tags.includes('estresse_alto'))return{title:original.title,text:original.text+' Como sono ruim ou estresse foram registrados, trate o incremento como opcional e confirme em um dia de contexto normal.'};
+  return original;
+};
+function injetarAnaliseSessaoV1241(sessionKey){
+  const root=document.getElementById('detalhesSessaoContent');if(!root||root.querySelector('.smart-insight-card'))return;
+  const analysis=gerarAnaliseSessaoV1241(sessionKey);if(!analysis)return;
+  const hero=root.querySelector('.session-detail-hero');if(!hero)return;
+  hero.insertAdjacentHTML('afterend',htmlAnaliseSessaoV1241(analysis));
+  const sections=[...root.querySelectorAll(':scope > .session-detail-section')],contextSection=sections.find(s=>s.querySelector('.session-detail-section-title')?.textContent.trim()==='Percepção e contexto');
+  const healthCard=root.querySelector(':scope > .session-health-card'),pendingHealth=root.querySelector(':scope > .health-match');
+  const technicalNodes=[healthCard,pendingHealth,...sections.filter(s=>s!==contextSection)].filter(Boolean);
+  if(!technicalNodes.length)return;
+  const details=document.createElement('details');details.className='smart-technical';
+  const summary=document.createElement('summary');summary.textContent='Ver métricas, gráficos e tabelas detalhadas';
+  const content=document.createElement('div');content.className='smart-technical-content';
+  technicalNodes.forEach(node=>content.appendChild(node));details.append(summary,content);root.appendChild(details);
+  details.addEventListener('toggle',()=>{if(details.open)setTimeout(()=>{try{_sessionHrChart?.resize();}catch(e){}},60);});
+}
+const _v1240AbrirDetalhesTreino=abrirDetalhesTreino;
+abrirDetalhesTreino=function(sessionKey){
+  const result=_v1240AbrirDetalhesTreino.apply(this,arguments);
+  injetarAnaliseSessaoV1241(sessionKey);
+  return result;
+};
+const _v1240AtualizarResumoPosTreinoHealth=atualizarResumoPosTreinoHealth;
+atualizarResumoPosTreinoHealth=function(sessionId,health){
+  _v1240AtualizarResumoPosTreinoHealth.apply(this,arguments);
+  const el=document.getElementById('resumoSessaoContent'),raw=el?.querySelector('.post-health-summary');if(!raw)return;
+  const regs=getHist().filter(r=>getSessionKey(r)===sessionId),analysis=gerarAnaliseSessaoV1241(sessionId,regs,health);
+  if(analysis)raw.outerHTML=htmlAnaliseSessaoV1241(analysis,{post:true,compact:true});
+};
 
 function aplicarRuntimeAndroidUI(){const note=document.getElementById('runtimeStorageNote'),banner=document.getElementById('notifBannerText'),install=document.getElementById('webInstallCard'),diag=document.getElementById('diagnosticRuntimeLabel'),watch=document.getElementById('watchNotificationConfig');if(isNativeAndroid()){if(note)note.innerHTML='<strong>Seus dados ficam neste dispositivo.</strong> No APK, o histórico usa armazenamento privado do Android e espelho Room nativo. Atualizações assinadas sobre o mesmo pacote preservam os dados; desinstalar/apagar dados remove o armazenamento local, por isso mantenha backups.';if(banner)banner.textContent='Ative as notificações do Android para receber o timer e os avisos de descanso em segundo plano.';if(install)install.style.display='none';if(diag)diag.textContent='Versão Android, armazenamento, Health Connect e banco local';if(watch)watch.style.display='flex';}else{if(note)note.innerHTML='<strong>Seus dados ficam neste dispositivo.</strong> Na versão Web/PWA, histórico e preferências são armazenados localmente no navegador. Faça backups antes de limpar os dados do site ou trocar de aparelho.';if(install)install.style.display='block';if(diag)diag.textContent='Versão Web/PWA, armazenamento e quantidade de dados';if(watch)watch.style.display='none';}}
 const _v122OldNotifStatus=verificarStatusNotif;verificarStatusNotif=async function(){if(!isNativeAndroid())return _v122OldNotifStatus.apply(this,arguments);const status=document.getElementById('notifStatus'),btn=document.getElementById('btnNotifConfig'),banner=document.getElementById('notifBanner');if(status)status.textContent='Gerenciadas pelas permissões do Android';if(btn){btn.textContent='Revisar';btn.disabled=false;}if(banner)banner.style.display='none';};

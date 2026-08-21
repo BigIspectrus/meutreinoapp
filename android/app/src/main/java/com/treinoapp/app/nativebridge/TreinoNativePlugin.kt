@@ -182,6 +182,14 @@ class TreinoNativePlugin : Plugin() {
     }
 
     @PluginMethod
+    fun testRestAlert(call: PluginCall) {
+        try {
+            WorkoutForegroundService.send(context, WorkoutForegroundService.ACTION_TEST_REST_ALERT)
+            call.resolve(JSObject().apply { put("posted", true) })
+        } catch (e: Exception) { call.reject("Falha ao testar o aviso de descanso", e) }
+    }
+
+    @PluginMethod
     fun openNotificationSettings(call: PluginCall) {
         try {
             val intent = Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {

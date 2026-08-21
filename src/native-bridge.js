@@ -24,6 +24,7 @@ window.TreinoNativeBridge = {
   adjustRest: deltaSeconds => call('adjustRest', { deltaSeconds }),
   skipRest: () => call('skipRest'),
   configureRestAlerts: data => call('configureRestAlerts', data || {}),
+  testRestAlert: () => call('testRestAlert'),
   openNotificationSettings: () => call('openNotificationSettings'),
   updateWidgetState: data => call('updateWidgetState', data),
   saveTextFile: data => call('saveTextFile', data || {}),

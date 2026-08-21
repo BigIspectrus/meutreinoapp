@@ -15,6 +15,7 @@ import android.os.IBinder
 import android.os.Looper
 import android.os.PowerManager
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import com.treinoapp.app.MainActivity
@@ -52,6 +53,11 @@ class WorkoutForegroundService : Service() {
                 intent.getStringExtra(EXTRA_VIBRATION),
                 intent.getBooleanExtra(EXTRA_SOUND, true),
             )
+            ACTION_TEST_REST_ALERT -> postRestFinishedAlert(
+                exercise = "Teste do Galaxy Watch",
+                set = 0,
+                isTest = true,
+            )
             ACTION_PAUSE -> pauseWorkout()
             ACTION_RESUME -> resumeWorkout()
             ACTION_FINISH -> finishWorkout()
@@ -65,7 +71,7 @@ class WorkoutForegroundService : Service() {
             handler.postDelayed(widgetTicker, 60_000L)
             return START_STICKY
         }
-        if (intent?.action == ACTION_CONFIGURE_ALERTS) stopSelf(startId)
+        if (intent?.action == ACTION_CONFIGURE_ALERTS || intent?.action == ACTION_TEST_REST_ALERT) stopSelf(startId)
         return START_NOT_STICKY
     }
 
@@ -173,31 +179,48 @@ class WorkoutForegroundService : Service() {
         prefs.edit().putLong(KEY_REST_END, 0L).apply()
         val exercise = prefs.getString(KEY_EXERCISE, "Exercício") ?: "Exercício"
         val set = prefs.getInt(KEY_SET, 0)
-        val nm = getSystemService(NotificationManager::class.java)
+        postRestFinishedAlert(exercise, set, isTest = false)
+        updateNotification()
+    }
+
+    private fun postRestFinishedAlert(exercise: String, set: Int, isTest: Boolean) {
         val vibration = normalizedVibration(prefs.getString(KEY_REST_VIBRATION, "medium"))
         val sound = prefs.getBoolean(KEY_REST_SOUND, true)
         val channelId = createRestAlertChannel(vibration, sound)
+        val now = System.currentTimeMillis()
+        val title = if (isTest) "Teste de aviso do TreinoApp" else "Descanso concluído"
+        val message = when {
+            isTest -> "Se este aviso apareceu no relógio, o espelhamento está funcionando."
+            set > 0 -> "$exercise · próxima série ${set + 1}"
+            else -> exercise
+        }
         val alert = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.ic_stat_treino)
-            .setContentTitle("Descanso concluído")
-            .setContentText(if (set > 0) "$exercise · próxima série ${set + 1}" else exercise)
+            .setContentTitle(title)
+            .setContentText(message)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+            .setSubText("TreinoApp Beta")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setLocalOnly(false)
+            .setWhen(now)
+            .setShowWhen(true)
+            .setOnlyAlertOnce(false)
             .setAutoCancel(true)
             .setContentIntent(openAppIntent())
-            .extend(NotificationCompat.WearableExtender().setDismissalId("treinoapp-rest-finished"))
+            .extend(
+                NotificationCompat.WearableExtender()
+                    .setBridgeTag(REST_BRIDGE_TAG)
+                    .setDismissalId("treinoapp-rest-$now")
+            )
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             alert.setVibrate(vibrationPattern(vibration))
             if (sound) alert.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
             else alert.setSound(null)
         }
-        nm.notify(
-            REST_NOTIFICATION_ID,
-            alert.build()
-        )
-        updateNotification()
+        // O gerenciador compatível preserva os metadados do WearableExtender ao publicar.
+        NotificationManagerCompat.from(this).notify(REST_NOTIFICATION_ID, alert.build())
     }
 
     private fun configureRestAlerts(rawVibration: String?, sound: Boolean) {
@@ -220,7 +243,7 @@ class WorkoutForegroundService : Service() {
     }
 
     private fun restChannelId(vibration: String, sound: Boolean): String =
-        "treinoapp_rest_v2_${vibration}_${if (sound) "sound" else "silent"}"
+        "treinoapp_rest_v3_${vibration}_${if (sound) "sound" else "silent"}"
 
     private fun createRestAlertChannel(vibration: String, sound: Boolean): String {
         val id = restChannelId(vibration, sound)
@@ -233,6 +256,7 @@ class WorkoutForegroundService : Service() {
         val channel = NotificationChannel(id, "Fim do descanso · $label", NotificationManager.IMPORTANCE_HIGH).apply {
             description = "Aviso no telefone e em relógios pareados quando o descanso termina"
             setShowBadge(false)
+            lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
             if (vibration == "off") {
                 enableVibration(false)
             } else {
@@ -371,6 +395,7 @@ class WorkoutForegroundService : Service() {
         const val ACTION_ADJUST_REST = "com.treinoapp.action.ADJUST_REST"
         const val ACTION_SKIP_REST = "com.treinoapp.action.SKIP_REST"
         const val ACTION_CONFIGURE_ALERTS = "com.treinoapp.action.CONFIGURE_ALERTS"
+        const val ACTION_TEST_REST_ALERT = "com.treinoapp.action.TEST_REST_ALERT"
         const val ACTION_PAUSE = "com.treinoapp.action.PAUSE"
         const val ACTION_RESUME = "com.treinoapp.action.RESUME"
         const val ACTION_FINISH = "com.treinoapp.action.FINISH"
@@ -392,6 +417,7 @@ class WorkoutForegroundService : Service() {
         private const val CHANNEL_WORKOUT = "treinoapp_workout"
         private const val WORKOUT_NOTIFICATION_ID = 12001
         private const val REST_NOTIFICATION_ID = 12002
+        private const val REST_BRIDGE_TAG = "treinoapp-rest-alert"
 
         fun send(context: Context, action: String, configure: Intent.() -> Unit = {}) {
             val intent = Intent(context, WorkoutForegroundService::class.java).apply {

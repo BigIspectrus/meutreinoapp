@@ -1,4 +1,4 @@
-# TreinoApp v12.4.0 Beta — Fundação de Esforço e Recuperação
+# TreinoApp v12.4.1 Beta — Feedback Personalizado de Treino
 
 TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capacitor. A variante Beta pode coexistir com a Stable.
 
@@ -6,8 +6,8 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 
 - Stable: `com.treinoapp.app`
 - Beta: `com.treinoapp.beta`
-- Versão: `12.4.0`
-- versionCode: `120400`
+- Versão: `12.4.1`
+- versionCode: `120401`
 - Android: compile/target API 36, minSdk 26
 - Room: schema 4, somente migrações explícitas
 
@@ -48,6 +48,13 @@ Quando uma sessão é vinculada, o TreinoApp preserva:
 ## Detalhes avançados do treino
 
 A tela de detalhes combina dados do TreinoApp com os dados fisiológicos do relógio:
+
+- resumo inicial em linguagem simples, sem score opaco;
+- comparação com até cinco sessões do mesmo treino ou com exercícios semelhantes;
+- confiança alta, média ou limitada acompanhada dos dados que sustentam a leitura;
+- feedback de esforço, fadiga, recuperação e orientação para a próxima sessão;
+- recomendações de progressão condicionadas por RIR/RPE, fadiga e contexto registrado;
+- métricas, gráficos e tabelas recolhidos para reduzir poluição visual;
 
 - gráfico de FC com marcadores das séries;
 - linha do tempo série x FC;
@@ -118,4 +125,4 @@ Na versão Web/PWA, os fluxos de navegador permanecem disponíveis.
 - `fallbackToDestructiveMigration()` continua proibido;
 - backup JSON inclui vínculos Health, plano semanal, cache de Recovery e preferências de aviso.
 
-Antes de promover para Stable, execute `TESTE_v12.4.0_BETA.md`.
+Antes de promover para Stable, execute `TESTE_v12.4.1_BETA.md`.

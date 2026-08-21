@@ -105,6 +105,13 @@ service=read('android/app/src/main/java/com/treinoapp/app/nativebridge/WorkoutFo
 for token in ['setLocalOnly(false)','WearableExtender','KEY_REST_VIBRATION','KEY_REST_SOUND','createRestAlertChannel']:
     ok(token in service, f'Aviso Android/relógio v12.4.0 ausente: {token}')
 
+# Feedback personalizado e correção Wear OS / v12.4.1
+for token in ['gerarAnaliseSessaoV1241','basesComparaveisV1241','fadigaIntraSessaoV1241','smart-insight-card','smart-technical','testarAvisoGalaxyWatch']:
+    ok(token in html, f'Recurso v12.4.1 ausente: {token}')
+for token in ['NotificationManagerCompat','setBridgeTag','ACTION_TEST_REST_ALERT','treinoapp_rest_v3_']:
+    ok(token in service, f'Correção Wear OS v12.4.1 ausente: {token}')
+ok('testRestAlert' in plugin and 'testRestAlert' in read('src/native-bridge.js'), 'Teste nativo de aviso para relógio ausente')
+
 # Interface focada / v12.3
 for token in ['serie-compact-trigger','atualizarFocoSeries','data-settings-group','dashboardSecondary','selEffortMode','Evolução &amp; Health']:
     ok(token in html, f'Recurso v12.3 ausente: {token}')
