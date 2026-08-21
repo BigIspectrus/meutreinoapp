@@ -1,7 +1,7 @@
-import { execFileSync } from 'node:child_process';
 import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { buildSync } from 'esbuild';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '..');
@@ -9,10 +9,15 @@ const web = resolve(root, 'web');
 const vendor = resolve(web, 'vendor');
 mkdirSync(vendor, { recursive: true });
 
-execFileSync(process.execPath, [
-  resolve(root, 'node_modules/esbuild/bin/esbuild'), resolve(root, 'src/native-bridge.js'), '--bundle', '--format=iife', '--target=es2020',
-  `--outfile=${resolve(web, 'native-bridge.js')}`, '--minify'
-], { stdio: 'inherit' });
+buildSync({
+  entryPoints:[resolve(root, 'src/native-bridge.js')],
+  bundle:true,
+  format:'iife',
+  target:'es2020',
+  outfile:resolve(web, 'native-bridge.js'),
+  minify:true,
+  logLevel:'info'
+});
 
 const vendors = [
   [resolve(root,'node_modules/chart.js/dist/chart.umd.js'), resolve(vendor,'chart.umd.js')],
