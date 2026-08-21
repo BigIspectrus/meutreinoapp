@@ -944,11 +944,11 @@
 <!-- MODAL NOVIDADES -->
 <div class="modal-overlay" id="modalNovidades">
   <div class="modal" style="max-width:500px;">
-    <div class="modal-title">TreinoApp v12.3.0 Beta</div>
+    <div class="modal-title">TreinoApp v12.3.1 Beta</div>
     <div style="font-size:.88em;line-height:1.6;color:var(--text-muted);">
       <p style="color:var(--text);font-weight:700;margin-bottom:8px;">Principais novidades desta versão</p>
-      <p>O treino agora abre em modo focado: somente a série atual fica expandida, com carga, repetições e conclusão em destaque. Séries concluídas e futuras ficam compactas, e o app avança automaticamente sem perder RIR, RPE ou tipos avançados.</p>
-      <p style="margin-top:8px;">A tela Início ficou mais leve, Histórico e Evolução foram reunidos, o menu inferior passou a ter quatro destinos e a área Mais foi organizada por categorias. Health Connect, frequência cardíaca e sincronização continuam preservados.</p>
+      <p>O compartilhamento em imagem agora aumenta a altura conforme o treino e inclui todos os exercícios e séries, sem o limite que cortava sessões longas.</p>
+      <p style="margin-top:8px;">O modo focado, RIR/RPE, Health Connect, frequência cardíaca e sincronização continuam preservados.</p>
     </div>
     <div class="modal-footer"><button class="btn btn-primary" onclick="fecharNovidades()">Entendi</button></div>
   </div>
@@ -1729,14 +1729,14 @@
 </div>
 
 <script>
-const APP_VERSION = '12.3.0';
-const APP_BUILD = '2026.08.21.1';
+const APP_VERSION = '12.3.1';
+const APP_BUILD = '2026.08.21.2';
 const DATA_SCHEMA_VERSION = 14;
 const GITHUB_REPO='BigIspectrus/meutreinoapp';
 const GITHUB_PAGES_BASE='https://bigispectrus.github.io/meutreinoapp';
 let _latestAndroidReleaseUrl='';
 let _nativeChannel='web';
-const APP_CACHE_VERSION = 'treinoapp-v12.3.0-202608211';
+const APP_CACHE_VERSION = 'treinoapp-v12.3.1-202608212';
 
 const SET_TYPES={workset:'Work set',warmup:'Aquecimento',topset:'Top set',backoff:'Back-off',dropset:'Drop set',cluster:'Cluster set',fst7:'FST-7',restpause:'Rest-pause',myoreps:'Myo-reps',amrap:'AMRAP'};
 function normalizarSetType(v){return SET_TYPES[v]?v:'workset';}
@@ -3895,19 +3895,25 @@ function abrirCompartilhar(sessionKey=null) {
   if(!found)return toast('Sessão não encontrada','error');
   const [sid,regs]=found,_shareSessionKey=sid;window._shareSessionKey=_shareSessionKey;
   const dataBr=(regs[0]?.data||'').split('-').reverse().join('/'),name=regs.find(r=>r.templateNome)?.templateNome||'Treino',health=getHealthLinks()[sid]||{},samples=normalizarAmostrasHealth(health),b=boundsSessao(regs),vol=volumeSessao(regs),prs=contarPrsDaSessao(sid,regs);
-  const canvas=document.getElementById('shareCanvas'),ctx=canvas.getContext('2d'),W=1080,H=1350;canvas.width=W;canvas.height=H;
+  const exs={};regs.forEach(r=>(exs[r.exercicio]||(exs[r.exercicio]=[])).push(r));
+  const exerciseEntries=Object.entries(exs).map(([ex,series])=>[ex,series.slice().sort((a,b)=>(a.numSerie||0)-(b.numSerie||0))]);
+  const hasHealth=!!(health.recordId||health.sourceApp),setsPerLine=6;
+  const exerciseCardsHeight=exerciseEntries.reduce((total,[,series])=>total+92+Math.max(0,Math.ceil(series.length/setsPerLine)-1)*40+12,0);
+  const exerciseStartY=360+(hasHealth?242:0)+30;
+  const canvas=document.getElementById('shareCanvas'),ctx=canvas.getContext('2d'),W=1080,H=Math.max(1350,exerciseStartY+exerciseCardsHeight+100);canvas.width=W;canvas.height=H;
   const isDark=(window._temaEfetivo||temaAtual)!=='light',bg=isDark?'#0f1117':'#f0f2fa',surface=isDark?'#1a1d27':'#ffffff',border=isDark?'#2e3350':'#d0d5ee',text=isDark?'#eef0fa':'#1e2340',muted=isDark?'#8b92b5':'#6b7280',primary=isDark?'#4f8ef7':'#2563eb',accent=isDark?'#f7c94f':'#d97706',success='#4fd39a',hrColor='#ef5b8b';
   ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);ctx.fillStyle=primary;ctx.fillRect(0,0,W,10);
   ctx.fillStyle=primary;ctx.font='bold 54px sans-serif';ctx.fillText('TREINOAPP',58,82);ctx.fillStyle=text;ctx.font='bold 46px sans-serif';ctx.fillText(name.length>30?name.slice(0,29)+'…':name,58,145);ctx.fillStyle=muted;ctx.font='28px sans-serif';ctx.fillText(`${dataBr} · ${fmtHealthTime(b.startMs)}–${fmtHealthTime(b.endMs)}`,58,186);
   function statBox(x,y,w,label,value,color=text){ctx.fillStyle=surface;roundRect(ctx,x,y,w,112,18);ctx.strokeStyle=border;ctx.lineWidth=2;ctx.stroke();ctx.fillStyle=color;ctx.font='bold 36px sans-serif';ctx.fillText(String(value),x+20,y+47);ctx.fillStyle=muted;ctx.font='22px sans-serif';ctx.fillText(label,x+20,y+82);}
   const gap=16,boxW=(W-116-gap*3)/4;statBox(58,220,boxW,'Duração',formatarDuracaoTreino(b.durationSec));statBox(58+boxW+gap,220,boxW,'Séries',regs.length);statBox(58+(boxW+gap)*2,220,boxW,'Volume',(vol/1000).toFixed(2)+' t');statBox(58+(boxW+gap)*3,220,boxW,'PRs',prs,prs?accent:text);
   let y=360;
-  if(health.recordId||health.sourceApp){ctx.fillStyle=surface;roundRect(ctx,58,y,W-116,214,20);ctx.strokeStyle=success;ctx.lineWidth=2;ctx.stroke();ctx.fillStyle=success;ctx.font='bold 28px sans-serif';ctx.fillText(healthSourceLabel(health.sourceApp),80,y+42);ctx.fillStyle=muted;ctx.font='21px sans-serif';ctx.fillText(`${fmtHealthTime(health.startMs)}–${fmtHealthTime(health.endMs)} · ${Math.round((Number(health.confidence)||1)*100)}% de correspondência`,80,y+72);ctx.fillStyle=text;ctx.font='bold 34px sans-serif';ctx.fillText(`${health.avgHr?Math.round(health.avgHr):'—'} bpm média`,80,y+120);ctx.fillText(`${health.maxHr?Math.round(health.maxHr):'—'} bpm máx.`,330,y+120);ctx.fillText(`${health.kcal?Math.round(health.kcal):'—'} kcal`,590,y+120);
+  if(hasHealth){ctx.fillStyle=surface;roundRect(ctx,58,y,W-116,214,20);ctx.strokeStyle=success;ctx.lineWidth=2;ctx.stroke();ctx.fillStyle=success;ctx.font='bold 28px sans-serif';ctx.fillText(healthSourceLabel(health.sourceApp),80,y+42);ctx.fillStyle=muted;ctx.font='21px sans-serif';ctx.fillText(`${fmtHealthTime(health.startMs)}–${fmtHealthTime(health.endMs)} · ${Math.round((Number(health.confidence)||1)*100)}% de correspondência`,80,y+72);ctx.fillStyle=text;ctx.font='bold 34px sans-serif';ctx.fillText(`${health.avgHr?Math.round(health.avgHr):'—'} bpm média`,80,y+120);ctx.fillText(`${health.maxHr?Math.round(health.maxHr):'—'} bpm máx.`,330,y+120);ctx.fillText(`${health.kcal?Math.round(health.kcal):'—'} kcal`,590,y+120);
     if(samples.length>1){const gx=80,gy=y+148,gw=W-160,gh=42,min=Math.min(...samples.map(p=>p.bpm)),max=Math.max(...samples.map(p=>p.bpm)),range=Math.max(1,max-min);ctx.strokeStyle=hrColor;ctx.lineWidth=3;ctx.beginPath();samples.forEach((p,i)=>{const px=gx+(i/(samples.length-1))*gw,py=gy+gh-((p.bpm-min)/range)*gh;i?ctx.lineTo(px,py):ctx.moveTo(px,py)});ctx.stroke();}
     y+=242;
   }
-  const exs={};regs.forEach(r=>(exs[r.exercicio]||(exs[r.exercicio]=[])).push(r));const maxEx=calcularMaxPorEx(hist);ctx.fillStyle=text;ctx.font='bold 30px sans-serif';ctx.fillText('Exercícios',58,y);y+=30;
-  Object.entries(exs).slice(0,7).forEach(([ex,series])=>{if(y>H-170)return;ctx.fillStyle=surface;roundRect(ctx,58,y,W-116,92,14);ctx.fillStyle=text;ctx.font='bold 27px sans-serif';ctx.fillText(ex.length>33?ex.slice(0,32)+'…':ex,78,y+35);let px=78;series.sort((a,b)=>(a.numSerie||0)-(b.numSerie||0)).slice(0,6).forEach(r=>{const t=`${r.carga}kg×${r.reps||0}`,tw=Math.max(112,ctx.measureText(t).width+24);ctx.fillStyle=r.carga===maxEx[ex]?accent:primary;roundRect(ctx,px,y+49,tw,30,8);ctx.fillStyle=isDark?'#10131c':'#fff';ctx.font='bold 18px sans-serif';ctx.fillText(t,px+12,y+70);px+=tw+8;});y+=104;});
+  const maxEx=calcularMaxPorEx(hist);ctx.fillStyle=text;ctx.font='bold 30px sans-serif';ctx.fillText(`Exercícios (${exerciseEntries.length})`,58,y);y+=30;
+  const pillGap=8,pillW=(W-156-pillGap*(setsPerLine-1))/setsPerLine;
+  exerciseEntries.forEach(([ex,series])=>{const pillRows=Math.max(1,Math.ceil(series.length/setsPerLine)),cardH=92+(pillRows-1)*40;ctx.fillStyle=surface;roundRect(ctx,58,y,W-116,cardH,14);ctx.fillStyle=text;ctx.font='bold 27px sans-serif';ctx.fillText(ex.length>42?ex.slice(0,41)+'…':ex,78,y+35);series.forEach((r,i)=>{const col=i%setsPerLine,row=Math.floor(i/setsPerLine),px=78+col*(pillW+pillGap),py=y+49+row*40,t=`${r.carga}kg×${r.reps||0}`;ctx.fillStyle=Number(r.carga)===Number(maxEx[ex])?accent:primary;roundRect(ctx,px,py,pillW,30,8);ctx.fillStyle=isDark?'#10131c':'#fff';ctx.font='bold 18px sans-serif';ctx.fillText(t,px+10,py+21,pillW-20);});y+=cardH+12;});
   ctx.strokeStyle=border;ctx.beginPath();ctx.moveTo(58,H-74);ctx.lineTo(W-58,H-74);ctx.stroke();ctx.fillStyle=muted;ctx.font='22px sans-serif';ctx.fillText('Dados do treino: TreinoApp · sinais fisiológicos: Health Connect',58,H-36);
   const img=document.getElementById('sharePreview');img.src=canvas.toDataURL('image/png');document.getElementById('modalCompartilhar').classList.add('open');
 }

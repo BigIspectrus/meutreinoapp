@@ -1,4 +1,4 @@
-# TreinoApp v12.3.0 Beta — Treino Focado
+# TreinoApp v12.3.1 Beta — Compartilhamento Completo
 
 TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capacitor. A variante Beta pode coexistir com a Stable.
 
@@ -6,8 +6,8 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 
 - Stable: `com.treinoapp.app`
 - Beta: `com.treinoapp.beta`
-- Versão: `12.3.0`
-- versionCode: `120300`
+- Versão: `12.3.1`
+- versionCode: `120301`
 - Android: compile/target API 36, minSdk 26
 - Room: schema 3, somente migrações explícitas
 
@@ -114,4 +114,4 @@ Na versão Web/PWA, os fluxos de navegador permanecem disponíveis.
 - `fallbackToDestructiveMigration()` continua proibido;
 - backup JSON inclui vínculos Health, plano semanal e cache de Recovery.
 
-Antes de promover para Stable, execute `TESTE_v12.3.0_BETA.md`.
+Antes de promover para Stable, execute `TESTE_v12.3.1_BETA.md`.

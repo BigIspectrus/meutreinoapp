@@ -12,6 +12,7 @@ version=read('VERSION').strip()
 build=json.loads(read('BUILD.json'))
 webbuild=json.loads(read('web/BUILD.json'))
 pkg=json.loads(read('package.json'))
+lock=json.loads(read('package-lock.json')) if (ROOT/'package-lock.json').exists() else None
 gradle=read('android/app/build.gradle')
 manifest=read('android/app/src/main/AndroidManifest.xml')
 html=read('web/index.html')
@@ -21,6 +22,7 @@ ok(re.match(r'^\d+\.\d+\.\d+$',version) is not None, 'VERSION inválido')
 ok(build.get('version')==version, 'BUILD.json diverge do VERSION')
 ok(webbuild.get('version')==version, 'web/BUILD.json diverge do VERSION')
 ok(pkg.get('version')==version, 'package.json diverge do VERSION')
+ok(lock is None or (lock.get('version')==version and lock.get('packages',{}).get('',{}).get('version')==version), 'package-lock.json diverge do VERSION')
 ok(f"versionName '{version}'" in gradle, 'Gradle versionName diverge do VERSION')
 ok(f"const APP_VERSION = '{version}';" in html, 'index.html diverge do VERSION')
 ok(f"const APP_VERSION = '{version}';" in sw, 'Service Worker diverge do VERSION')
@@ -99,6 +101,8 @@ ok('DATA_SCHEMA_VERSION = 14' in html or 'DATA_SCHEMA_VERSION=14' in html, 'Sche
 # Interface focada / v12.3
 for token in ['serie-compact-trigger','atualizarFocoSeries','data-settings-group','dashboardSecondary','selEffortMode','Evolução &amp; Health']:
     ok(token in html, f'Recurso v12.3 ausente: {token}')
+ok('exerciseCardsHeight' in html and 'H=Math.max(1350' in html, 'Imagem compartilhada não usa altura dinâmica')
+ok('Object.entries(exs).slice(0,7)' not in html, 'Imagem compartilhada ainda limita a quantidade de exercícios')
 
 # Performance & Recovery / v12.2
 for token in ['getRecoverySnapshot','SleepSessionRecord','RestingHeartRateRecord','HeartRateVariabilityRmssdRecord','BodyFatRecord','LeanBodyMassRecord']:

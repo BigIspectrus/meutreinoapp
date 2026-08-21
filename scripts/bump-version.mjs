@@ -22,6 +22,12 @@ for (const f of ['BUILD.json', 'web/BUILD.json']) {
 }
 const pkgPath = path.join(root, 'package.json'); const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8')); pkg.version = version;
 fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+const lockPath = path.join(root, 'package-lock.json');
+if (fs.existsSync(lockPath)) {
+  const lock = JSON.parse(fs.readFileSync(lockPath, 'utf8')); lock.version = version;
+  if (lock.packages?.['']) lock.packages[''].version = version;
+  fs.writeFileSync(lockPath, JSON.stringify(lock, null, 2) + '\n');
+}
 const gradlePath = path.join(root, 'android/app/build.gradle'); let g = fs.readFileSync(gradlePath,'utf8');
 g = g.replace(/versionCode\s+\d+/, `versionCode ${versionCode}`).replace(/versionName\s+'[^']+'/, `versionName '${version}'`);
 fs.writeFileSync(gradlePath, g);
