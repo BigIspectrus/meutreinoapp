@@ -1,5 +1,5 @@
-const APP_VERSION = '12.3.1';
-const BUILD = '2026.08.21.2';
+const APP_VERSION = '12.4.0';
+const BUILD = '2026.08.21.1';
 const CACHE_PREFIX = 'treinoapp-';
 const CACHE_NAME = `${CACHE_PREFIX}v${APP_VERSION}-${BUILD}`;
 const APP_SHELL = ['./', './index.html', './manifest.json', './VERSION', './BUILD.json', './icon-192.png', './icon-512.png'];

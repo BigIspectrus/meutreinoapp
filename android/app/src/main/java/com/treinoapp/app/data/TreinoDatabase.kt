@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [WorkoutSessionEntity::class, WorkoutSetEntity::class],
-    version = 3,
+    version = 4,
     exportSchema = true
 )
 abstract class TreinoDatabase : RoomDatabase() {
@@ -37,12 +37,23 @@ abstract class TreinoDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE workout_sessions ADD COLUMN sessionRpe REAL")
+                db.execSQL("ALTER TABLE workout_sessions ADD COLUMN contextTagsJson TEXT")
+                db.execSQL("ALTER TABLE workout_sessions ADD COLUMN sessionNote TEXT")
+                db.execSQL("ALTER TABLE workout_sets ADD COLUMN startedAt INTEGER")
+                db.execSQL("ALTER TABLE workout_sets ADD COLUMN restBeforeSec INTEGER")
+                db.execSQL("ALTER TABLE workout_sets ADD COLUMN timingQuality TEXT NOT NULL DEFAULT 'legacy'")
+            }
+        }
+
         fun get(context: Context): TreinoDatabase = INSTANCE ?: synchronized(this) {
             INSTANCE ?: Room.databaseBuilder(
                 context.applicationContext,
                 TreinoDatabase::class.java,
                 "treinoapp_native.db"
-            ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build().also { INSTANCE = it }
+            ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build().also { INSTANCE = it }
         }
     }
 }

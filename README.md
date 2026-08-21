@@ -1,4 +1,4 @@
-# TreinoApp v12.3.1 Beta — Compartilhamento Completo
+# TreinoApp v12.4.0 Beta — Fundação de Esforço e Recuperação
 
 TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capacitor. A variante Beta pode coexistir com a Stable.
 
@@ -6,10 +6,10 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 
 - Stable: `com.treinoapp.app`
 - Beta: `com.treinoapp.beta`
-- Versão: `12.3.1`
-- versionCode: `120301`
+- Versão: `12.4.0`
+- versionCode: `120400`
 - Android: compile/target API 36, minSdk 26
-- Room: schema 3, somente migrações explícitas
+- Room: schema 4, somente migrações explícitas
 
 ## Treino e execução
 
@@ -23,6 +23,10 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 - tipos avançados de série;
 - preferência de esforço por RIR, RPE, ambos ou oculto;
 - rascunho automático incluindo RIR/RPE;
+- início opcional da série para medir descanso real sem quebrar o fluxo antigo;
+- RPE geral, contexto do dia e anotação opcional no encerramento;
+- padrões leve, médio, longo ou desativado para o aviso de descanso;
+- notificação descartável e espelhável para relógios pareados;
 - progressão de carga sugerida, nunca aplicada automaticamente.
 
 ## Galaxy Watch / Health Connect
@@ -110,8 +114,8 @@ Na versão Web/PWA, os fluxos de navegador permanecem disponíveis.
 
 - histórico Web é a base funcional principal;
 - Room mantém espelho nativo de sessões/séries;
-- Room schema 3 adiciona RIR/RPE via `MIGRATION_2_3`;
+- Room schema 4 adiciona contexto da sessão e horários precisos via `MIGRATION_3_4`;
 - `fallbackToDestructiveMigration()` continua proibido;
-- backup JSON inclui vínculos Health, plano semanal e cache de Recovery.
+- backup JSON inclui vínculos Health, plano semanal, cache de Recovery e preferências de aviso.
 
-Antes de promover para Stable, execute `TESTE_v12.3.1_BETA.md`.
+Antes de promover para Stable, execute `TESTE_v12.4.0_BETA.md`.

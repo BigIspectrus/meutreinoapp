@@ -166,6 +166,34 @@ class TreinoNativePlugin : Plugin() {
     @PluginMethod fun skipRest(call: PluginCall) = serviceCall(call, WorkoutForegroundService.ACTION_SKIP_REST)
 
     @PluginMethod
+    fun configureRestAlerts(call: PluginCall) {
+        val vibration = call.getString("vibration", "medium") ?: "medium"
+        val sound = call.getBoolean("sound", true) ?: true
+        try {
+            WorkoutForegroundService.send(context, WorkoutForegroundService.ACTION_CONFIGURE_ALERTS) {
+                putExtra(WorkoutForegroundService.EXTRA_VIBRATION, vibration)
+                putExtra(WorkoutForegroundService.EXTRA_SOUND, sound)
+            }
+            call.resolve(JSObject().apply {
+                put("vibration", vibration)
+                put("sound", sound)
+            })
+        } catch (e: Exception) { call.reject("Falha ao configurar avisos de descanso", e) }
+    }
+
+    @PluginMethod
+    fun openNotificationSettings(call: PluginCall) {
+        try {
+            val intent = Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, context.packageName)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+            call.resolve()
+        } catch (e: Exception) { call.reject("Não foi possível abrir as notificações do Android", e) }
+    }
+
+    @PluginMethod
     fun getWorkoutState(call: PluginCall) {
         val p = context.getSharedPreferences(WorkoutForegroundService.PREFS, Context.MODE_PRIVATE)
         call.resolve(JSObject().apply {
@@ -531,6 +559,9 @@ class TreinoNativePlugin : Plugin() {
                     durationSec = (call.getInt("durationSec", 0) ?: 0).toLong(),
                     completedSets = call.getInt("completedSets", sets.length()) ?: sets.length(),
                     totalSets = call.getInt("totalSets", sets.length()) ?: sets.length(),
+                    sessionRpe = call.getDouble("sessionRpe"),
+                    contextTagsJson = call.getArray("contextTags")?.toString(),
+                    sessionNote = call.getString("sessionNote")?.trim()?.take(500),
                 )
                 val nativeSets = mutableListOf<WorkoutSetEntity>()
                 for (i in 0 until sets.length()) {
@@ -546,6 +577,9 @@ class TreinoNativePlugin : Plugin() {
                         completedAt = o.optLong("completedAt", session.endMs),
                         rir = if (o.has("rir") && !o.isNull("rir")) o.optInt("rir") else null,
                         rpe = if (o.has("rpe") && !o.isNull("rpe")) o.optDouble("rpe") else null,
+                        startedAt = if (o.has("startedAt") && !o.isNull("startedAt")) o.optLong("startedAt") else null,
+                        restBeforeSec = if (o.has("restBeforeSec") && !o.isNull("restBeforeSec")) o.optInt("restBeforeSec") else null,
+                        timingQuality = o.optString("timingQuality", "legacy").ifBlank { "legacy" },
                     )
                 }
                 db.workoutDao().upsertSession(session)
@@ -577,6 +611,9 @@ class TreinoNativePlugin : Plugin() {
                         completedAt = o.optLong("completedAt", o.optLong("finishedAt", 0L)),
                         rir = if (o.has("rir") && !o.isNull("rir")) o.optInt("rir") else null,
                         rpe = if (o.has("rpe") && !o.isNull("rpe")) o.optDouble("rpe") else null,
+                        startedAt = if (o.has("setStartedAt") && !o.isNull("setStartedAt")) o.optLong("setStartedAt") else null,
+                        restBeforeSec = if (o.has("restBeforeSec") && !o.isNull("restBeforeSec")) o.optInt("restBeforeSec") else null,
+                        timingQuality = o.optString("timingQuality", "legacy").ifBlank { "legacy" },
                     )
                 }
                 if (replace) db.workoutDao().replaceAllLegacy(sets) else db.workoutDao().upsertLegacySets(sets)

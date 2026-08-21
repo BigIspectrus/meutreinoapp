@@ -29,6 +29,9 @@ data class WorkoutSessionEntity(
     val healthSampleCount: Int = 0,
     val healthSamplesJson: String? = null,
     val healthSyncedAt: Long? = null,
+    val sessionRpe: Double? = null,
+    val contextTagsJson: String? = null,
+    val sessionNote: String? = null,
 )
 
 @Entity(tableName = "workout_sets")
@@ -43,4 +46,7 @@ data class WorkoutSetEntity(
     val completedAt: Long,
     val rir: Int? = null,
     val rpe: Double? = null,
+    val startedAt: Long? = null,
+    val restBeforeSec: Int? = null,
+    val timingQuality: String = "legacy",
 )

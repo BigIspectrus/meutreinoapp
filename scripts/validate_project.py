@@ -92,11 +92,18 @@ for token in ['longArgOrNull','getHealthExerciseDetail','heartRateSamples','hear
     ok(token in plugin, f'Bridge Health avançado ausente: {token}')
 for token in ['HeartRatePoint','readDetailedMetrics','BPM_MIN','heartRateSamples','getExerciseDetail']:
     ok(token in repo, f'Leitura Health detalhada ausente: {token}')
-ok('version = 3' in dbkt and 'MIGRATION_1_2' in dbkt and 'MIGRATION_2_3' in dbkt and '.addMigrations(MIGRATION_1_2, MIGRATION_2_3)' in dbkt, 'Migrações Room 1->2->3 ausentes')
+ok('version = 4' in dbkt and all(x in dbkt for x in ['MIGRATION_1_2','MIGRATION_2_3','MIGRATION_3_4']) and '.addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)' in dbkt, 'Migrações Room 1->2->3->4 ausentes')
 for token in ['modalDetalhesSessao','abrirDetalhesTreino','compartilharSessaoDetalhada','renderHealthPerformance','healthPerformanceChart','calcularZonasFc','calcularFcPorExercicio','normalizarAmostrasHealth','healthRelHtml','Galaxy Watch / Health Connect']:
     ok(token in html, f'UI de detalhes/performance/relatório ausente: {token}')
 ok('healthLinksV12:localStorage.getItem' in html, 'Backup não inclui vínculos Health')
-ok('DATA_SCHEMA_VERSION = 14' in html or 'DATA_SCHEMA_VERSION=14' in html, 'Schema web v14 esperado para RIR/RPE, recovery e agenda')
+ok('DATA_SCHEMA_VERSION = 15' in html or 'DATA_SCHEMA_VERSION=15' in html, 'Schema web v15 esperado para contexto e horários precisos')
+
+# Fundação v12.4
+for token in ['modalContextoSessao','sessionRpe','sessionContext','setStartedAt','restBeforeSec','iniciarSeriePrecisao','selRestVibration','configureRestAlerts','openNotificationSettings']:
+    ok(token in html or token in plugin or token in read('src/native-bridge.js'), f'Recurso v12.4.0 ausente: {token}')
+service=read('android/app/src/main/java/com/treinoapp/app/nativebridge/WorkoutForegroundService.kt')
+for token in ['setLocalOnly(false)','WearableExtender','KEY_REST_VIBRATION','KEY_REST_SOUND','createRestAlertChannel']:
+    ok(token in service, f'Aviso Android/relógio v12.4.0 ausente: {token}')
 
 # Interface focada / v12.3
 for token in ['serie-compact-trigger','atualizarFocoSeries','data-settings-group','dashboardSecondary','selEffortMode','Evolução &amp; Health']:

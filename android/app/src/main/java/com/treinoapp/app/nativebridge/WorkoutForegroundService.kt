@@ -7,6 +7,8 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.media.AudioAttributes
+import android.media.RingtoneManager
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
@@ -46,6 +48,10 @@ class WorkoutForegroundService : Service() {
             ACTION_START_REST -> startRest(intent.getLongExtra(EXTRA_SECONDS, 0L), intent.getStringExtra(EXTRA_EXERCISE).orEmpty(), intent.getIntExtra(EXTRA_SET, 0))
             ACTION_ADJUST_REST -> adjustRest(intent.getLongExtra(EXTRA_DELTA, 0L))
             ACTION_SKIP_REST -> clearRest()
+            ACTION_CONFIGURE_ALERTS -> configureRestAlerts(
+                intent.getStringExtra(EXTRA_VIBRATION),
+                intent.getBooleanExtra(EXTRA_SOUND, true),
+            )
             ACTION_PAUSE -> pauseWorkout()
             ACTION_RESUME -> resumeWorkout()
             ACTION_FINISH -> finishWorkout()
@@ -57,8 +63,10 @@ class WorkoutForegroundService : Service() {
             TreinoAppWidgetProvider.updateAll(this)
             handler.removeCallbacks(widgetTicker)
             handler.postDelayed(widgetTicker, 60_000L)
+            return START_STICKY
         }
-        return START_STICKY
+        if (intent?.action == ACTION_CONFIGURE_ALERTS) stopSelf(startId)
+        return START_NOT_STICKY
     }
 
     private fun saveWorkoutFromIntent(intent: Intent, reset: Boolean) {
@@ -166,18 +174,82 @@ class WorkoutForegroundService : Service() {
         val exercise = prefs.getString(KEY_EXERCISE, "Exercício") ?: "Exercício"
         val set = prefs.getInt(KEY_SET, 0)
         val nm = getSystemService(NotificationManager::class.java)
+        val vibration = normalizedVibration(prefs.getString(KEY_REST_VIBRATION, "medium"))
+        val sound = prefs.getBoolean(KEY_REST_SOUND, true)
+        val channelId = createRestAlertChannel(vibration, sound)
+        val alert = NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(R.drawable.ic_stat_treino)
+            .setContentTitle("Descanso concluído")
+            .setContentText(if (set > 0) "$exercise · próxima série ${set + 1}" else exercise)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setLocalOnly(false)
+            .setAutoCancel(true)
+            .setContentIntent(openAppIntent())
+            .extend(NotificationCompat.WearableExtender().setDismissalId("treinoapp-rest-finished"))
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            alert.setVibrate(vibrationPattern(vibration))
+            if (sound) alert.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
+            else alert.setSound(null)
+        }
         nm.notify(
             REST_NOTIFICATION_ID,
-            NotificationCompat.Builder(this, CHANNEL_REST)
-                .setSmallIcon(R.drawable.ic_stat_treino)
-                .setContentTitle("Descanso concluído")
-                .setContentText(if (set > 0) "$exercise · próxima série ${set + 1}" else exercise)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setAutoCancel(true)
-                .setContentIntent(openAppIntent())
-                .build()
+            alert.build()
         )
         updateNotification()
+    }
+
+    private fun configureRestAlerts(rawVibration: String?, sound: Boolean) {
+        val vibration = normalizedVibration(rawVibration)
+        prefs.edit()
+            .putString(KEY_REST_VIBRATION, vibration)
+            .putBoolean(KEY_REST_SOUND, sound)
+            .apply()
+        createRestAlertChannel(vibration, sound)
+    }
+
+    private fun normalizedVibration(value: String?): String =
+        value?.takeIf { it in setOf("off", "light", "medium", "long") } ?: "medium"
+
+    private fun vibrationPattern(mode: String): LongArray = when (mode) {
+        "off" -> longArrayOf(0L)
+        "light" -> longArrayOf(0L, 120L)
+        "long" -> longArrayOf(0L, 700L, 180L, 700L)
+        else -> longArrayOf(0L, 260L, 120L, 260L)
+    }
+
+    private fun restChannelId(vibration: String, sound: Boolean): String =
+        "treinoapp_rest_v2_${vibration}_${if (sound) "sound" else "silent"}"
+
+    private fun createRestAlertChannel(vibration: String, sound: Boolean): String {
+        val id = restChannelId(vibration, sound)
+        val label = when (vibration) {
+            "off" -> "sem vibração"
+            "light" -> "vibração leve"
+            "long" -> "vibração longa"
+            else -> "vibração média"
+        }
+        val channel = NotificationChannel(id, "Fim do descanso · $label", NotificationManager.IMPORTANCE_HIGH).apply {
+            description = "Aviso no telefone e em relógios pareados quando o descanso termina"
+            setShowBadge(false)
+            if (vibration == "off") {
+                enableVibration(false)
+            } else {
+                enableVibration(true)
+                setVibrationPattern(vibrationPattern(vibration))
+            }
+            if (sound) {
+                val attributes = AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
+                    .build()
+                setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION), attributes)
+            } else {
+                setSound(null, null)
+            }
+        }
+        getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+        return id
     }
 
     private fun ensureForeground() {
@@ -261,10 +333,10 @@ class WorkoutForegroundService : Service() {
             setSound(null, null)
             enableVibration(false)
         })
-        nm.createNotificationChannel(NotificationChannel(CHANNEL_REST, "Fim do descanso", NotificationManager.IMPORTANCE_HIGH).apply {
-            description = "Aviso quando o descanso termina"
-            enableVibration(true)
-        })
+        createRestAlertChannel(
+            normalizedVibration(prefs.getString(KEY_REST_VIBRATION, "medium")),
+            prefs.getBoolean(KEY_REST_SOUND, true),
+        )
     }
 
     override fun onDestroy() {
@@ -290,12 +362,15 @@ class WorkoutForegroundService : Service() {
         const val KEY_PAUSED = "paused"
         const val KEY_PAUSED_AT = "pausedAt"
         const val KEY_PAUSED_TOTAL = "pausedTotal"
+        const val KEY_REST_VIBRATION = "restVibration"
+        const val KEY_REST_SOUND = "restSound"
 
         const val ACTION_START = "com.treinoapp.action.START"
         const val ACTION_UPDATE = "com.treinoapp.action.UPDATE"
         const val ACTION_START_REST = "com.treinoapp.action.START_REST"
         const val ACTION_ADJUST_REST = "com.treinoapp.action.ADJUST_REST"
         const val ACTION_SKIP_REST = "com.treinoapp.action.SKIP_REST"
+        const val ACTION_CONFIGURE_ALERTS = "com.treinoapp.action.CONFIGURE_ALERTS"
         const val ACTION_PAUSE = "com.treinoapp.action.PAUSE"
         const val ACTION_RESUME = "com.treinoapp.action.RESUME"
         const val ACTION_FINISH = "com.treinoapp.action.FINISH"
@@ -311,9 +386,10 @@ class WorkoutForegroundService : Service() {
         const val EXTRA_SECONDS = "seconds"
         const val EXTRA_DELTA = "deltaSeconds"
         const val EXTRA_PAUSED_BOOL = "paused"
+        const val EXTRA_VIBRATION = "vibration"
+        const val EXTRA_SOUND = "sound"
 
         private const val CHANNEL_WORKOUT = "treinoapp_workout"
-        private const val CHANNEL_REST = "treinoapp_rest"
         private const val WORKOUT_NOTIFICATION_ID = 12001
         private const val REST_NOTIFICATION_ID = 12002
 
