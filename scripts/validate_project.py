@@ -15,12 +15,15 @@ pkg=json.loads(read('package.json'))
 gradle=read('android/app/build.gradle')
 manifest=read('android/app/src/main/AndroidManifest.xml')
 html=read('web/index.html')
+sw=read('web/sw.js')
 
 ok(re.match(r'^\d+\.\d+\.\d+$',version) is not None, 'VERSION inválido')
 ok(build.get('version')==version, 'BUILD.json diverge do VERSION')
 ok(webbuild.get('version')==version, 'web/BUILD.json diverge do VERSION')
 ok(pkg.get('version')==version, 'package.json diverge do VERSION')
 ok(f"versionName '{version}'" in gradle, 'Gradle versionName diverge do VERSION')
+ok(f"const APP_VERSION = '{version}';" in html, 'index.html diverge do VERSION')
+ok(f"const APP_VERSION = '{version}';" in sw, 'Service Worker diverge do VERSION')
 ok("applicationId 'com.treinoapp.app'" in gradle, 'Stable applicationId ausente')
 ok("applicationId 'com.treinoapp.beta'" in gradle, 'Beta applicationId ausente')
 ok('compileSdk 36' in gradle and 'targetSdk 36' in gradle and 'minSdk 26' in gradle, 'SDKs Android incorretos')
@@ -92,6 +95,10 @@ for token in ['modalDetalhesSessao','abrirDetalhesTreino','compartilharSessaoDet
     ok(token in html, f'UI de detalhes/performance/relatório ausente: {token}')
 ok('healthLinksV12:localStorage.getItem' in html, 'Backup não inclui vínculos Health')
 ok('DATA_SCHEMA_VERSION = 14' in html or 'DATA_SCHEMA_VERSION=14' in html, 'Schema web v14 esperado para RIR/RPE, recovery e agenda')
+
+# Interface focada / v12.3
+for token in ['serie-compact-trigger','atualizarFocoSeries','data-settings-group','dashboardSecondary','selEffortMode','Evolução &amp; Health']:
+    ok(token in html, f'Recurso v12.3 ausente: {token}')
 
 # Performance & Recovery / v12.2
 for token in ['getRecoverySnapshot','SleepSessionRecord','RestingHeartRateRecord','HeartRateVariabilityRmssdRecord','BodyFatRecord','LeanBodyMassRecord']:

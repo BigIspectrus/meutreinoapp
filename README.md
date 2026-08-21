@@ -1,4 +1,4 @@
-# TreinoApp v12.2.0 Beta — Performance & Recovery
+# TreinoApp v12.3.0 Beta — Treino Focado
 
 TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capacitor. A variante Beta pode coexistir com a Stable.
 
@@ -6,8 +6,8 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 
 - Stable: `com.treinoapp.app`
 - Beta: `com.treinoapp.beta`
-- Versão: `12.2.0`
-- versionCode: `120200`
+- Versão: `12.3.0`
+- versionCode: `120300`
 - Android: compile/target API 36, minSdk 26
 - Room: schema 3, somente migrações explícitas
 
@@ -17,10 +17,11 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 - notificação persistente com duração/progresso;
 - descanso nativo com `-15s`, `Pular` e `+30s`;
 - widget com sessão ativa e treino planejado do dia;
-- Modo Academia;
+- modo de treino focado, com um exercício e uma série em destaque;
+- séries concluídas e futuras compactas, com avanço automático;
 - sessão avulsa usando o mesmo motor do treino montado;
 - tipos avançados de série;
-- RIR e RPE opcionais em cada série;
+- preferência de esforço por RIR, RPE, ambos ou oculto;
 - rascunho automático incluindo RIR/RPE;
 - progressão de carga sugerida, nunca aplicada automaticamente.
 
@@ -82,6 +83,15 @@ O TreinoApp não cria um "readiness score" opaco. Os componentes são exibidos s
 - treino planejado do dia na tela inicial;
 - widget usa o treino planejado quando não há sessão ativa.
 
+## Interface
+
+- Início prioriza o próximo treino e recolhe evolução/conquistas;
+- navegação inferior com Início, Treinar, Histórico e Mais;
+- Histórico reúne Sessões e Evolução & Health;
+- Mais organiza treinos, preferências, Health, dados e aplicativo por categoria;
+- durante a sessão, cabeçalho e navegação saem de cena para ampliar o espaço útil;
+- ações de pausar e finalizar permanecem fixas e acessíveis.
+
 ## Android x Web/PWA
 
 No APK:
@@ -104,4 +114,4 @@ Na versão Web/PWA, os fluxos de navegador permanecem disponíveis.
 - `fallbackToDestructiveMigration()` continua proibido;
 - backup JSON inclui vínculos Health, plano semanal e cache de Recovery.
 
-Antes de promover para Stable, execute `TESTE_v12.2.0_BETA.md`.
+Antes de promover para Stable, execute `TESTE_v12.3.0_BETA.md`.

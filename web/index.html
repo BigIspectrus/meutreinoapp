@@ -650,6 +650,97 @@
     .android-runtime-note{font-size:.76em;color:var(--text-muted);line-height:1.45}
     @media(max-width:520px){.recovery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.load-trend-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.calendar-day{min-height:48px;padding:4px}.weekly-plan-row{grid-template-columns:68px minmax(0,1fr)}.timeline-item{grid-template-columns:44px 1fr auto}.set-effort-tools{gap:5px}.set-effort-tools select{min-width:67px;padding:7px 6px}}
 
+    /* v12.3 - interface focada e hierarquia visual */
+    .section-switch{display:flex;gap:5px;padding:4px;background:var(--surface2);border:1px solid var(--border);border-radius:14px;margin-bottom:14px}
+    .section-switch button{flex:1;border:0;border-radius:10px;background:transparent;color:var(--text-muted);font-weight:750;padding:10px 8px;cursor:pointer}
+    .section-switch button.active{background:var(--surface);color:var(--text);box-shadow:0 2px 10px rgba(0,0,0,.16)}
+    .dashboard-more-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;padding:13px 15px;margin:2px 0 14px;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--text);font-weight:750;cursor:pointer}
+    .dashboard-secondary{display:none}.dashboard-secondary.open{display:block}
+    #aba-dashboard .dash-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .settings-hub{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:14px}
+    .settings-hub button{display:flex;align-items:center;gap:9px;text-align:left;padding:13px;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--text);font-weight:750;cursor:pointer}
+    .settings-hub button span{display:block;font-size:.72em;font-weight:500;color:var(--text-muted);margin-top:2px}
+    .settings-hub button.active{border-color:var(--primary);background:var(--primary-dim);color:var(--primary)}
+    #aba-config.settings-ready .card[data-settings-group]:not(.settings-active){display:none!important}
+    .set-focus-heading,.serie-compact-trigger,.set-type-toggle,.set-field-label{display:none}
+
+    body.workout-mode{padding-bottom:92px}
+    body.workout-mode .app-header,
+    body.workout-mode .bottom-nav,
+    body.workout-mode #updateBanner{display:none!important}
+    body.workout-mode .fab-timer{display:none!important}
+    body.workout-mode #aba-treinar{display:block!important;max-width:580px;padding:8px 12px 116px}
+    body.workout-mode #aba-treinar>.card:not(#treinoAtivoCard),
+    body.workout-mode #maisOpcoesBtn,
+    body.workout-mode #maisOpcoesContent,
+    body.workout-mode #notifBanner,
+    body.workout-mode #timerCardMobile{display:none!important}
+    body.workout-mode #treinoAtivoCard{display:block!important;margin:0;padding:0;background:transparent;border:0;box-shadow:none;animation:none}
+    body.workout-mode #treinoAtivoCard>.card-title{position:sticky;top:0;z-index:150;margin:0 -12px 8px;padding:12px 14px;background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);font-size:1em}
+    body.workout-mode #treinoAtivoCard>.card-title input{border:0;background:transparent;color:var(--text-muted);font-size:.75em;padding:5px;width:124px}
+    body.workout-mode .treino-progress{margin:0 0 8px;padding:8px 10px;background:transparent;border:0}
+    body.workout-mode .workout-focus-nav{display:flex;position:sticky;top:54px;z-index:145;margin:0 0 10px;padding:7px;background:color-mix(in srgb,var(--surface) 96%,transparent);border-radius:12px;box-shadow:0 5px 18px rgba(0,0,0,.18)}
+    body.workout-mode .workout-focus-label{font-size:.82em;line-height:1.25}
+    body.workout-mode .workout-sticky-bar{bottom:0;padding:9px 12px calc(9px + env(safe-area-inset-bottom));border-top-color:color-mix(in srgb,var(--primary) 55%,var(--border));box-shadow:0 -10px 28px rgba(0,0,0,.34)}
+    body.workout-mode .rest-inline{bottom:82px}
+    body.workout-mode #treinoAtivoCard>.row:last-child{display:none!important}
+    body.workout-mode .session-add-wrap{margin:12px 0 4px}
+    body.workout-mode .session-add-wrap .btn{border-color:var(--border);color:var(--text-muted)}
+    body.workout-mode #exerciciosAtivos>p{display:none}
+    body.workout-mode #exerciciosAtivos .exercicio-card{padding:0;margin:0 0 9px;background:transparent;border-color:transparent;border-radius:14px}
+    body.workout-mode #exerciciosAtivos .exercicio-card.focus-active{border:0;box-shadow:none}
+    body.workout-mode #exerciciosAtivos .exercicio-card.focus-active .ex-card-header{padding:14px 12px;border:1px solid var(--border);border-radius:13px 13px 0 0;background:var(--surface)}
+    body.workout-mode #exerciciosAtivos .exercicio-card.focus-active .ex-name{font-size:1.05em;color:var(--text)}
+    body.workout-mode #exerciciosAtivos .exercicio-card.focus-inactive{padding:0;margin-bottom:7px;background:transparent;opacity:.74}
+    body.workout-mode #exerciciosAtivos .exercicio-card.focus-inactive .ex-card-header{border:1px solid var(--border);border-radius:12px;background:var(--surface);padding:10px 12px}
+    body.workout-mode #exerciciosAtivos .exercicio-card.focus-inactive .ex-name{font-size:.88em;color:var(--text-muted)}
+    body.workout-mode #exerciciosAtivos .ex-card-body{overflow:visible;padding:9px;background:var(--surface);border:1px solid var(--border);border-top:0;border-radius:0 0 13px 13px}
+
+    body.workout-mode #exerciciosAtivos .serie-row{display:grid;grid-template-columns:48px minmax(0,1fr) 48px;grid-template-areas:'heading heading heading' 'prev prev prev' 'weight-label weight-label weight-label' 'minus weight plus' 'reps-label reps-label reps-label' 'reps reps reps' 'effort effort effort' 'type-toggle type-toggle type-toggle' 'type type type' 'quick quick quick' 'check check check';gap:8px;padding:16px 12px;margin:0;border:0;background:transparent;overflow:visible}
+    body.workout-mode #exerciciosAtivos .serie-row+.serie-row{margin-top:7px}
+    body.workout-mode #exerciciosAtivos .set-focus-heading{grid-area:heading;display:flex;align-items:center;justify-content:space-between;font-size:.75em;font-weight:850;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted)}
+    body.workout-mode #exerciciosAtivos .set-focus-heading strong{font-size:1.35em;color:var(--text);letter-spacing:0;text-transform:none}
+    body.workout-mode #exerciciosAtivos .prev-val{grid-area:prev;display:flex;align-items:center;justify-content:center;gap:7px;min-height:28px;padding:5px 9px;border-radius:9px;background:var(--surface2);font-size:.75em;text-align:center}
+    body.workout-mode #exerciciosAtivos .prev-val::before{content:'Anterior';color:var(--text-muted);font-weight:650}
+    body.workout-mode #exerciciosAtivos .prev-val span{display:inline;color:var(--text);font-weight:750}
+    body.workout-mode #exerciciosAtivos .set-field-label{display:block;font-size:.7em;font-weight:750;color:var(--text-muted);margin:3px 2px -3px}.weight-field-label{grid-area:weight-label}.reps-field-label{grid-area:reps-label}
+    body.workout-mode #exerciciosAtivos .ativo-carga{grid-area:weight!important;height:56px!important;font-size:1.35em!important;border-radius:12px}
+    body.workout-mode #exerciciosAtivos .ativo-reps{grid-area:reps!important;height:54px!important;font-size:1.2em!important;border-radius:12px}
+    body.workout-mode #exerciciosAtivos .serie-row>.inc-btn:nth-of-type(1){grid-area:minus;width:48px;height:56px;border-radius:12px}
+    body.workout-mode #exerciciosAtivos .serie-row>.inc-btn:nth-of-type(2){grid-area:plus;width:48px;height:56px;border-radius:12px}
+    body.workout-mode #exerciciosAtivos .set-effort-tools{grid-area:effort;justify-content:center;margin:0;padding:3px 0}
+    body.workout-mode #exerciciosAtivos .set-effort-tools .effort-label{display:none}
+    body.workout-mode #exerciciosAtivos .set-effort-tools select{min-width:118px;height:42px;font-size:.85em;text-align:center}
+    body.workout-mode[data-effort-mode='rir'] .ativo-rpe,
+    body.workout-mode[data-effort-mode='rpe'] .ativo-rir{display:none!important}
+    body.workout-mode[data-effort-mode='none'] .set-effort-tools{display:none!important}
+    body.workout-mode #exerciciosAtivos .set-type-toggle{grid-area:type-toggle;display:block;width:100%;border:0;background:transparent;color:var(--text-muted);font-size:.75em;padding:5px;cursor:pointer}
+    body.workout-mode #exerciciosAtivos .set-type-select{grid-area:type;display:none;width:100%;max-width:none;height:44px}
+    body.workout-mode #exerciciosAtivos .serie-row.advanced-open .set-type-select{display:block}
+    body.workout-mode #exerciciosAtivos .set-quick-tools{grid-area:quick;display:none!important}
+    body.workout-mode #exerciciosAtivos .serie-check{grid-area:check;width:100%;height:52px;border-radius:12px;border:0;background:var(--primary);color:#fff;font-size:0;font-weight:850}
+    body.workout-mode #exerciciosAtivos .serie-check::after{content:'Concluir série';font-size:15px}
+    body.workout-mode #exerciciosAtivos .serie-check.checked{background:var(--success);color:#071b10}
+    body.workout-mode #exerciciosAtivos .serie-check.checked::after{content:'Série concluída'}
+    body.workout-mode #exerciciosAtivos .serie-badge{display:none}
+
+    body.workout-mode #exerciciosAtivos .serie-row.serie-collapsed{display:block;padding:0;border:1px solid var(--border);border-radius:11px;background:var(--surface2)}
+    body.workout-mode #exerciciosAtivos .serie-row.serie-collapsed>*:not(.serie-compact-trigger){display:none!important}
+    body.workout-mode #exerciciosAtivos .serie-row.serie-collapsed .serie-compact-trigger{display:flex;width:100%;align-items:center;gap:10px;border:0;background:transparent;color:var(--text);padding:12px;cursor:pointer;text-align:left}
+    body.workout-mode #exerciciosAtivos .serie-compact-trigger .compact-number{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:28px;border-radius:8px;background:var(--primary-dim);color:var(--primary);font-size:.75em;font-weight:850}
+    body.workout-mode #exerciciosAtivos .serie-compact-trigger .compact-state{flex:1;font-size:.82em;font-weight:750}
+    body.workout-mode #exerciciosAtivos .serie-compact-trigger .compact-values{font-size:.75em;color:var(--text-muted)}
+    body.workout-mode #exerciciosAtivos .serie-row.serie-completed .serie-compact-trigger .compact-number{background:var(--success-dim);color:var(--success)}
+    body.workout-mode #exerciciosAtivos .serie-row.serie-completed .serie-compact-trigger .compact-state{color:var(--success)}
+
+    @media(max-width:520px){
+      .tab-content{padding:12px}
+      .card{padding:15px;margin-bottom:11px}
+      .app-header{padding:10px 12px}
+      .timer-compact .tmini{display:none}
+      .settings-hub{grid-template-columns:1fr 1fr}
+    }
+
 </style>
 </head>
 <body>
@@ -853,11 +944,11 @@
 <!-- MODAL NOVIDADES -->
 <div class="modal-overlay" id="modalNovidades">
   <div class="modal" style="max-width:500px;">
-    <div class="modal-title">TreinoApp v12.1.0 Beta</div>
+    <div class="modal-title">TreinoApp v12.3.0 Beta</div>
     <div style="font-size:.88em;line-height:1.6;color:var(--text-muted);">
       <p style="color:var(--text);font-weight:700;margin-bottom:8px;">Principais novidades desta versão</p>
-      <p>Correção da associação automática com o Health Connect, preservando horários de início e fim entre WebView, Kotlin e Room. Cada treino pode exibir dados do Galaxy Watch, gráfico de frequência cardíaca, zonas configuráveis, calorias, comparação com a sessão anterior, resposta cardiovascular por exercício e detalhes técnicos do vínculo.</p>
-      <p style="margin-top:8px;">A tela Progresso ganhou um painel de performance de 30 dias. O compartilhamento do treino e o relatório para personal agora incluem dados fisiológicos quando disponíveis, e o backup passa a preservar os vínculos Health e as amostras usadas nos gráficos.</p>
+      <p>O treino agora abre em modo focado: somente a série atual fica expandida, com carga, repetições e conclusão em destaque. Séries concluídas e futuras ficam compactas, e o app avança automaticamente sem perder RIR, RPE ou tipos avançados.</p>
+      <p style="margin-top:8px;">A tela Início ficou mais leve, Histórico e Evolução foram reunidos, o menu inferior passou a ter quatro destinos e a área Mais foi organizada por categorias. Health Connect, frequência cardíaca e sincronização continuam preservados.</p>
     </div>
     <div class="modal-footer"><button class="btn btn-primary" onclick="fecharNovidades()">Entendi</button></div>
   </div>
@@ -994,7 +1085,6 @@
   <button class="bnav-btn active" data-tab="dashboard"><span class="bnav-icon">🏠</span>Início</button>
   <button class="bnav-btn" data-tab="treinar"><span class="bnav-icon">🏋️</span>Treinar</button>
   <button class="bnav-btn" data-tab="historico"><span class="bnav-icon">📝</span>Histórico</button>
-  <button class="bnav-btn" data-tab="progresso"><span class="bnav-icon">📈</span>Progresso</button>
   <button class="bnav-btn" data-tab="config"><span class="bnav-icon">⚙️</span>Mais</button>
 </nav>
 
@@ -1002,6 +1092,8 @@
 <div class="tab-content" id="aba-dashboard">
   <div id="dashHero"></div>
   <div id="dashPlannedWorkout"></div>
+  <button type="button" class="dashboard-more-toggle" id="dashboardMoreToggle" onclick="toggleDashboardSecondary()" aria-expanded="false">Ver evolução e conquistas <span aria-hidden="true">⌄</span></button>
+  <div class="dashboard-secondary" id="dashboardSecondary">
   <div id="dashDesafio"></div>
 
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
@@ -1032,6 +1124,7 @@
   <div class="card">
     <div class="card-title">🏅 Conquistas recentes</div>
     <div class="conquistas-grid" id="dashConquistas"></div>
+  </div>
   </div>
 </div>
 
@@ -1175,6 +1268,10 @@
 
 <!-- ═══════════════ ABA: HISTÓRICO ═══════════════ -->
 <div class="tab-content" id="aba-historico">
+  <div class="section-switch" aria-label="Histórico e evolução">
+    <button type="button" class="active" onclick="irParaAba('historico')">Sessões</button>
+    <button type="button" onclick="irParaAba('progresso')">Evolução &amp; Health</button>
+  </div>
   <div id="resumoSemanalContainer"></div>
 
   <div class="card">
@@ -1218,6 +1315,10 @@
 
 <!-- ═══════════════ ABA: PROGRESSO ═══════════════ -->
 <div class="tab-content" id="aba-progresso">
+  <div class="section-switch" aria-label="Histórico e evolução">
+    <button type="button" onclick="irParaAba('historico')">Sessões</button>
+    <button type="button" class="active" onclick="irParaAba('progresso')">Evolução &amp; Health</button>
+  </div>
   <div class="sub-tabs" id="subTabsProgresso">
     <button class="sub-tab active" data-sub="evolucao">📈 Evolução</button>
     <button class="sub-tab" data-sub="streak">🔥 Streak</button>
@@ -1477,13 +1578,20 @@
 <!-- ═══════════════ ABA: CONFIG ═══════════════ -->
 <div class="tab-content" id="aba-config">
   <div class="privacy-note" id="runtimeStorageNote"><strong>Seus dados ficam neste dispositivo.</strong> O TreinoApp usa armazenamento local privado. Faça backups periódicos antes de trocar de aparelho ou apagar os dados do app.</div>
-  <div class="card">
+  <div class="settings-hub" aria-label="Categorias de ajustes">
+    <button type="button" data-settings-tab="treinos" onclick="abrirCategoriaConfig('treinos')">🏋️ <div>Treinos<span>Rotinas e exercícios</span></div></button>
+    <button type="button" data-settings-tab="perfil" onclick="abrirCategoriaConfig('perfil')">👤 <div>Preferências<span>Perfil e experiência</span></div></button>
+    <button type="button" data-settings-tab="health" onclick="abrirCategoriaConfig('health')">❤️ <div>Health<span>Relógio e sincronização</span></div></button>
+    <button type="button" data-settings-tab="dados" onclick="abrirCategoriaConfig('dados')">💾 <div>Dados<span>Backup e relatórios</span></div></button>
+    <button type="button" data-settings-tab="app" onclick="abrirCategoriaConfig('app')">📱 <div>Aplicativo<span>Versão e ferramentas</span></div></button>
+  </div>
+  <div class="card" data-settings-group="treinos">
     <div class="card-title">🗂️ Meus Treinos</div>
     <div id="listaTreinosSalvos"></div>
     <button class="btn btn-outline btn-sm" style="width:auto;margin-top:9px;" onclick="abrirModalTreino()">+ Criar Novo Treino</button>
   </div>
   <!-- Perfil -->
-  <div class="card">
+  <div class="card" data-settings-group="perfil">
     <div class="card-title">👤 Meu Perfil</div>
     <div class="row" style="align-items:center;gap:12px;">
       <div style="font-size:2.5em;cursor:pointer;" id="avatarDisplay" onclick="abrirSeletorAvatar()">💪</div>
@@ -1497,7 +1605,7 @@
     </div>
   </div>
 
-  <div class="card">
+  <div class="card" data-settings-group="perfil">
     <div class="card-title">⚙️ Preferências</div>
     <div class="config-item">
       <div><div class="config-label">Tema</div><div class="config-sub">Escuro ou Claro</div></div>
@@ -1526,8 +1634,14 @@
         <option value="0">Desativado</option><option value="60">1:00</option><option value="90">1:30</option><option value="120">2:00</option><option value="150">2:30</option><option value="180">3:00</option>
       </select>
     </div>
+    <div class="config-item">
+      <div><div class="config-label">Esforço nas séries</div><div class="config-sub">Escolha a métrica que aparece durante o treino</div></div>
+      <select id="selEffortMode" style="width:auto;padding:6px 10px;font-size:.83em;" onchange="salvarEffortMode(this.value)">
+        <option value="rir">RIR</option><option value="rpe">RPE</option><option value="both">RIR + RPE</option><option value="none">Ocultar</option>
+      </select>
+    </div>
   </div>
-  <div class="card">
+  <div class="card" data-settings-group="dados">
     <div class="card-title">💾 Backup</div>
     <p style="font-size:.83em;color:var(--text-muted);margin-bottom:14px;">Faça backup regularmente para não perder seus dados.</p>
     <div class="row">
@@ -1556,7 +1670,7 @@
     <hr class="divider">
     <button class="btn btn-danger" onclick="confirmarAcao('Apagar todos os dados?','Isso remove histórico, treinos, metas, perfil e preferências deste dispositivo. Faça backup antes.',resetarDados)">Apagar todos os dados do app</button>
   </div>
-  <div class="card">
+  <div class="card" data-settings-group="dados">
     <div class="card-title">🌐 Relatório para Personal</div>
     <p style="font-size:.83em;color:var(--text-muted);margin-bottom:12px;">
       Gere um arquivo HTML com toda sua evolução. Envie pelo WhatsApp, e-mail ou qualquer app. Seu personal abre no navegador do celular ou computador e vê tudo — peso, cargas, PRs, frequência, sessões.
@@ -1566,16 +1680,16 @@
     <p style="font-size:.72em;color:var(--text-muted);margin-top:8px;">O arquivo abre em qualquer navegador, sem internet, sem instalar nada.</p>
   </div>
 
-  <div class="card">
+  <div class="card" data-settings-group="app">
     <div class="card-title">Ferramentas rápidas</div>
     <button class="btn btn-ghost" onclick="abrirModalAnilhas()">Calculadora de anilhas</button>
   </div>
 
-  <div class="card" id="appInfoCard">
+  <div class="card" id="appInfoCard" data-settings-group="app">
     <div class="card-title">Aplicativo e dados</div>
     <div class="config-item"><div><div class="config-label">Versão instalada</div><div class="config-sub" id="appVersionInfo">v11.0.0</div></div><button class="btn btn-outline btn-sm" style="width:auto;" onclick="verificarAtualizacaoManual()">Verificar atualização</button></div>
     <div class="config-item"><div><div class="config-label">Tela ligada durante o treino</div><div class="config-sub">Evita que a tela apague enquanto a sessão está ativa</div></div><select id="selWakeLock" style="width:auto;padding:6px 10px;font-size:.83em;" onchange="salvarWakeLockConfig(this.value)"><option value="1">Ativado</option><option value="0">Desativado</option></select></div>
-    <div class="config-item"><div><div class="config-label">Modo Academia</div><div class="config-sub">Mantém um exercício em foco e recolhe os demais durante a sessão</div></div><select id="selAcademiaMode" style="width:auto;padding:6px 10px;font-size:.83em;" onchange="salvarAcademiaModeConfig(this.value)"><option value="1">Ativado</option><option value="0">Desativado</option></select></div>
+    <div class="config-item"><div><div class="config-label">Modo de treino focado</div><div class="config-sub">Mostra só o exercício e a série que pedem sua atenção</div></div><select id="selAcademiaMode" style="width:auto;padding:6px 10px;font-size:.83em;" onchange="salvarAcademiaModeConfig(this.value)"><option value="1">Ativado</option><option value="0">Desativado</option></select></div>
     <div class="config-item"><div style="flex:1;"><div class="config-label">Proteção do armazenamento</div><div class="config-sub" id="storagePersistStatus">Verificando...</div><div class="storage-meter"><div class="storage-meter-fill" id="storageMeterFill" style="width:0%"></div></div></div><button class="btn btn-outline btn-sm" id="btnPersistStorage" style="width:auto;margin-left:10px;" onclick="solicitarPersistenciaStorage()">Proteger</button></div>
     <div class="config-item"><div><div class="config-label">Diagnóstico</div><div class="config-sub" id="diagnosticRuntimeLabel">Versão, armazenamento e quantidade de dados</div></div><button class="btn btn-ghost btn-sm" style="width:auto;" onclick="copiarDiagnostico()">Copiar</button></div>
     <div class="diag-code" id="diagResumo"></div>
@@ -1584,7 +1698,11 @@
   </div>
 
 
-  <div class="card native-card" id="nativeIntegrationCard" style="display:none;">
+  <div class="card" data-settings-group="health">
+    <div class="card-title">❤️ Health e relógio</div>
+    <p style="font-size:.83em;color:var(--text-muted);line-height:1.55;">No APK Android, use os controles abaixo para conectar o Health Connect, sincronizar o Galaxy Watch e ajustar a FC máxima. Na versão Web, esses recursos ficam disponíveis somente para consulta nos dados já importados.</p>
+  </div>
+  <div class="card native-card" id="nativeIntegrationCard" data-settings-group="health" style="display:none;">
     <div class="card-title" style="justify-content:space-between;"><span>Android nativo</span><span class="channel-badge" id="nativeChannelBadge">—</span></div>
     <div class="config-item"><div><div class="config-label">Treino em segundo plano</div><div class="config-sub">Notificação permanente com duração, progresso e descanso</div></div><span class="badge badge-success">Ativo</span></div>
     <div class="config-item"><div><div class="config-label">Health Connect</div><div class="config-sub" id="healthConnectStatus">Verificando disponibilidade...</div></div><button class="btn btn-outline btn-sm" style="width:auto;" onclick="conectarHealthConnect()">Conectar</button></div>
@@ -1597,7 +1715,7 @@
     <div id="healthDiagnosticPanel" style="margin-top:10px;"></div>
   </div>
 
-  <div class="card" id="webInstallCard">
+  <div class="card" id="webInstallCard" data-settings-group="app">
     <div class="card-title">📱 Instalar como App</div>
     <p style="font-size:.83em;color:var(--text-muted);margin-bottom:14px;">Este app pode ser instalado no seu celular como um aplicativo nativo, sem precisar da Play Store.</p>
     <div id="installInstructions">
@@ -1611,14 +1729,14 @@
 </div>
 
 <script>
-const APP_VERSION = '12.2.0';
-const APP_BUILD = '2026.08.19.1';
+const APP_VERSION = '12.3.0';
+const APP_BUILD = '2026.08.21.1';
 const DATA_SCHEMA_VERSION = 14;
 const GITHUB_REPO='BigIspectrus/meutreinoapp';
 const GITHUB_PAGES_BASE='https://bigispectrus.github.io/meutreinoapp';
 let _latestAndroidReleaseUrl='';
 let _nativeChannel='web';
-const APP_CACHE_VERSION = 'treinoapp-v12.2.0-202608191';
+const APP_CACHE_VERSION = 'treinoapp-v12.3.0-202608211';
 
 const SET_TYPES={workset:'Work set',warmup:'Aquecimento',topset:'Top set',backoff:'Back-off',dropset:'Drop set',cluster:'Cluster set',fst7:'FST-7',restpause:'Rest-pause',myoreps:'Myo-reps',amrap:'AMRAP'};
 function normalizarSetType(v){return SET_TYPES[v]?v:'workset';}
@@ -1627,7 +1745,8 @@ function setTypeOptionsHtml(selected='workset'){selected=normalizarSetType(selec
 function setContaParaPR(r){return ['workset','topset','backoff','amrap'].includes(normalizarSetType(r?.setType));}
 function setContaParaVolume(r){return normalizarSetType(r?.setType)!=='warmup';}
 function volumeRegistro(r){ const c=Number(r?.carga)||0, reps=Number(r?.reps)||0; return setContaParaVolume(r)&&c>0&&reps>0?c*reps:0; }
-function atualizarSetTypeVisual(sel){if(sel)sel.dataset.kind=normalizarSetType(sel.value);marcarDadosNaoSalvos();salvarRascunho();}
+function serieFocusExtrasHtml(i,total){return `<div class="set-focus-heading"><span>Série ${i} de ${total}</span><strong>S${i}</strong></div><div class="set-field-label weight-field-label">Carga (kg)</div><div class="set-field-label reps-field-label">Repetições</div><button type="button" class="set-type-toggle" onclick="toggleDetalhesSerie(this)" aria-expanded="false">Tipo de série · Work set</button><button type="button" class="serie-compact-trigger" onclick="abrirSerieFocada(this)" aria-label="Abrir série ${i}"><span class="compact-number">S${i}</span><span class="compact-state">Próxima série</span><span class="compact-values">—</span></button>`;}
+function atualizarSetTypeVisual(sel){if(sel){sel.dataset.kind=normalizarSetType(sel.value);const toggle=sel.closest('.serie-row')?.querySelector('.set-type-toggle');if(toggle)toggle.textContent=`Tipo de série · ${setTypeLabel(sel.value)}`;}marcarDadosNaoSalvos();salvarRascunho();}
 function gerarId(prefix='id'){ try{return `${prefix}_${crypto.randomUUID()}`}catch(e){return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2,9)}`} }
 function jsArg(v){return JSON.stringify(String(v)).replace(/</g,'\u003c');}
 function getRascunhoValido(templateId=null){ try{const r=JSON.parse(localStorage.getItem('_rascunhoTreino')||'null');if(!r||!r.templateId||(Date.now()-(r.timestamp||0))>86400000)return null;if(templateId!==null&&String(r.templateId)!==String(templateId))return null;return r}catch(e){return null} }
@@ -1745,6 +1864,7 @@ window.onload = async function() {
   carregarPerfil();
   carregarSomConfig();
   carregarDescansoPadrao();
+  carregarEffortMode();
   carregarWakeLockConfig();
   carregarAcademiaModeConfig();
   restaurarTimerPersistido();
@@ -1778,7 +1898,7 @@ window.onload = async function() {
 // ════════════════════════════════════════════════
 // TABS — Bottom Nav + Sub-tabs
 // ════════════════════════════════════════════════
-const TAB_ORDER = ['dashboard','treinar','historico','progresso','config'];
+const TAB_ORDER = ['dashboard','treinar','historico','config'];
 let _currentTab = 'dashboard';
 let _currentSubTab = 'evolucao';
 
@@ -1788,14 +1908,33 @@ function irParaAba(id) {
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.bnav-btn').forEach(t => t.classList.remove('active'));
   document.getElementById('aba-'+id).classList.add('active');
-  const navBtn = document.querySelector(`.bnav-btn[data-tab="${id}"]`);
+  const navTarget = id==='progresso' ? 'historico' : id;
+  const navBtn = document.querySelector(`.bnav-btn[data-tab="${navTarget}"]`);
   if(navBtn) navBtn.classList.add('active');
   // Trigger renders
   if(id==='dashboard') renderizarDashboard();
   if(id==='historico') renderizarHistorico();
   if(id==='progresso') ativarSubTab(_currentSubTab);
-  if(id==='config') { renderizarListaTreinosSalvos(); verificarStatusNotif(); carregarPerfil(); carregarSomConfig(); renderizarHistoricoBackup(); renderizarConfigPerfilPub(); carregarTemaConfig(); carregarAcademiaModeConfig(); atualizarStorageStatus(); atualizarDiagnosticoUI(); atualizarBuildInfoUI(); }
+  if(id==='config') { renderizarListaTreinosSalvos(); verificarStatusNotif(); carregarPerfil(); carregarSomConfig(); renderizarHistoricoBackup(); renderizarConfigPerfilPub(); carregarTemaConfig(); carregarAcademiaModeConfig(); carregarEffortMode(); abrirCategoriaConfig(localStorage.getItem('settingsCategory')||'treinos'); atualizarStorageStatus(); atualizarDiagnosticoUI(); atualizarBuildInfoUI(); }
   window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function toggleDashboardSecondary(){
+  const content=document.getElementById('dashboardSecondary'),btn=document.getElementById('dashboardMoreToggle');
+  if(!content||!btn)return;
+  const open=content.classList.toggle('open');
+  btn.setAttribute('aria-expanded',String(open));
+  btn.innerHTML=`${open?'Ocultar detalhes':'Ver evolução e conquistas'} <span aria-hidden="true">${open?'⌃':'⌄'}</span>`;
+}
+
+function abrirCategoriaConfig(group='treinos'){
+  const valid=['treinos','perfil','health','dados','app'];
+  if(!valid.includes(group))group='treinos';
+  const aba=document.getElementById('aba-config');if(!aba)return;
+  aba.classList.add('settings-ready');
+  aba.querySelectorAll('[data-settings-group]').forEach(card=>card.classList.toggle('settings-active',card.dataset.settingsGroup===group));
+  aba.querySelectorAll('[data-settings-tab]').forEach(btn=>btn.classList.toggle('active',btn.dataset.settingsTab===group));
+  localStorage.setItem('settingsCategory',group);
 }
 
 function ativarSubTab(subId) {
@@ -1848,7 +1987,7 @@ document.addEventListener('touchend', e=>{
   const dx=e.changedTouches[0].clientX-_swipeStartX;
   const dy=e.changedTouches[0].clientY-_swipeStartY;
   if(Math.abs(dx)<100 || Math.abs(dy)>Math.abs(dx)*0.5) return; // threshold: 100px min, mostly horizontal
-  const idx=TAB_ORDER.indexOf(_currentTab);
+  const idx=TAB_ORDER.indexOf(_currentTab==='progresso'?'historico':_currentTab);
   if(dx<0 && idx<TAB_ORDER.length-1) irParaAba(TAB_ORDER[idx+1]); // swipe left = next
   if(dx>0 && idx>0) irParaAba(TAB_ORDER[idx-1]); // swipe right = prev
 },{passive:true});
@@ -2151,7 +2290,7 @@ function selecionarTreino(template, btnEl) {
           <input type="number" class="ativo-reps" data-ex="${esc(ex)}" data-serie="${i}" placeholder="${repRange==='livre'?'reps':repRange+' reps'}" ${prev&&prev.reps?`value="${prev.reps}"`:''} inputmode="numeric">
           <select class="set-type-select ativo-tipo" data-kind="workset" aria-label="Tipo da série ${i}" onchange="atualizarSetTypeVisual(this)">${setTypeOptionsHtml('workset')}</select>
           <button type="button" class="serie-check" onclick="toggleSerieCheck(this)" aria-label="Concluir série ${i}" title="Concluir série">✓</button>
-          ${effortControlsHtml(i)}<div class="set-quick-tools"><button type="button" class="set-mini-btn" onclick="copiarSerieAnterior(this)">Série anterior</button><button type="button" class="set-mini-btn" onclick="copiarCargaAnterior(this)">Carga anterior</button></div>
+          ${effortControlsHtml(i)}<div class="set-quick-tools"><button type="button" class="set-mini-btn" onclick="copiarSerieAnterior(this)">Série anterior</button><button type="button" class="set-mini-btn" onclick="copiarCargaAnterior(this)">Carga anterior</button></div>${serieFocusExtrasHtml(i,exSeries)}
         </div>`;
     }
     const faixa=template.repRangeMap?.[ex];
@@ -2208,7 +2347,7 @@ function restaurarRascunho() {
       if(rasc.data) document.getElementById('dataTreinoAtivo').value=rasc.data; if(rasc.startedAt) window._treinoStartedAt=rasc.startedAt;
       atualizarProgressoTreino();
       (rasc.skippedExs||[]).forEach(ex=>{const card=[...document.querySelectorAll('#exerciciosAtivos .exercicio-card')].find(c=>c.dataset.ex===ex);if(card){card.classList.add('skipped');const b=card.querySelector('.ex-skip-btn');if(b)b.textContent='Reativar';}});
-      atualizarEstadoPausaUI(); atualizarProgressoTreino();
+      atualizarFocoSeries(); aplicarModoAcademia(); atualizarEstadoPausaUI(); atualizarProgressoTreino();
       if(restaurados || (rasc.skippedExs||[]).length) toast('Treino em andamento restaurado','info');
     }
   } catch(e) { console.warn('Falha ao restaurar rascunho',e); }
@@ -2219,6 +2358,7 @@ function limparRascunho() { localStorage.removeItem('_rascunhoTreino'); }
 let _draftSaveTimer=null;
 document.addEventListener('input', e=>{
   if(e.target.classList.contains('ativo-carga') || e.target.classList.contains('ativo-reps') || e.target.classList.contains('ativo-rir') || e.target.classList.contains('ativo-rpe')) {
+    atualizarResumoCompactoSerie(e.target.closest('.serie-row'));
     marcarDadosNaoSalvos();
     clearTimeout(_draftSaveTimer);
     _draftSaveTimer=setTimeout(()=>salvarRascunho(),180);
@@ -3173,6 +3313,7 @@ function importarBackup(event) {
       if(d.timerSom) localStorage.setItem('timerSom',d.timerSom);
       if(d.backupConfig) localStorage.setItem('backupConfig',d.backupConfig);
       if(d.descansoPadrao) localStorage.setItem('descansoPadrao',d.descansoPadrao);
+      if(d.effortMode) localStorage.setItem('effortMode',d.effortMode);
       if(d.wakeLockEnabled!==undefined&&d.wakeLockEnabled!==null) localStorage.setItem('wakeLockEnabled',d.wakeLockEnabled);
       if(d.academiaModeEnabled!==undefined&&d.academiaModeEnabled!==null) localStorage.setItem('academiaModeEnabled',d.academiaModeEnabled);
       if(d.plateBarWeight) localStorage.setItem('plateBarWeight',d.plateBarWeight);
@@ -3190,7 +3331,7 @@ function importarBackup(event) {
   };
   reader.readAsText(file);
 }
-function resetarDados() { const keys=['historicoTreinoV3','pesoCorporal','exerciciosCustomizadosV3','treinosTemplates','temaPreferido','userProfile','treinoMetas','conquistasDesbloqueadas','perfilPublico','treinoScores','timerSom','backupConfig','descansoPadrao','_rascunhoTreino','_onboardingV9','_onboardingV10','_onboardingV11','_lastSeenVersion','_lastSnapshotDay','_restTimerEndAt','wakeLockEnabled','academiaModeEnabled','plateBarWeight','platePreset','healthLinksV12','healthPendingV12','healthHrMax','healthAutoSync','healthWriteEnabled','weeklyPlanV12','healthRecoveryCacheV12','_appErrors']; keys.forEach(k=>localStorage.removeItem(k)); invalidarCache(); toast('Dados do TreinoApp apagados. Recarregando...','info'); setTimeout(()=>location.reload(),1000); }
+function resetarDados() { const keys=['historicoTreinoV3','pesoCorporal','exerciciosCustomizadosV3','treinosTemplates','temaPreferido','userProfile','treinoMetas','conquistasDesbloqueadas','perfilPublico','treinoScores','timerSom','backupConfig','descansoPadrao','effortMode','settingsCategory','_rascunhoTreino','_onboardingV9','_onboardingV10','_onboardingV11','_lastSeenVersion','_lastSnapshotDay','_restTimerEndAt','wakeLockEnabled','academiaModeEnabled','plateBarWeight','platePreset','healthLinksV12','healthPendingV12','healthHrMax','healthAutoSync','healthWriteEnabled','weeklyPlanV12','healthRecoveryCacheV12','_appErrors']; keys.forEach(k=>localStorage.removeItem(k)); invalidarCache(); toast('Dados do TreinoApp apagados. Recarregando...','info'); setTimeout(()=>location.reload(),1000); }
 
 
 // ════════════════════════════════════════════════
@@ -4120,9 +4261,8 @@ function renderizarDashboard() {
     <div class="dash-hero">
       <div class="dash-hero-top">
         <div>
-          <div style="font-size:1.3em;margin-bottom:2px;">${p.avatar||'💪'}</div>
-          <div class="dash-greeting">${saudacao}${p.nome?`, <span>${p.nome}</span>`:''}!</div>
-          <div class="nivel-badge" style="margin-top:6px;">${nivel.icon} ${nivel.nome} · ${xp.toLocaleString()} XP</div>
+          <div class="dash-greeting">${p.avatar||'💪'} ${saudacao}${p.nome?`, <span>${p.nome}</span>`:''}!</div>
+          <div style="font-size:.78em;color:var(--text-muted);margin-top:5px;">Seu próximo treino está a um toque.</div>
         </div>
         <div style="text-align:right;">
           <div class="dash-streak">${streak}</div>
@@ -4132,11 +4272,9 @@ function renderizarDashboard() {
       <div class="dash-kpis">
         <div class="dash-kpi"><div class="dash-kpi-val">${semDias}</div><div class="dash-kpi-lbl">Treinos semana</div></div>
         <div class="dash-kpi"><div class="dash-kpi-val">${(semVol/1000).toFixed(1)}t</div><div class="dash-kpi-lbl">Volume semana</div></div>
-        <div class="dash-kpi"><div class="dash-kpi-val">${diasTreino.length}</div><div class="dash-kpi-lbl">Total dias</div></div>
       </div>
-      ${ultimaDateBr?`<div class="dash-last">Último treino: <strong>${ultimaDateBr}</strong> · ${ultimaExs.slice(0,3).join(', ')}${ultimaExs.length>3?'...':''} · ${(ultimaVol/1000).toFixed(2)}t</div>`:''}
+      ${ultimaDateBr?`<div class="dash-last">Último: <strong>${ultimaDateBr}</strong> · ${ultimaExs.slice(0,2).join(', ')}${ultimaExs.length>2?' +'+(ultimaExs.length-2):''}</div>`:''}
       ${(()=>{const ts=getTreinosSalvos();let rasc=getRascunhoValido(); const draftT=rasc?ts.find(t=>String(t.id)===String(rasc.templateId)):null;if(draftT)return `<button class="cta-treinar" onclick='iniciarTreinoPorId(${jsArg(draftT.id)})'>CONTINUAR ${esc(draftT.nome).toUpperCase()}</button>`;if(rasc?.templateSnapshot?.isAdHoc)return `<button class="cta-treinar" onclick="continuarSessaoAvulsa()">CONTINUAR SESSÃO AVULSA</button>`;const lastTid=ultimaRegs.find(r=>r.templateId)?.templateId||null;const lastT=ts.find(t=>String(t.id)===String(lastTid));return lastT?`<button class="cta-treinar" onclick='iniciarTreinoPorId(${jsArg(lastT.id)})'>REPETIR ${esc(lastT.nome).toUpperCase()}</button>`:`<button class="cta-treinar" onclick="irParaAba('treinar')">INICIAR TREINO</button>`;})()}
-      ${getTreinosSalvos().length>0?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:-6px;">${getTreinosSalvos().slice(0,3).map(t=>`<button style="font-size:.72em;color:var(--text);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);padding:6px 10px;border-radius:12px;cursor:pointer;" onclick='iniciarTreinoPorId(${jsArg(t.id)})'>${esc(t.nome).slice(0,18)}</button>`).join('')}</div>`:''}
     </div>`;
 
   // Animar números do dashboard
@@ -4410,7 +4548,7 @@ function verificarBackupAuto() {
   }
 }
 
-function gerarObjetoBackup(){return {app:'TreinoApp',appVersion:APP_VERSION,build:APP_BUILD,schemaVersion:DATA_SCHEMA_VERSION,exportedAt:new Date().toISOString(),pesoCorporal:localStorage.getItem('pesoCorporal'),historicoTreinoV3:localStorage.getItem('historicoTreinoV3'),exerciciosCustomizadosV3:localStorage.getItem('exerciciosCustomizadosV3'),treinosTemplates:localStorage.getItem('treinosTemplates'),temaPreferido:localStorage.getItem('temaPreferido'),userProfile:localStorage.getItem('userProfile'),treinoMetas:localStorage.getItem('treinoMetas'),conquistasDesbloqueadas:localStorage.getItem('conquistasDesbloqueadas'),perfilPublico:localStorage.getItem('perfilPublico'),treinoScores:localStorage.getItem('treinoScores'),timerSom:localStorage.getItem('timerSom'),backupConfig:localStorage.getItem('backupConfig'),descansoPadrao:localStorage.getItem('descansoPadrao'),wakeLockEnabled:localStorage.getItem('wakeLockEnabled'),academiaModeEnabled:localStorage.getItem('academiaModeEnabled'),plateBarWeight:localStorage.getItem('plateBarWeight'),platePreset:localStorage.getItem('platePreset'),healthLinksV12:localStorage.getItem('healthLinksV12'),healthHrMax:localStorage.getItem('healthHrMax'),healthAutoSync:localStorage.getItem('healthAutoSync'),healthWriteEnabled:localStorage.getItem('healthWriteEnabled'),weeklyPlanV12:localStorage.getItem('weeklyPlanV12'),healthRecoveryCacheV12:localStorage.getItem('healthRecoveryCacheV12')};}
+function gerarObjetoBackup(){return {app:'TreinoApp',appVersion:APP_VERSION,build:APP_BUILD,schemaVersion:DATA_SCHEMA_VERSION,exportedAt:new Date().toISOString(),pesoCorporal:localStorage.getItem('pesoCorporal'),historicoTreinoV3:localStorage.getItem('historicoTreinoV3'),exerciciosCustomizadosV3:localStorage.getItem('exerciciosCustomizadosV3'),treinosTemplates:localStorage.getItem('treinosTemplates'),temaPreferido:localStorage.getItem('temaPreferido'),userProfile:localStorage.getItem('userProfile'),treinoMetas:localStorage.getItem('treinoMetas'),conquistasDesbloqueadas:localStorage.getItem('conquistasDesbloqueadas'),perfilPublico:localStorage.getItem('perfilPublico'),treinoScores:localStorage.getItem('treinoScores'),timerSom:localStorage.getItem('timerSom'),backupConfig:localStorage.getItem('backupConfig'),descansoPadrao:localStorage.getItem('descansoPadrao'),effortMode:localStorage.getItem('effortMode'),wakeLockEnabled:localStorage.getItem('wakeLockEnabled'),academiaModeEnabled:localStorage.getItem('academiaModeEnabled'),plateBarWeight:localStorage.getItem('plateBarWeight'),platePreset:localStorage.getItem('platePreset'),healthLinksV12:localStorage.getItem('healthLinksV12'),healthHrMax:localStorage.getItem('healthHrMax'),healthAutoSync:localStorage.getItem('healthAutoSync'),healthWriteEnabled:localStorage.getItem('healthWriteEnabled'),weeklyPlanV12:localStorage.getItem('weeklyPlanV12'),healthRecoveryCacheV12:localStorage.getItem('healthRecoveryCacheV12')};}
 async function compartilharBackup(){
   const dados=gerarObjetoBackup(),conteudo=JSON.stringify(dados),nome=`treinoapp_backup_v${APP_VERSION}_${hoje()}.json`;
   if(isNativeAndroid()&&window.TreinoNativeBridge?.shareTextFile){
@@ -5024,7 +5162,7 @@ function toggleHistoricoExercicio(btn){const card=btn.closest('.exercicio-card')
 function abrirAddExSessao(){if(!treinoAtivoTemplate)return toast('Inicie um treino primeiro','warn');document.getElementById('addSessaoGrupo').value='';document.getElementById('addSessaoEx').innerHTML='<option value="">Selecione...</option>';document.getElementById('addSessaoSeries').value='3';document.getElementById('modalAddSessaoEx').classList.add('open');}
 function atualizarExsAddSessao(){const g=document.getElementById('addSessaoGrupo').value,sel=document.getElementById('addSessaoEx');sel.innerHTML='<option value="">Selecione...</option>';if(!g)return;(obterExerciciosSalvos()[g]||[]).sort().forEach(ex=>sel.add(new Option(ex,ex)));}
 function confirmarAddExSessao(){const ex=document.getElementById('addSessaoEx').value,n=parseInt(document.getElementById('addSessaoSeries').value)||3;if(!ex)return toast('Selecione um exercício','warn');if([...document.querySelectorAll('#exerciciosAtivos .exercicio-card')].some(c=>c.dataset.ex===ex))return toast('Este exercício já está na sessão','warn');criarCardExercicioSessao(ex,n);fecharModal('modalAddSessaoEx');salvarRascunho();atualizarProgressoTreino();setTimeout(()=>{const cards=[...document.querySelectorAll('#exerciciosAtivos .exercicio-card')];cards[cards.length-1]?.scrollIntoView({behavior:'smooth',block:'center'});},120);}
-function criarCardExercicioSessao(ex,n=3,restaurando=false){const container=document.getElementById('exerciciosAtivos');if(!container)return;const hist=getHist().filter(r=>r.exercicio===ex),sessoes=agruparSessoes(hist),ultima=Object.values(sessoes).sort((a,b)=>getSessionTimestamp(b)-getSessionTimestamp(a))[0]||[],mapa={};ultima.forEach(r=>mapa[r.numSerie]=r);const inc=2.5,desc=getDescansoPadrao();let seriesHTML='';for(let i=1;i<=n;i++){const prev=mapa[i],prevTxt=prev?`<span>${prev.carga}kg</span><span style="font-size:.7em">${prev.reps||0}r</span>`:'<span style="color:var(--border)">—</span>',exEncoded=encodeURIComponent(ex);seriesHTML+=`<div class="serie-row" data-rest="${desc}" data-inc="${inc}" data-prev-carga="${prev?.carga||''}" data-prev-reps="${prev?.reps||''}"><div class="serie-badge">S${i}</div><div class="prev-val" title="Último treino">${prevTxt}</div><button type="button" class="inc-btn" aria-label="Diminuir carga" onclick="ajustarCarga(decodeURIComponent('${exEncoded}'),${i},-${inc})">−</button><input type="number" class="ativo-carga" data-ex="${esc(ex)}" data-serie="${i}" step="${inc}" placeholder="kg" ${prev?`value="${prev.carga}"`:''} inputmode="decimal"><button type="button" class="inc-btn" aria-label="Aumentar carga" onclick="ajustarCarga(decodeURIComponent('${exEncoded}'),${i},${inc})">+</button><input type="number" class="ativo-reps" data-ex="${esc(ex)}" data-serie="${i}" placeholder="reps" ${prev?.reps?`value="${prev.reps}"`:''} inputmode="numeric"><select class="set-type-select ativo-tipo" data-kind="workset" aria-label="Tipo da série ${i}" onchange="atualizarSetTypeVisual(this)">${setTypeOptionsHtml('workset')}</select><button type="button" class="serie-check" onclick="toggleSerieCheck(this)" aria-label="Concluir série ${i}">✓</button>${effortControlsHtml(i)}<div class="set-quick-tools"><button type="button" class="set-mini-btn" onclick="copiarSerieAnterior(this)">Série anterior</button><button type="button" class="set-mini-btn" onclick="copiarCargaAnterior(this)">Carga anterior</button></div></div>`;}const card=document.createElement('div');card.className='exercicio-card';card.dataset.ex=ex;card.innerHTML=`<div class="ex-card-header"><span class="ex-name">${esc(ex)}</span><span class="focus-done-mark">Concluído</span><div class="ex-header-actions"><span class="badge badge-primary">${n}s</span><button type="button" class="ex-skip-btn" onclick="toggleHistoricoExercicio(this)">Hist.</button><button type="button" class="ex-skip-btn" onclick="togglePularExercicio(this)">Pular</button></div></div><div class="ex-history-mini"></div><div class="ex-card-body">${seriesHTML}</div>`;container.appendChild(card);prepararModoAcademiaCards();aplicarModoAcademia();if(!restaurando)marcarDadosNaoSalvos();}
+function criarCardExercicioSessao(ex,n=3,restaurando=false){const container=document.getElementById('exerciciosAtivos');if(!container)return;const hist=getHist().filter(r=>r.exercicio===ex),sessoes=agruparSessoes(hist),ultima=Object.values(sessoes).sort((a,b)=>getSessionTimestamp(b)-getSessionTimestamp(a))[0]||[],mapa={};ultima.forEach(r=>mapa[r.numSerie]=r);const inc=2.5,desc=getDescansoPadrao();let seriesHTML='';for(let i=1;i<=n;i++){const prev=mapa[i],prevTxt=prev?`<span>${prev.carga}kg</span><span style="font-size:.7em">${prev.reps||0}r</span>`:'<span style="color:var(--border)">—</span>',exEncoded=encodeURIComponent(ex);seriesHTML+=`<div class="serie-row" data-rest="${desc}" data-inc="${inc}" data-prev-carga="${prev?.carga||''}" data-prev-reps="${prev?.reps||''}"><div class="serie-badge">S${i}</div><div class="prev-val" title="Último treino">${prevTxt}</div><button type="button" class="inc-btn" aria-label="Diminuir carga" onclick="ajustarCarga(decodeURIComponent('${exEncoded}'),${i},-${inc})">−</button><input type="number" class="ativo-carga" data-ex="${esc(ex)}" data-serie="${i}" step="${inc}" placeholder="kg" ${prev?`value="${prev.carga}"`:''} inputmode="decimal"><button type="button" class="inc-btn" aria-label="Aumentar carga" onclick="ajustarCarga(decodeURIComponent('${exEncoded}'),${i},${inc})">+</button><input type="number" class="ativo-reps" data-ex="${esc(ex)}" data-serie="${i}" placeholder="reps" ${prev?.reps?`value="${prev.reps}"`:''} inputmode="numeric"><select class="set-type-select ativo-tipo" data-kind="workset" aria-label="Tipo da série ${i}" onchange="atualizarSetTypeVisual(this)">${setTypeOptionsHtml('workset')}</select><button type="button" class="serie-check" onclick="toggleSerieCheck(this)" aria-label="Concluir série ${i}">✓</button>${effortControlsHtml(i)}<div class="set-quick-tools"><button type="button" class="set-mini-btn" onclick="copiarSerieAnterior(this)">Série anterior</button><button type="button" class="set-mini-btn" onclick="copiarCargaAnterior(this)">Carga anterior</button></div>${serieFocusExtrasHtml(i,n)}</div>`;}const card=document.createElement('div');card.className='exercicio-card';card.dataset.ex=ex;card.innerHTML=`<div class="ex-card-header"><span class="ex-name">${esc(ex)}</span><span class="focus-done-mark">Concluído</span><div class="ex-header-actions"><span class="badge badge-primary">${n}s</span><button type="button" class="ex-skip-btn" onclick="toggleHistoricoExercicio(this)">Hist.</button><button type="button" class="ex-skip-btn" onclick="togglePularExercicio(this)">Pular</button></div></div><div class="ex-history-mini"></div><div class="ex-card-body">${seriesHTML}</div>`;container.appendChild(card);prepararModoAcademiaCards();aplicarModoAcademia();if(!restaurando)marcarDadosNaoSalvos();}
 async function atualizarStorageStatus(){
   const st=document.getElementById('storagePersistStatus'),btn=document.getElementById('btnPersistStorage'),fill=document.getElementById('storageMeterFill');
   if(isNativeAndroid()){
@@ -5060,6 +5198,9 @@ function registrarErroLocal(msg,arquivo='',linha=''){try{const arr=JSON.parse(lo
 function getDescansoPadrao(){ return parseInt(localStorage.getItem('descansoPadrao')||'90'); }
 function salvarDescansoPadrao(v){ localStorage.setItem('descansoPadrao',String(parseInt(v)||0)); toast(parseInt(v)?'Descanso automático atualizado':'Descanso automático desativado','info'); }
 function carregarDescansoPadrao(){ const s=document.getElementById('selDescansoPadrao'); if(s) s.value=String(getDescansoPadrao()); }
+function getEffortMode(){const v=localStorage.getItem('effortMode')||'rir';return ['rir','rpe','both','none'].includes(v)?v:'rir';}
+function carregarEffortMode(){const mode=getEffortMode(),s=document.getElementById('selEffortMode');document.body.dataset.effortMode=mode;if(s)s.value=mode;}
+function salvarEffortMode(v){localStorage.setItem('effortMode',['rir','rpe','both','none'].includes(v)?v:'rir');carregarEffortMode();toast('Exibição de esforço atualizada','info');}
 function adicionarTempoTimer(seg){seg=Number(seg)||0;if(!_timerEndTime||timerRestante<=0){if(seg>0)iniciarTimer(seg);return;} _timerEndTime+=seg*1000;const r=Math.max(0,Math.ceil((_timerEndTime-Date.now())/1000));if(r<=0){pararTimer();return;}try{localStorage.setItem('_restTimerEndAt',String(_timerEndTime))}catch(e){}timerRestante=r;atualizarTimerUI(r);enviarTimerParaSW(r);}
 function setModoTreinoAtivo(ativo,template=null){const bar=document.getElementById('workoutStickyBar');if(bar){bar.classList.toggle('visible',!!ativo);bar.onclick=e=>{if(e.target.closest('button'))return;if(ativo)irParaAba('treinar');};}if(ativo){const t=template||treinoAtivoTemplate;const title=document.getElementById('workoutStickyTitle');if(title)title.textContent=t?.nome||'Treino em andamento';solicitarWakeLock();}else{const rest=document.getElementById('restInline');if(rest)rest.classList.remove('visible');liberarWakeLock();}document.body.classList.toggle('workout-mode',!!ativo);document.body.classList.toggle('academia-mode',!!ativo&&getAcademiaModeEnabled());if(ativo)setTimeout(()=>aplicarModoAcademia(),0);else fecharQuickInput();}
 function iniciarTreinoPorId(id){ const t=getTreinosSalvos().find(x=>String(x.id)===String(id)); if(!t) return toast('Treino não encontrado','error'); irParaAba('treinar'); setTimeout(()=>{ const btn=[...document.querySelectorAll('.treino-card-btn')].find(b=>String(b.dataset.id)===String(id)); if(btn) selecionarTreino(t,btn); },80); }
@@ -5076,8 +5217,20 @@ function ajustarCarga(ex, serie, delta) {
   haptic(15);
 }
 
-function toggleSerieCheck(el){const row=el.closest('.serie-row'),carga=parseFloat(row?.querySelector('.ativo-carga')?.value)||0,reps=parseInt(row?.querySelector('.ativo-reps')?.value)||0;if(!el.classList.contains('checked')&&(carga<=0||reps<=0)){toast('Preencha carga e repetições antes de concluir a série','warn');return;}el.classList.toggle('checked');const checked=el.classList.contains('checked');if(row){row.classList.toggle('done',checked);row.classList.toggle('pending',!checked&&!!row.querySelector('.ativo-carga')?.value);if(checked)row.dataset.completedAt=String(Date.now());else delete row.dataset.completedAt;}marcarDadosNaoSalvos();salvarRascunho();haptic(20);atualizarProgressoTreino();atualizarEstadoCardExercicio(row?.closest('.exercicio-card'));if(checked){const descanso=Number(row?.dataset.rest)||getDescansoPadrao();if(descanso>0)iniciarTimer(descanso);setTimeout(()=>focarProximaSerie(row),180);}}
-function focarProximaSerie(atual){const card=atual?.closest('.exercicio-card');const dentro=[...card?.querySelectorAll('.serie-row')||[]],idxDentro=dentro.indexOf(atual),proxDentro=dentro.slice(idxDentro+1).find(r=>!r.querySelector('.serie-check')?.classList.contains('checked'));if(proxDentro){const cargaAtual=atual.querySelector('.ativo-carga')?.value,cargaProx=proxDentro.querySelector('.ativo-carga');if(cargaAtual&&cargaProx&&!cargaProx.value){cargaProx.value=cargaAtual;cargaProx.dispatchEvent(new Event('input',{bubbles:true}));}proxDentro.scrollIntoView({behavior:'smooth',block:'center'});return;}atualizarEstadoCardExercicio(card);if(getAcademiaModeEnabled())setTimeout(()=>focarPrimeiroExercicioPendente(true),260);else{const rows=[...document.querySelectorAll('#exerciciosAtivos .serie-row')].filter(r=>!r.closest('.exercicio-card')?.classList.contains('skipped'));const idx=rows.indexOf(atual),prox=rows.slice(idx+1).find(r=>!r.querySelector('.serie-check')?.classList.contains('checked'));if(prox)prox.scrollIntoView({behavior:'smooth',block:'center'});}}
+function toggleSerieCheck(el){
+  const row=el.closest('.serie-row'),card=row?.closest('.exercicio-card'),carga=parseFloat(row?.querySelector('.ativo-carga')?.value)||0,reps=parseInt(row?.querySelector('.ativo-reps')?.value)||0;
+  if(!el.classList.contains('checked')&&(carga<=0||reps<=0)){toast('Preencha carga e repetições antes de concluir a série','warn');return;}
+  el.classList.toggle('checked');const checked=el.classList.contains('checked');
+  if(row){row.classList.toggle('done',checked);row.classList.toggle('pending',!checked&&!!row.querySelector('.ativo-carga')?.value);if(checked){row.dataset.completedAt=String(Date.now());row.classList.remove('serie-manual');}else{delete row.dataset.completedAt;row.classList.add('serie-manual');}}
+  atualizarFocoSeries(card);marcarDadosNaoSalvos();salvarRascunho();haptic(20);atualizarProgressoTreino();atualizarEstadoCardExercicio(card);
+  if(checked){const descanso=Number(row?.dataset.rest)||getDescansoPadrao();if(descanso>0)iniciarTimer(descanso);setTimeout(()=>focarProximaSerie(row),180);}
+}
+function focarProximaSerie(atual){
+  const card=atual?.closest('.exercicio-card'),dentro=[...card?.querySelectorAll('.serie-row')||[]],idxDentro=dentro.indexOf(atual),proxDentro=dentro.slice(idxDentro+1).find(r=>!r.querySelector('.serie-check')?.classList.contains('checked'));
+  if(proxDentro){const cargaAtual=atual.querySelector('.ativo-carga')?.value,cargaProx=proxDentro.querySelector('.ativo-carga');if(cargaAtual&&cargaProx&&!cargaProx.value){cargaProx.value=cargaAtual;cargaProx.dispatchEvent(new Event('input',{bubbles:true}));}dentro.forEach(r=>r.classList.remove('serie-manual'));atualizarFocoSeries(card);proxDentro.scrollIntoView({behavior:'smooth',block:'center'});return;}
+  atualizarFocoSeries(card);atualizarEstadoCardExercicio(card);
+  if(getAcademiaModeEnabled())setTimeout(()=>focarPrimeiroExercicioPendente(true),260);else{const rows=[...document.querySelectorAll('#exerciciosAtivos .serie-row')].filter(r=>!r.closest('.exercicio-card')?.classList.contains('skipped'));const idx=rows.indexOf(atual),prox=rows.slice(idx+1).find(r=>!r.querySelector('.serie-check')?.classList.contains('checked'));if(prox){atualizarFocoSeries(prox.closest('.exercicio-card'));prox.scrollIntoView({behavior:'smooth',block:'center'});}}
+}
 
 function atualizarProgressoTreino() {
   const validRows=[...document.querySelectorAll('#exerciciosAtivos .serie-row')].filter(r=>!r.closest('.exercicio-card')?.classList.contains('skipped'));
@@ -5117,13 +5270,17 @@ window.addEventListener('appinstalled',()=>{atualizarEstadoPWA();toast('TreinoAp
 // ════════════════════════════════════════════════
 let _focusExerciseIndex = 0;
 function getAcademiaModeEnabled(){ return localStorage.getItem('academiaModeEnabled')!=='0'; }
-function salvarAcademiaModeConfig(v){localStorage.setItem('academiaModeEnabled',v==='0'?'0':'1');carregarAcademiaModeConfig();aplicarModoAcademia();toast(v==='0'?'Modo Academia desativado':'Modo Academia ativado','info');}
+function salvarAcademiaModeConfig(v){localStorage.setItem('academiaModeEnabled',v==='0'?'0':'1');carregarAcademiaModeConfig();aplicarModoAcademia();toast(v==='0'?'Modo focado desativado':'Modo focado ativado','info');}
 function carregarAcademiaModeConfig(){const s=document.getElementById('selAcademiaMode');if(s)s.value=getAcademiaModeEnabled()?'1':'0';}
 function getExerciseCards(){return [...document.querySelectorAll('#exerciciosAtivos .exercicio-card')];}
-function prepararModoAcademiaCards(){getExerciseCards().forEach(card=>{const h=card.querySelector('.ex-card-header');if(h&&!h.dataset.focusBound){h.dataset.focusBound='1';h.addEventListener('click',e=>{if(e.target.closest('button,select,input'))return;focarExercicioCard(card,true);});}atualizarEstadoCardExercicio(card);});}
+function atualizarResumoCompactoSerie(row){if(!row)return;const trigger=row.querySelector('.serie-compact-trigger'),state=trigger?.querySelector('.compact-state'),values=trigger?.querySelector('.compact-values'),done=!!row.querySelector('.serie-check.checked'),carga=row.querySelector('.ativo-carga')?.value,reps=row.querySelector('.ativo-reps')?.value;if(state)state.textContent=done?'Concluída':row.classList.contains('serie-current')?'Série atual':'Próxima série';if(values)values.textContent=[carga?`${carga} kg`:'',reps?`${reps} reps`:''].filter(Boolean).join(' · ')||'A preencher';row.classList.toggle('serie-completed',done);}
+function atualizarFocoSeries(targetCard=null){const cards=targetCard?[targetCard]:getExerciseCards();cards.forEach(card=>{const rows=[...card.querySelectorAll('.serie-row')];if(!rows.length)return;const manual=rows.find(r=>r.classList.contains('serie-manual'));const current=manual||rows.find(r=>!r.querySelector('.serie-check')?.classList.contains('checked'))||rows.at(-1);rows.forEach(row=>{const isCurrent=row===current;row.classList.toggle('serie-current',isCurrent);row.classList.toggle('serie-collapsed',!isCurrent);const trigger=row.querySelector('.serie-compact-trigger');if(trigger)trigger.setAttribute('aria-expanded',String(isCurrent));const sel=row.querySelector('.ativo-tipo'),toggle=row.querySelector('.set-type-toggle');if(sel&&toggle)toggle.textContent=`Tipo de série · ${setTypeLabel(sel.value)}`;atualizarResumoCompactoSerie(row);});});}
+function abrirSerieFocada(btn){const row=btn?.closest('.serie-row'),card=row?.closest('.exercicio-card');if(!row||!card)return;card.querySelectorAll('.serie-row').forEach(r=>r.classList.toggle('serie-manual',r===row));atualizarFocoSeries(card);setTimeout(()=>row.scrollIntoView({behavior:'smooth',block:'center'}),30);}
+function toggleDetalhesSerie(btn){const row=btn?.closest('.serie-row');if(!row)return;const open=row.classList.toggle('advanced-open');btn.setAttribute('aria-expanded',String(open));}
+function prepararModoAcademiaCards(){getExerciseCards().forEach(card=>{const h=card.querySelector('.ex-card-header');if(h&&!h.dataset.focusBound){h.dataset.focusBound='1';h.addEventListener('click',e=>{if(e.target.closest('button,select,input'))return;focarExercicioCard(card,true);});}atualizarEstadoCardExercicio(card);});atualizarFocoSeries();}
 function atualizarEstadoCardExercicio(card){if(!card)return;const rows=[...card.querySelectorAll('.serie-row')],all=rows.length>0&&rows.every(r=>r.querySelector('.serie-check')?.classList.contains('checked'));card.classList.toggle('focus-complete',all);if(card.classList.contains('focus-active'))atualizarRotulosFoco();}
-function aplicarModoAcademia(){const enabled=!!treinoAtivoTemplate&&getAcademiaModeEnabled();document.body.classList.toggle('academia-mode',enabled);prepararModoAcademiaCards();const cards=getExerciseCards();if(!enabled){cards.forEach(c=>c.classList.remove('focus-active','focus-inactive'));return;}if(!cards.some(c=>c.classList.contains('focus-active')))focarPrimeiroExercicioPendente(false);else atualizarRotulosFoco();}
-function focarExercicioCard(card,scroll=true){const cards=getExerciseCards();const idx=cards.indexOf(card);if(idx<0)return;_focusExerciseIndex=idx;cards.forEach((c,i)=>{c.classList.toggle('focus-active',i===idx);c.classList.toggle('focus-inactive',i!==idx);});atualizarRotulosFoco();if(scroll)card.scrollIntoView({behavior:'smooth',block:'start'});}
+function aplicarModoAcademia(){const enabled=!!treinoAtivoTemplate&&getAcademiaModeEnabled();document.body.classList.toggle('academia-mode',enabled);prepararModoAcademiaCards();const cards=getExerciseCards();if(!enabled){cards.forEach(c=>c.classList.remove('focus-active','focus-inactive'));return;}if(!cards.some(c=>c.classList.contains('focus-active')))focarPrimeiroExercicioPendente(false);else{atualizarFocoSeries(cards.find(c=>c.classList.contains('focus-active')));atualizarRotulosFoco();}}
+function focarExercicioCard(card,scroll=true){const cards=getExerciseCards();const idx=cards.indexOf(card);if(idx<0)return;_focusExerciseIndex=idx;cards.forEach((c,i)=>{c.classList.toggle('focus-active',i===idx);c.classList.toggle('focus-inactive',i!==idx);});atualizarFocoSeries(card);atualizarRotulosFoco();if(scroll)card.scrollIntoView({behavior:'smooth',block:'start'});}
 function focarPrimeiroExercicioPendente(scroll=true){const cards=getExerciseCards();if(!cards.length)return;let target=cards.find(c=>!c.classList.contains('skipped')&&!c.classList.contains('focus-complete'));if(!target)target=cards.find(c=>!c.classList.contains('skipped'))||cards[0];focarExercicioCard(target,scroll);}
 function navegarExercicioFoco(dir){const cards=getExerciseCards().filter(c=>!c.classList.contains('skipped'));if(!cards.length)return;let cur=cards.findIndex(c=>c.classList.contains('focus-active'));if(cur<0)cur=0;cur=(cur+Number(dir)+cards.length)%cards.length;focarExercicioCard(cards[cur],true);}
 function atualizarRotulosFoco(){const all=getExerciseCards(),visible=all.filter(c=>!c.classList.contains('skipped')),active=all.find(c=>c.classList.contains('focus-active'));const idx=Math.max(0,visible.indexOf(active));const label=document.getElementById('workoutFocusLabel');if(label&&active){const rows=[...active.querySelectorAll('.serie-row')],feitas=rows.filter(r=>r.querySelector('.serie-check')?.classList.contains('checked')).length;label.textContent=`${idx+1}/${visible.length} · ${active.dataset.ex||'Exercício'} · ${feitas}/${rows.length}`;}else if(label)label.textContent=`${visible.length} exercícios`;}
@@ -5166,7 +5323,7 @@ function salvarSnapshotDiario(){const d=hoje();if(localStorage.getItem('_lastSna
 async function listarSnapshotsSeguro(){try{const db=await openSafeDB();const arr=await new Promise((res,rej)=>{const r=db.transaction('snapshots').objectStore('snapshots').getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error);});db.close();return arr.sort((a,b)=>b.createdAt-a.createdAt);}catch(e){return[];}}
 async function excluirSnapshotSeguro(id){try{const db=await openSafeDB();await new Promise((res,rej)=>{const tx=db.transaction('snapshots','readwrite');tx.objectStore('snapshots').delete(id);tx.oncomplete=res;tx.onerror=()=>rej(tx.error);});db.close();}catch(e){}}
 async function abrirSnapshots(){const el=document.getElementById('snapshotList');document.getElementById('modalSnapshots').classList.add('open');if(!el)return;el.innerHTML='<div style="color:var(--text-muted);font-size:.82em;">Carregando...</div>';const arr=await listarSnapshotsSeguro();if(!arr.length){el.innerHTML='<div class="empty-state" style="padding:20px 0;"><p>Nenhum snapshot interno ainda.</p></div>';return;}el.innerHTML=arr.map(x=>`<div class="snapshot-item"><div><strong>${new Date(x.createdAt).toLocaleString('pt-BR')}</strong><div class="snapshot-meta">${esc(x.motivo||'snapshot')} · v${esc(x.version||'?')}</div></div><div style="display:flex;gap:5px;"><button class="btn btn-outline btn-sm" style="width:auto;" onclick="restaurarSnapshotSeguro('${x.id}')">Restaurar</button><button class="btn btn-danger btn-sm btn-icon" onclick="excluirSnapshotSeguro('${x.id}').then(abrirSnapshots)">×</button></div></div>`).join('');}
-async function restaurarSnapshotSeguro(id){const arr=await listarSnapshotsSeguro(),snap=arr.find(x=>x.id===id);if(!snap)return toast('Snapshot não encontrado','error');if(!confirm('Restaurar este snapshot? Os dados atuais serão substituídos.'))return;await salvarSnapshotSeguro('antes_restauracao');const d=snap.data||{},keys=['pesoCorporal','historicoTreinoV3','exerciciosCustomizadosV3','treinosTemplates','temaPreferido','userProfile','treinoMetas','conquistasDesbloqueadas','perfilPublico','treinoScores','timerSom','backupConfig','descansoPadrao','wakeLockEnabled','academiaModeEnabled','plateBarWeight','platePreset','healthLinksV12','healthHrMax','healthAutoSync','healthWriteEnabled','weeklyPlanV12','healthRecoveryCacheV12'];keys.forEach(k=>{if(d[k]!==undefined&&d[k]!==null)localStorage.setItem(k,String(d[k]));});invalidarCache();toast('Snapshot restaurado. Recarregando...','success');setTimeout(()=>location.reload(),900);}
+async function restaurarSnapshotSeguro(id){const arr=await listarSnapshotsSeguro(),snap=arr.find(x=>x.id===id);if(!snap)return toast('Snapshot não encontrado','error');if(!confirm('Restaurar este snapshot? Os dados atuais serão substituídos.'))return;await salvarSnapshotSeguro('antes_restauracao');const d=snap.data||{},keys=['pesoCorporal','historicoTreinoV3','exerciciosCustomizadosV3','treinosTemplates','temaPreferido','userProfile','treinoMetas','conquistasDesbloqueadas','perfilPublico','treinoScores','timerSom','backupConfig','descansoPadrao','effortMode','wakeLockEnabled','academiaModeEnabled','plateBarWeight','platePreset','healthLinksV12','healthHrMax','healthAutoSync','healthWriteEnabled','weeklyPlanV12','healthRecoveryCacheV12'];keys.forEach(k=>{if(d[k]!==undefined&&d[k]!==null)localStorage.setItem(k,String(d[k]));});invalidarCache();toast('Snapshot restaurado. Recarregando...','success');setTimeout(()=>location.reload(),900);}
 
 // ════════════════════════════════════════════════
 // V11 — BUILD/DEPLOY E REPARO DO APP

@@ -8,7 +8,7 @@ android/local.properties
 # Artefatos gerados pelo build web
 web/vendor/
 web/native-bridge.js
-android/app/src/main/assets/public/
+android/app/src/main/assets/
 
 # Assinatura: NUNCA versionar
 *.jks

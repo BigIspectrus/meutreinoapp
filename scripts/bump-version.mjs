@@ -28,4 +28,7 @@ fs.writeFileSync(gradlePath, g);
 const indexPath = path.join(root,'web/index.html'); let html = fs.readFileSync(indexPath,'utf8');
 html = html.replace(/const APP_VERSION = '[^']+';/, `const APP_VERSION = '${version}';`).replace(/const APP_BUILD = '[^']+';/, `const APP_BUILD = '${build}';`).replace(/const APP_CACHE_VERSION = '[^']+';/, `const APP_CACHE_VERSION = 'treinoapp-v${version}-${build.replace(/\./g,'')}';`);
 fs.writeFileSync(indexPath,html);
+const swPath = path.join(root,'web/sw.js'); let sw = fs.readFileSync(swPath,'utf8');
+sw = sw.replace(/const APP_VERSION = '[^']+';/, `const APP_VERSION = '${version}';`).replace(/const BUILD = '[^']+';/, `const BUILD = '${build}';`);
+fs.writeFileSync(swPath,sw);
 console.log(`Versão atualizada para ${version} (versionCode ${versionCode}, build ${build}).`);

@@ -9,8 +9,8 @@ const web = resolve(root, 'web');
 const vendor = resolve(web, 'vendor');
 mkdirSync(vendor, { recursive: true });
 
-execFileSync(process.platform === 'win32' ? 'npx.cmd' : 'npx', [
-  'esbuild', resolve(root, 'src/native-bridge.js'), '--bundle', '--format=iife', '--target=es2020',
+execFileSync(process.execPath, [
+  resolve(root, 'node_modules/esbuild/bin/esbuild'), resolve(root, 'src/native-bridge.js'), '--bundle', '--format=iife', '--target=es2020',
   `--outfile=${resolve(web, 'native-bridge.js')}`, '--minify'
 ], { stdio: 'inherit' });
 

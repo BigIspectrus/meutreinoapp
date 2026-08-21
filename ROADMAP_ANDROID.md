@@ -20,7 +20,18 @@
 - auditoria de fluxos APK x navegador;
 - exportação, relatório e compartilhamento nativos.
 
-## Após validar a v12.2.0
+## Entregue na v12.3.0 Beta
+
+- modo de treino focado em uma série por vez;
+- séries concluídas e futuras compactas;
+- preferência de RIR/RPE;
+- Início simplificada;
+- navegação inferior reduzida a quatro destinos;
+- Histórico e Evolução reunidos;
+- Mais organizado por categorias;
+- cache Web/PWA alinhado automaticamente à versão do APK.
+
+## Após validar a v12.3.0
 
 - testes instrumentados de migração Room no CI;
 - testes automatizados Android para Health match e payloads do bridge;
