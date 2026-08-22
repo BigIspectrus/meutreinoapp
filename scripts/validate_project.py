@@ -137,6 +137,10 @@ for token in ['microsJson','NutritionRecord','syncNutritionDay','nutritionPermis
     ok(token in entities or token in repo or token in plugin, f'Persistência/Health v12.5.2 ausente: {token}')
 ok('requestNutritionPermissions' in bridge and 'syncNutritionDay' in bridge, 'Bridge de nutrição Health Connect ausente')
 
+# Foco, cabeçalho adaptável e atalhos / v12.6.0
+for token in ['atualizarCabecalhoAdaptavel','headerContextTitle','iniciarProximaSerieDescanso','desfazerUltimaSerie','restInlineNext','toggleVisaoGeralTreino','workout-overview','renderizarAtalhosNutricao','copiarDiaAnteriorNutricao','nutritionQuickFoods']:
+    ok(token in html, f'Recurso de experiência v12.6.0 ausente: {token}')
+
 # Fundação v12.4
 for token in ['modalContextoSessao','sessionRpe','sessionContext','setStartedAt','restBeforeSec','iniciarSeriePrecisao','selRestVibration','configureRestAlerts','openNotificationSettings']:
     ok(token in html or token in plugin or token in read('src/native-bridge.js'), f'Recurso v12.4.0 ausente: {token}')

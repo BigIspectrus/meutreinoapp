@@ -1,4 +1,4 @@
-# TreinoApp v12.5.2 Beta — Treino, Alimentação e Análises
+# TreinoApp v12.6.0 Beta — Foco, menos poluição e atalhos
 
 TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capacitor. A variante Beta pode coexistir com a Stable.
 
@@ -6,8 +6,8 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 
 - Stable: `com.treinoapp.app`
 - Beta: `com.treinoapp.beta`
-- Versão: `12.5.2`
-- versionCode: `120502`
+- Versão: `12.6.0`
+- versionCode: `120600`
 - Android: compile/target API 36, minSdk 26
 - Room: schema 7, somente migrações explícitas
 
@@ -28,6 +28,9 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 - importação em lote por JSON com mesclagem segura, sem apagar cadastros existentes;
 - favoritos, alimentos recentes e busca local;
 - cópia de uma refeição do dia anterior;
+- atalhos horizontais para alimentos recentes/favoritos e refeições prontas;
+- cópia opcional de todo o dia anterior, preservando os registros atuais;
+- ferramentas e resumo semanal recolhidos para manter o diário mais leve;
 - totais diários e média dos últimos sete dias registrados;
 - histórico imutável por snapshot: editar ou excluir um alimento não altera refeições antigas;
 - funcionamento offline, inclusão no backup JSON e espelho Room no APK.
@@ -42,6 +45,9 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 - widget com sessão ativa e treino planejado do dia;
 - modo de treino focado, com um exercício e uma série em destaque;
 - séries concluídas e futuras compactas, com avanço automático;
+- somente o exercício atual permanece aberto; o indicador superior alterna para uma visão geral tocável;
+- descanso com identificação da próxima série e ação “Iniciar agora”;
+- janela segura para desfazer a última série concluída;
 - sessão avulsa usando o mesmo motor do treino montado;
 - tipos avançados de série;
 - preferência de esforço por RIR, RPE, ambos ou oculto;
@@ -126,7 +132,9 @@ O TreinoApp não cria um "readiness score" opaco. Os componentes são exibidos s
 - Histórico reúne Sessões e Evolução & Health;
 - Mais organiza treinos, preferências, Health, dados e aplicativo por categoria;
 - durante a sessão, cabeçalho e navegação saem de cena para ampliar o espaço útil;
-- ações de pausar e finalizar permanecem fixas e acessíveis.
+- o cabeçalho fora da sessão adapta título e contexto à área atual;
+- o timer só ocupa o cabeçalho quando está realmente ativo;
+- ações de pausar e finalizar permanecem fixas e acessíveis, com o exercício atual no rodapé.
 
 ## Android x Web/PWA
 
