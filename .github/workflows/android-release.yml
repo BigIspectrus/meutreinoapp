@@ -69,7 +69,7 @@ jobs:
           TREINOAPP_KEYSTORE_PASSWORD: ${{ secrets.TREINOAPP_KEYSTORE_PASSWORD }}
           TREINOAPP_KEY_ALIAS: ${{ secrets.TREINOAPP_KEY_ALIAS }}
           TREINOAPP_KEY_PASSWORD: ${{ secrets.TREINOAPP_KEY_PASSWORD }}
-        run: gradle -p android :app:assembleStableRelease :app:bundleStableRelease :app:assembleBetaRelease :app:bundleBetaRelease --stacktrace
+        run: gradle -p android :app:assembleStableRelease :app:bundleStableRelease :app:assembleBetaRelease :app:bundleBetaRelease --max-workers=1 --stacktrace
       - name: Organizar artefatos
         run: |
           mkdir -p dist

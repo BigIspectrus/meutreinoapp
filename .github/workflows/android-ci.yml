@@ -34,7 +34,7 @@ jobs:
       - name: Compilar Stable e Beta debug
         env:
           BUILD_TIME: ${{ github.event.head_commit.timestamp || 'ci' }}
-        run: gradle -p android :app:assembleStableDebug :app:assembleBetaDebug --stacktrace
+        run: gradle -p android :app:assembleStableDebug :app:assembleBetaDebug --max-workers=1 --stacktrace
       - name: Publicar APKs de teste
         uses: actions/upload-artifact@v4
         with:
