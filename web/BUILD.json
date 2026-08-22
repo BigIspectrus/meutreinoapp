@@ -1,7 +1,7 @@
 {
-  "version": "12.5.1",
-  "versionCode": 120501,
-  "build": "2026.08.22.2",
+  "version": "12.5.2",
+  "versionCode": 120502,
+  "build": "2026.08.22.3",
   "commit": "local-build",
   "deployedAt": null,
   "channel": "source"

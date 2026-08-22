@@ -60,6 +60,7 @@ data class NutritionGoalEntity(
     val protein: Double,
     val carbs: Double,
     val fat: Double,
+    @ColumnInfo(defaultValue = "'{}'") val microsJson: String = "{}",
     val updatedAt: Long,
 )
 
@@ -81,6 +82,7 @@ data class NutritionFoodEntity(
     @ColumnInfo(defaultValue = "''") val sourceId: String = "",
     @ColumnInfo(defaultValue = "''") val barcode: String = "",
     @ColumnInfo(defaultValue = "'[]'") val measuresJson: String = "[]",
+    @ColumnInfo(defaultValue = "'{}'") val microsJson: String = "{}",
     val createdAt: Long,
     val updatedAt: Long,
     val lastUsedAt: Long,
@@ -128,6 +130,7 @@ data class NutritionEntryEntity(
     val fat: Double,
     val fiber: Double,
     val sodium: Double,
+    @ColumnInfo(defaultValue = "'{}'") val microsJson: String = "{}",
     val createdAt: Long,
     val updatedAt: Long,
 )

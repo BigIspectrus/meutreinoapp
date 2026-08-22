@@ -15,6 +15,7 @@ import com.treinoapp.app.nativebridge.TreinoNativePlugin
 
 class MainActivity : BridgeActivity() {
     private var pendingHealthCall: PluginCall? = null
+    private var pendingNutritionCall: PluginCall? = null
     private var pendingCoreCall: PluginCall? = null
     private lateinit var healthRepository: HealthConnectRepository
 
@@ -44,6 +45,17 @@ class MainActivity : BridgeActivity() {
         pendingCoreCall = null
     }
 
+    private val nutritionPermissionsLauncher = registerForActivityResult(
+        PermissionController.createRequestPermissionResultContract()
+    ) { granted ->
+        pendingNutritionCall?.resolve(com.getcapacitor.JSObject().apply {
+            put("granted", granted.containsAll(healthRepository.nutritionPermissions))
+            put("grantedCount", granted.intersect(healthRepository.nutritionPermissions).size)
+            put("requiredCount", healthRepository.nutritionPermissions.size)
+        })
+        pendingNutritionCall = null
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         healthRepository = HealthConnectRepository(this)
         registerPlugin(TreinoNativePlugin::class.java)
@@ -65,6 +77,15 @@ class MainActivity : BridgeActivity() {
         }
         pendingHealthCall = call
         healthPermissionsLauncher.launch(healthRepository.requestablePermissions())
+    }
+
+    fun requestNutritionPermissions(call: PluginCall) {
+        if (!healthRepository.isAvailable()) {
+            call.resolve(com.getcapacitor.JSObject().apply { put("granted", false); put("available", false) })
+            return
+        }
+        pendingNutritionCall = call
+        nutritionPermissionsLauncher.launch(healthRepository.nutritionPermissions)
     }
 
     fun requestCorePermissions(call: PluginCall) {

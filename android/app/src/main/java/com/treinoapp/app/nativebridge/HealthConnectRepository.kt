@@ -3,6 +3,7 @@ package com.treinoapp.app.nativebridge
 import android.content.Context
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.HealthConnectFeatures
+import androidx.health.connect.client.deleteRecords
 import androidx.health.connect.client.aggregate.AggregationResult
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.permission.HealthPermission.Companion.PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND
@@ -12,6 +13,8 @@ import androidx.health.connect.client.records.RestingHeartRateRecord
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
 import androidx.health.connect.client.records.BodyFatRecord
 import androidx.health.connect.client.records.LeanBodyMassRecord
+import androidx.health.connect.client.records.MealType
+import androidx.health.connect.client.records.NutritionRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
 import androidx.health.connect.client.records.WeightRecord
@@ -22,6 +25,7 @@ import androidx.health.connect.client.request.AggregateRequest
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
 import androidx.health.connect.client.units.Mass
+import androidx.health.connect.client.units.Energy
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -46,6 +50,10 @@ class HealthConnectRepository(private val context: Context) {
         HealthPermission.getReadPermission(HeartRateVariabilityRmssdRecord::class),
         HealthPermission.getReadPermission(BodyFatRecord::class),
         HealthPermission.getReadPermission(LeanBodyMassRecord::class),
+    )
+
+    val nutritionPermissions: Set<String> = setOf(
+        HealthPermission.getWritePermission(NutritionRecord::class),
     )
 
     fun isAvailable(): Boolean =
@@ -161,7 +169,36 @@ class HealthConnectRepository(private val context: Context) {
         val restingHrSource: String? = null,
         val hrvSource: String? = null,
         val bodySource: String? = null,
+        val daily: List<RecoveryDay> = emptyList(),
         val permissions: List<String> = emptyList(),
+    )
+
+    data class RecoveryDay(
+        val date: String,
+        val sleepMinutes: Double? = null,
+        val restingHr: Double? = null,
+        val hrvMs: Double? = null,
+        val weightKg: Double? = null,
+    )
+
+    data class NutritionMealSync(
+        val mealType: String,
+        val name: String,
+        val time: String,
+        val kcal: Double,
+        val protein: Double,
+        val carbs: Double,
+        val fat: Double,
+        val fiber: Double,
+        val sodiumMg: Double,
+        val micros: Map<String, Double>,
+        val version: Long,
+    )
+
+    data class NutritionSyncResult(
+        val written: Int,
+        val deletedDay: Boolean,
+        val permissionGranted: Boolean,
     )
 
     data class WriteResult(
@@ -601,6 +638,25 @@ class HealthConnectRepository(private val context: Context) {
         val latestWeight = weights.maxByOrNull { it.time }
         val latestFat = bodyFat.maxByOrNull { it.time }
         val latestLean = lean.maxByOrNull { it.time }
+        val zone = ZoneId.systemDefault()
+        val sleepByDate = sleepRecords.groupBy { it.endTime.atZone(zone).toLocalDate().toString() }
+            .mapValues { (_, rows) -> rows.maxOfOrNull { (it.endTime.toEpochMilli() - it.startTime.toEpochMilli()).coerceAtLeast(0L) / 60000.0 } }
+        val restingByDate = resting.groupBy { it.time.atZone(zone).toLocalDate().toString() }
+            .mapValues { (_, rows) -> rows.map { it.beatsPerMinute.toDouble() }.average() }
+        val hrvByDate = hrv.groupBy { it.time.atZone(zone).toLocalDate().toString() }
+            .mapValues { (_, rows) -> rows.map { it.heartRateVariabilityMillis }.average() }
+        val weightByDate = weights.groupBy { it.time.atZone(zone).toLocalDate().toString() }
+            .mapValues { (_, rows) -> rows.maxByOrNull { it.time }?.weight?.inKilograms }
+        val dailyDates = (sleepByDate.keys + restingByDate.keys + hrvByDate.keys + weightByDate.keys).distinct().sorted()
+        val daily = dailyDates.map { date ->
+            RecoveryDay(
+                date = date,
+                sleepMinutes = sleepByDate[date],
+                restingHr = restingByDate[date],
+                hrvMs = hrvByDate[date],
+                weightKg = weightByDate[date],
+            )
+        }
 
         return RecoverySnapshot(
             sleepLastMinutes = latestSleep?.let { ((it.endTime.toEpochMilli() - it.startTime.toEpochMilli()).coerceAtLeast(0L) / 60000L) },
@@ -620,8 +676,81 @@ class HealthConnectRepository(private val context: Context) {
             restingHrSource = latestRest?.metadata?.dataOrigin?.packageName?.let(::sourceLabel),
             hrvSource = latestHrv?.metadata?.dataOrigin?.packageName?.let(::sourceLabel),
             bodySource = (latestWeight?.metadata?.dataOrigin?.packageName ?: latestFat?.metadata?.dataOrigin?.packageName ?: latestLean?.metadata?.dataOrigin?.packageName)?.let(::sourceLabel),
+            daily = daily,
             permissions = granted.sorted(),
         )
+    }
+
+    suspend fun syncNutritionDay(date: String, meals: List<NutritionMealSync>): NutritionSyncResult {
+        if (!isAvailable()) return NutritionSyncResult(0, false, false)
+        val granted = grantedPermissions()
+        val permission = HealthPermission.getWritePermission(NutritionRecord::class)
+        if (!granted.contains(permission)) return NutritionSyncResult(0, false, false)
+        val localDate = runCatching { LocalDate.parse(date) }.getOrNull()
+            ?: return NutritionSyncResult(0, false, true)
+        val zone = ZoneId.systemDefault()
+        val dayStart = localDate.atStartOfDay(zone).toInstant()
+        val dayEnd = localDate.plusDays(1).atStartOfDay(zone).toInstant()
+        val hc = client()
+        hc.deleteRecords<NutritionRecord>(TimeRangeFilter.between(dayStart, dayEnd))
+        fun positive(value: Double): Double? = value.takeIf { it.isFinite() && it > 0.0 }
+        fun grams(value: Double): Mass? = positive(value)?.let { Mass.grams(it) }
+        fun milligrams(value: Double): Mass? = positive(value)?.let { Mass.grams(it / 1_000.0) }
+        fun micrograms(value: Double): Mass? = positive(value)?.let { Mass.grams(it / 1_000_000.0) }
+        fun mealType(value: String): Int = when (value) {
+            "breakfast" -> MealType.MEAL_TYPE_BREAKFAST
+            "lunch" -> MealType.MEAL_TYPE_LUNCH
+            "dinner" -> MealType.MEAL_TYPE_DINNER
+            "snack" -> MealType.MEAL_TYPE_SNACK
+            else -> MealType.MEAL_TYPE_UNKNOWN
+        }
+        val records = meals.mapNotNull { meal ->
+            val parts = meal.time.split(':')
+            val hour = parts.getOrNull(0)?.toIntOrNull()?.coerceIn(0, 23) ?: 12
+            val minute = parts.getOrNull(1)?.toIntOrNull()?.coerceIn(0, 59) ?: 0
+            val startTime = localDate.atTime(hour, minute).atZone(zone).toInstant()
+            val endTime = startTime.plusSeconds(60)
+            val hasNutrients = listOf(meal.kcal, meal.protein, meal.carbs, meal.fat, meal.fiber, meal.sodiumMg).any { it > 0.0 } || meal.micros.values.any { it > 0.0 }
+            if (!hasNutrients) return@mapNotNull null
+            NutritionRecord(
+                startTime = startTime,
+                startZoneOffset = zone.rules.getOffset(startTime),
+                endTime = endTime,
+                endZoneOffset = zone.rules.getOffset(endTime),
+                metadata = Metadata.manualEntry(
+                    clientRecordId = "treinoapp-nutrition:$date:${meal.mealType}",
+                    clientRecordVersion = meal.version.coerceAtLeast(1L),
+                ),
+                name = meal.name.take(120),
+                mealType = mealType(meal.mealType),
+                energy = positive(meal.kcal)?.let { Energy.kilocalories(it) },
+                protein = grams(meal.protein),
+                totalCarbohydrate = grams(meal.carbs),
+                totalFat = grams(meal.fat),
+                dietaryFiber = grams(meal.fiber),
+                sodium = milligrams(meal.sodiumMg),
+                calcium = milligrams(meal.micros["calciumMg"] ?: 0.0),
+                magnesium = milligrams(meal.micros["magnesiumMg"] ?: 0.0),
+                phosphorus = milligrams(meal.micros["phosphorusMg"] ?: 0.0),
+                iron = milligrams(meal.micros["ironMg"] ?: 0.0),
+                potassium = milligrams(meal.micros["potassiumMg"] ?: 0.0),
+                zinc = milligrams(meal.micros["zincMg"] ?: 0.0),
+                copper = milligrams(meal.micros["copperMg"] ?: 0.0),
+                manganese = milligrams(meal.micros["manganeseMg"] ?: 0.0),
+                vitaminA = micrograms(meal.micros["vitaminAMcg"] ?: 0.0),
+                thiamin = milligrams(meal.micros["thiaminMg"] ?: 0.0),
+                riboflavin = milligrams(meal.micros["riboflavinMg"] ?: 0.0),
+                niacin = milligrams(meal.micros["niacinMg"] ?: 0.0),
+                vitaminB6 = milligrams(meal.micros["vitaminB6Mg"] ?: 0.0),
+                vitaminB12 = micrograms(meal.micros["vitaminB12Mcg"] ?: 0.0),
+                vitaminC = milligrams(meal.micros["vitaminCMg"] ?: 0.0),
+                vitaminD = micrograms(meal.micros["vitaminDMcg"] ?: 0.0),
+                vitaminE = milligrams(meal.micros["vitaminEMg"] ?: 0.0),
+                folate = micrograms(meal.micros["folateMcg"] ?: 0.0),
+            )
+        }
+        if (records.isNotEmpty()) hc.insertRecords(records)
+        return NutritionSyncResult(records.size, true, true)
     }
 
     data class WeightSyncResult(val latestKg: Double?, val latestDate: String?, val written: Int)

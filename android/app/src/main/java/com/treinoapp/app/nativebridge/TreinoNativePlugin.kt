@@ -24,6 +24,7 @@ import androidx.health.connect.client.records.RestingHeartRateRecord
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
 import androidx.health.connect.client.records.BodyFatRecord
 import androidx.health.connect.client.records.LeanBodyMassRecord
+import androidx.health.connect.client.records.NutritionRecord
 import com.getcapacitor.JSArray
 import com.getcapacitor.JSObject
 import com.getcapacitor.Plugin
@@ -372,6 +373,7 @@ class TreinoNativePlugin : Plugin() {
                     put("readHrv", granted.contains(HealthPermission.getReadPermission(HeartRateVariabilityRmssdRecord::class)))
                     put("readBodyFat", granted.contains(HealthPermission.getReadPermission(BodyFatRecord::class)))
                     put("readLeanBodyMass", granted.contains(HealthPermission.getReadPermission(LeanBodyMassRecord::class)))
+                    put("writeNutrition", granted.contains(HealthPermission.getWritePermission(NutritionRecord::class)))
                 })
             } catch (e: Exception) { reject(call, "Falha ao consultar Health Connect", e) }
         }
@@ -402,6 +404,17 @@ class TreinoNativePlugin : Plugin() {
                     put("restingHrSource", r.restingHrSource)
                     put("hrvSource", r.hrvSource)
                     put("bodySource", r.bodySource)
+                    put("daily", JSArray().apply {
+                        r.daily.forEach { day ->
+                            put(JSObject().apply {
+                                put("date", day.date)
+                                put("sleepMinutes", day.sleepMinutes)
+                                put("restingHr", day.restingHr)
+                                put("hrvMs", day.hrvMs)
+                                put("weightKg", day.weightKg)
+                            })
+                        }
+                    })
                     put("permissions", JSArray(r.permissions))
                 })
             } catch (e: Exception) { reject(call, "Falha ao ler recuperação do Health Connect", e) }
@@ -411,6 +424,55 @@ class TreinoNativePlugin : Plugin() {
     @PluginMethod
     fun requestHealthPermissions(call: PluginCall) {
         (activity as? MainActivity)?.requestHealthPermissions(call) ?: call.reject("Activity indisponível")
+    }
+
+    @PluginMethod
+    fun requestNutritionPermissions(call: PluginCall) {
+        (activity as? MainActivity)?.requestNutritionPermissions(call) ?: call.reject("Activity indisponível")
+    }
+
+    @PluginMethod
+    fun syncNutritionDay(call: PluginCall) {
+        val date = call.getString("date")?.trim().orEmpty()
+        val mealsArray = call.getArray("meals") ?: JSArray()
+        if (!date.matches(Regex("\\d{4}-\\d{2}-\\d{2}"))) return call.reject("Data de alimentação inválida")
+        scope.launch {
+            try {
+                val meals = mutableListOf<HealthConnectRepository.NutritionMealSync>()
+                for (i in 0 until mealsArray.length()) {
+                    val o = mealsArray.optJSONObject(i) ?: continue
+                    val microsObject = o.optJSONObject("micros")
+                    val micros = mutableMapOf<String, Double>()
+                    if (microsObject != null) {
+                        val keys = microsObject.keys()
+                        while (keys.hasNext()) {
+                            val key = keys.next()
+                            val value = microsObject.optDouble(key, 0.0)
+                            if (value.isFinite() && value > 0.0) micros[key] = value
+                        }
+                    }
+                    meals += HealthConnectRepository.NutritionMealSync(
+                        mealType = o.optString("mealType", "snack").take(24),
+                        name = o.optString("name", "Refeição TreinoApp").ifBlank { "Refeição TreinoApp" }.take(120),
+                        time = o.optString("time", "12:00").take(5),
+                        kcal = o.optDouble("kcal", 0.0).coerceAtLeast(0.0),
+                        protein = o.optDouble("protein", 0.0).coerceAtLeast(0.0),
+                        carbs = o.optDouble("carbs", 0.0).coerceAtLeast(0.0),
+                        fat = o.optDouble("fat", 0.0).coerceAtLeast(0.0),
+                        fiber = o.optDouble("fiber", 0.0).coerceAtLeast(0.0),
+                        sodiumMg = o.optDouble("sodium", 0.0).coerceAtLeast(0.0),
+                        micros = micros,
+                        version = o.optLong("version", System.currentTimeMillis()),
+                    )
+                }
+                val result = health.syncNutritionDay(date, meals)
+                resolve(call, JSObject().apply {
+                    put("written", result.written)
+                    put("deletedDay", result.deletedDay)
+                    put("permissionGranted", result.permissionGranted)
+                })
+            } catch (e: Exception) { reject(call, "Falha ao sincronizar alimentação no Health Connect", e) }
+        }
     }
 
     @PluginMethod
@@ -649,6 +711,7 @@ class TreinoNativePlugin : Plugin() {
                         protein = o.optDouble("protein", 0.0).coerceAtLeast(0.0),
                         carbs = o.optDouble("carbs", 0.0).coerceAtLeast(0.0),
                         fat = o.optDouble("fat", 0.0).coerceAtLeast(0.0),
+                        microsJson = (o.optJSONObject("micros") ?: JSObject()).toString(),
                         updatedAt = o.optLong("updatedAt", System.currentTimeMillis()),
                     )
                 }
@@ -675,6 +738,7 @@ class TreinoNativePlugin : Plugin() {
                         sourceId = o.optString("sourceId").trim().take(120),
                         barcode = o.optString("barcode").trim().take(48),
                         measuresJson = (o.optJSONArray("measures") ?: JSArray()).toString(),
+                        microsJson = (o.optJSONObject("micros100") ?: JSObject()).toString(),
                         createdAt = o.optLong("createdAt", System.currentTimeMillis()),
                         updatedAt = o.optLong("updatedAt", System.currentTimeMillis()),
                         lastUsedAt = o.optLong("lastUsedAt", 0L),
@@ -701,6 +765,7 @@ class TreinoNativePlugin : Plugin() {
                         fat = o.optDouble("fat", 0.0).coerceAtLeast(0.0),
                         fiber = o.optDouble("fiber", 0.0).coerceAtLeast(0.0),
                         sodium = o.optDouble("sodium", 0.0).coerceAtLeast(0.0),
+                        microsJson = (o.optJSONObject("micros") ?: JSObject()).toString(),
                         createdAt = o.optLong("createdAt", System.currentTimeMillis()),
                         updatedAt = o.optLong("updatedAt", System.currentTimeMillis()),
                     )

@@ -1,4 +1,4 @@
-# TreinoApp v12.5.1 Beta — Treino e Alimentação
+# TreinoApp v12.5.2 Beta — Treino, Alimentação e Análises
 
 TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capacitor. A variante Beta pode coexistir com a Stable.
 
@@ -6,10 +6,10 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 
 - Stable: `com.treinoapp.app`
 - Beta: `com.treinoapp.beta`
-- Versão: `12.5.1`
-- versionCode: `120501`
+- Versão: `12.5.2`
+- versionCode: `120502`
 - Android: compile/target API 36, minSdk 26
-- Room: schema 6, somente migrações explícitas
+- Room: schema 7, somente migrações explícitas
 
 ## Alimentação
 
@@ -23,11 +23,16 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 - receitas por ingredientes, rendimento e porções;
 - refeições completas salvas para reutilização;
 - valores opcionais de fibras e sódio;
+- 18 micronutrientes opcionais nos alimentos, receitas, registros e metas manuais;
+- micronutrientes importados da TACO, Open Food Facts e USDA quando a fonte os fornece;
+- importação em lote por JSON com mesclagem segura, sem apagar cadastros existentes;
 - favoritos, alimentos recentes e busca local;
 - cópia de uma refeição do dia anterior;
 - totais diários e média dos últimos sete dias registrados;
 - histórico imutável por snapshot: editar ou excluir um alimento não altera refeições antigas;
 - funcionamento offline, inclusão no backup JSON e espelho Room no APK.
+- sincronização nutricional opcional e independente com o Health Connect;
+- relatório mensal de alimentação, peso, recuperação, volume, RIR/RPE e associações exploratórias.
 
 ## Treino e execução
 
@@ -145,4 +150,4 @@ Na versão Web/PWA, os fluxos de navegador permanecem disponíveis.
 - `fallbackToDestructiveMigration()` continua proibido;
 - backup JSON inclui vínculos Health, plano semanal, cache de Recovery, preferências de aviso e todos os dados de alimentação.
 
-Antes de promover para Stable, execute `TESTE_v12.5.1_BETA.md`.
+Antes de promover para Stable, execute `TESTE_v12.5.2_BETA.md`.

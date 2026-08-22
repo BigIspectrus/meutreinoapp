@@ -55,6 +55,22 @@ def build(source: Path) -> dict[str, object]:
                 "carbs100": nutrient(row.iloc[8]),
                 "fiber100": nutrient(row.iloc[9]),
                 "sodium100": nutrient(row.iloc[17]),
+                "micros100": {
+                    "calciumMg": nutrient(row.iloc[11]),
+                    "magnesiumMg": nutrient(row.iloc[12]),
+                    "manganeseMg": nutrient(row.iloc[14]),
+                    "phosphorusMg": nutrient(row.iloc[15]),
+                    "ironMg": nutrient(row.iloc[16]),
+                    "potassiumMg": nutrient(row.iloc[18]),
+                    "copperMg": nutrient(row.iloc[19]),
+                    "zincMg": nutrient(row.iloc[20]),
+                    "vitaminAMcg": nutrient(row.iloc[23]),
+                    "thiaminMg": nutrient(row.iloc[24]),
+                    "riboflavinMg": nutrient(row.iloc[25]),
+                    "vitaminB6Mg": nutrient(row.iloc[26]),
+                    "niacinMg": nutrient(row.iloc[27]),
+                    "vitaminCMg": nutrient(row.iloc[28]),
+                },
             }
         )
     if len(foods) != 597:

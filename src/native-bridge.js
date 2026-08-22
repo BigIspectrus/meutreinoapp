@@ -38,6 +38,7 @@ window.TreinoNativeBridge = {
   getHealthStatus: () => call('getHealthStatus'),
   getRecoverySnapshot: data => call('getRecoverySnapshot', data || {}),
   requestHealthPermissions: () => call('requestHealthPermissions'),
+  requestNutritionPermissions: () => call('requestNutritionPermissions'),
   getHealthSyncResults: () => call('getHealthSyncResults'),
   listHealthExercises: data => call('listHealthExercises', data || {}),
   getHealthExerciseDetail: data => call('getHealthExerciseDetail', data || {}),
@@ -49,6 +50,7 @@ window.TreinoNativeBridge = {
   syncNativeDatabase: data => call('syncNativeDatabase', data),
   saveWorkoutMirror: data => call('saveWorkoutMirror', data),
   syncNutritionData: data => call('syncNutritionData', data || {}),
+  syncNutritionDay: data => call('syncNutritionDay', data || {}),
   scanBarcode: () => native() ? BarcodeScanner.scanBarcode({
     hint: 17,
     scanInstructions: 'Aponte para o código de barras do alimento',

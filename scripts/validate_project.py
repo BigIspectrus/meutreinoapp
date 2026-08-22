@@ -30,7 +30,7 @@ ok("applicationId 'com.treinoapp.app'" in gradle, 'Stable applicationId ausente'
 ok("applicationId 'com.treinoapp.beta'" in gradle, 'Beta applicationId ausente')
 ok('compileSdk 36' in gradle and 'targetSdk 36' in gradle and 'minSdk 26' in gradle, 'SDKs Android incorretos')
 ok('fallbackToDestructiveMigration' not in '\n'.join(p.read_text(errors='ignore') for p in (ROOT/'android/app/src/main/java').rglob('*.kt')), 'Migração destrutiva proibida')
-for token in ['FOREGROUND_SERVICE_HEALTH','ACTIVITY_RECOGNITION','POST_NOTIFICATIONS','READ_EXERCISE','READ_HEART_RATE','READ_TOTAL_CALORIES_BURNED','READ_HEALTH_DATA_IN_BACKGROUND','READ_SLEEP','READ_RESTING_HEART_RATE','READ_HEART_RATE_VARIABILITY','READ_BODY_FAT','READ_LEAN_BODY_MASS']:
+for token in ['FOREGROUND_SERVICE_HEALTH','ACTIVITY_RECOGNITION','POST_NOTIFICATIONS','READ_EXERCISE','READ_HEART_RATE','READ_TOTAL_CALORIES_BURNED','READ_HEALTH_DATA_IN_BACKGROUND','READ_SLEEP','READ_RESTING_HEART_RATE','READ_HEART_RATE_VARIABILITY','READ_BODY_FAT','READ_LEAN_BODY_MASS','WRITE_NUTRITION']:
     ok(token in manifest, f'Permissão/declaração Android ausente: {token}')
 for token in ['WorkoutForegroundService','TreinoAppWidgetProvider','HealthPermissionsRationaleActivity']:
     ok(token in manifest, f'Componente Android ausente: {token}')
@@ -92,11 +92,11 @@ for token in ['longArgOrNull','getHealthExerciseDetail','heartRateSamples','hear
     ok(token in plugin, f'Bridge Health avançado ausente: {token}')
 for token in ['HeartRatePoint','readDetailedMetrics','BPM_MIN','heartRateSamples','getExerciseDetail']:
     ok(token in repo, f'Leitura Health detalhada ausente: {token}')
-ok('version = 6' in dbkt and all(x in dbkt for x in ['MIGRATION_1_2','MIGRATION_2_3','MIGRATION_3_4','MIGRATION_4_5','MIGRATION_5_6']) and '.addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)' in dbkt, 'Migrações Room 1->2->3->4->5->6 ausentes')
+ok('version = 7' in dbkt and all(x in dbkt for x in ['MIGRATION_1_2','MIGRATION_2_3','MIGRATION_3_4','MIGRATION_4_5','MIGRATION_5_6','MIGRATION_6_7']) and '.addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)' in dbkt, 'Migrações Room 1->2->3->4->5->6->7 ausentes')
 for token in ['modalDetalhesSessao','abrirDetalhesTreino','compartilharSessaoDetalhada','renderHealthPerformance','healthPerformanceChart','calcularZonasFc','calcularFcPorExercicio','normalizarAmostrasHealth','healthRelHtml','Galaxy Watch / Health Connect']:
     ok(token in html, f'UI de detalhes/performance/relatório ausente: {token}')
 ok('healthLinksV12:localStorage.getItem' in html, 'Backup não inclui vínculos Health')
-ok('DATA_SCHEMA_VERSION = 17' in html or 'DATA_SCHEMA_VERSION=17' in html, 'Schema web v17 esperado para catálogo e receitas')
+ok('DATA_SCHEMA_VERSION = 18' in html or 'DATA_SCHEMA_VERSION=18' in html, 'Schema web v18 esperado para integrações e análises')
 
 # Alimentação offline / v12.5.0
 entities=read('android/app/src/main/java/com/treinoapp/app/data/NativeEntities.kt')
@@ -127,7 +127,15 @@ if taco_path.exists():
     try:
         taco=json.loads(taco_path.read_text(encoding='utf-8'))
         ok(len(taco.get('foods',[]))==597, 'Catálogo TACO deve conter 597 alimentos')
+        ok(all('micros100' in food for food in taco.get('foods',[])), 'Catálogo TACO sem micronutrientes v12.5.2')
     except Exception as e: errors.append(f'Catálogo TACO inválido: {e}')
+
+# Integrações e análises / v12.5.2
+for token in ['NUTRITION_MICROS','micros100','importarLoteAlimentosNutricao','abrirRelatorioMensalNutricao','correlacaoNutricao','nutritionHealthEnabledV1252','sincronizarNutritionHealthRecentes']:
+    ok(token in html, f'Recurso de alimentação v12.5.2 ausente: {token}')
+for token in ['microsJson','NutritionRecord','syncNutritionDay','nutritionPermissions']:
+    ok(token in entities or token in repo or token in plugin, f'Persistência/Health v12.5.2 ausente: {token}')
+ok('requestNutritionPermissions' in bridge and 'syncNutritionDay' in bridge, 'Bridge de nutrição Health Connect ausente')
 
 # Fundação v12.4
 for token in ['modalContextoSessao','sessionRpe','sessionContext','setStartedAt','restBeforeSec','iniciarSeriePrecisao','selRestVibration','configureRestAlerts','openNotificationSettings']:
