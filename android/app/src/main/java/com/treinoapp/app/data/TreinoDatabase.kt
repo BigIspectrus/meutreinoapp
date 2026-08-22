@@ -14,8 +14,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         NutritionGoalEntity::class,
         NutritionFoodEntity::class,
         NutritionEntryEntity::class,
+        NutritionRecipeEntity::class,
+        NutritionMealTemplateEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = true
 )
 abstract class TreinoDatabase : RoomDatabase() {
@@ -112,12 +114,47 @@ abstract class TreinoDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE nutrition_foods ADD COLUMN source TEXT NOT NULL DEFAULT 'manual'")
+                db.execSQL("ALTER TABLE nutrition_foods ADD COLUMN sourceId TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE nutrition_foods ADD COLUMN barcode TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE nutrition_foods ADD COLUMN measuresJson TEXT NOT NULL DEFAULT '[]'")
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `nutrition_recipes` (
+                        `id` TEXT NOT NULL,
+                        `name` TEXT NOT NULL,
+                        `yieldGrams` REAL NOT NULL,
+                        `servings` REAL NOT NULL,
+                        `itemsJson` TEXT NOT NULL,
+                        `favorite` INTEGER NOT NULL,
+                        `createdAt` INTEGER NOT NULL,
+                        `updatedAt` INTEGER NOT NULL,
+                        `lastUsedAt` INTEGER NOT NULL,
+                        PRIMARY KEY(`id`)
+                    )
+                """.trimIndent())
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `nutrition_meal_templates` (
+                        `id` TEXT NOT NULL,
+                        `name` TEXT NOT NULL,
+                        `mealType` TEXT NOT NULL,
+                        `itemsJson` TEXT NOT NULL,
+                        `createdAt` INTEGER NOT NULL,
+                        `updatedAt` INTEGER NOT NULL,
+                        `lastUsedAt` INTEGER NOT NULL,
+                        PRIMARY KEY(`id`)
+                    )
+                """.trimIndent())
+            }
+        }
+
         fun get(context: Context): TreinoDatabase = INSTANCE ?: synchronized(this) {
             INSTANCE ?: Room.databaseBuilder(
                 context.applicationContext,
                 TreinoDatabase::class.java,
                 "treinoapp_native.db"
-            ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5).build().also { INSTANCE = it }
+            ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6).build().also { INSTANCE = it }
         }
     }
 }

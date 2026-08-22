@@ -3,6 +3,7 @@ package com.treinoapp.app.data
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import androidx.room.ColumnInfo
 
 @Entity(tableName = "workout_sessions")
 data class WorkoutSessionEntity(
@@ -76,6 +77,34 @@ data class NutritionFoodEntity(
     val fiber100: Double,
     val sodium100: Double,
     val favorite: Boolean,
+    @ColumnInfo(defaultValue = "'manual'") val source: String = "manual",
+    @ColumnInfo(defaultValue = "''") val sourceId: String = "",
+    @ColumnInfo(defaultValue = "''") val barcode: String = "",
+    @ColumnInfo(defaultValue = "'[]'") val measuresJson: String = "[]",
+    val createdAt: Long,
+    val updatedAt: Long,
+    val lastUsedAt: Long,
+)
+
+@Entity(tableName = "nutrition_recipes")
+data class NutritionRecipeEntity(
+    @PrimaryKey val id: String,
+    val name: String,
+    val yieldGrams: Double,
+    val servings: Double,
+    val itemsJson: String,
+    val favorite: Boolean,
+    val createdAt: Long,
+    val updatedAt: Long,
+    val lastUsedAt: Long,
+)
+
+@Entity(tableName = "nutrition_meal_templates")
+data class NutritionMealTemplateEntity(
+    @PrimaryKey val id: String,
+    val name: String,
+    val mealType: String,
+    val itemsJson: String,
     val createdAt: Long,
     val updatedAt: Long,
     val lastUsedAt: Long,

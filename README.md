@@ -1,4 +1,4 @@
-# TreinoApp v12.5.0 Beta — Treino e Alimentação
+# TreinoApp v12.5.1 Beta — Treino e Alimentação
 
 TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capacitor. A variante Beta pode coexistir com a Stable.
 
@@ -6,16 +6,22 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 
 - Stable: `com.treinoapp.app`
 - Beta: `com.treinoapp.beta`
-- Versão: `12.5.0`
-- versionCode: `120500`
+- Versão: `12.5.1`
+- versionCode: `120501`
 - Android: compile/target API 36, minSdk 26
-- Room: schema 5, somente migrações explícitas
+- Room: schema 6, somente migrações explícitas
 
 ## Alimentação
 
 - metas diárias de kcal, proteína, carboidratos e gorduras definidas somente pelo usuário;
 - diário por café da manhã, almoço, jantar e lanches;
 - alimentos próprios cadastrados por 100 g ou porção;
+- catálogo TACO com 597 alimentos brasileiros disponível offline;
+- busca online no Open Food Facts e USDA FoodData Central, sempre com a fonte visível;
+- leitura nativa de código de barras no APK;
+- medidas caseiras personalizadas com conversão para gramas;
+- receitas por ingredientes, rendimento e porções;
+- refeições completas salvas para reutilização;
 - valores opcionais de fibras e sódio;
 - favoritos, alimentos recentes e busca local;
 - cópia de uma refeição do dia anterior;
@@ -135,8 +141,8 @@ Na versão Web/PWA, os fluxos de navegador permanecem disponíveis.
 
 - histórico Web é a base funcional principal;
 - Room mantém espelho nativo de sessões/séries e dos dados de alimentação;
-- Room schema 5 adiciona metas, alimentos e registros por `MIGRATION_4_5`, preservando os schemas anteriores;
+- Room schema 6 adiciona fontes, medidas, receitas e refeições prontas por `MIGRATION_5_6`, preservando os schemas anteriores;
 - `fallbackToDestructiveMigration()` continua proibido;
 - backup JSON inclui vínculos Health, plano semanal, cache de Recovery, preferências de aviso e todos os dados de alimentação.
 
-Antes de promover para Stable, execute `TESTE_v12.5.0_BETA.md`.
+Antes de promover para Stable, execute `TESTE_v12.5.1_BETA.md`.

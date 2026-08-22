@@ -92,11 +92,11 @@ for token in ['longArgOrNull','getHealthExerciseDetail','heartRateSamples','hear
     ok(token in plugin, f'Bridge Health avançado ausente: {token}')
 for token in ['HeartRatePoint','readDetailedMetrics','BPM_MIN','heartRateSamples','getExerciseDetail']:
     ok(token in repo, f'Leitura Health detalhada ausente: {token}')
-ok('version = 5' in dbkt and all(x in dbkt for x in ['MIGRATION_1_2','MIGRATION_2_3','MIGRATION_3_4','MIGRATION_4_5']) and '.addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)' in dbkt, 'Migrações Room 1->2->3->4->5 ausentes')
+ok('version = 6' in dbkt and all(x in dbkt for x in ['MIGRATION_1_2','MIGRATION_2_3','MIGRATION_3_4','MIGRATION_4_5','MIGRATION_5_6']) and '.addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)' in dbkt, 'Migrações Room 1->2->3->4->5->6 ausentes')
 for token in ['modalDetalhesSessao','abrirDetalhesTreino','compartilharSessaoDetalhada','renderHealthPerformance','healthPerformanceChart','calcularZonasFc','calcularFcPorExercicio','normalizarAmostrasHealth','healthRelHtml','Galaxy Watch / Health Connect']:
     ok(token in html, f'UI de detalhes/performance/relatório ausente: {token}')
 ok('healthLinksV12:localStorage.getItem' in html, 'Backup não inclui vínculos Health')
-ok('DATA_SCHEMA_VERSION = 16' in html or 'DATA_SCHEMA_VERSION=16' in html, 'Schema web v16 esperado para o diário alimentar')
+ok('DATA_SCHEMA_VERSION = 17' in html or 'DATA_SCHEMA_VERSION=17' in html, 'Schema web v17 esperado para catálogo e receitas')
 
 # Alimentação offline / v12.5.0
 entities=read('android/app/src/main/java/com/treinoapp/app/data/NativeEntities.kt')
@@ -110,6 +110,24 @@ ok('replaceAllNutrition' in dao, 'Transação Room da alimentação ausente')
 ok('syncNutritionData' in plugin and 'syncNutritionData' in bridge, 'Sincronização nativa da alimentação ausente')
 for token in ['nutritionGoalsV125:localStorage.getItem','nutritionFoodsV125:localStorage.getItem','nutritionEntriesV125:localStorage.getItem']:
     ok(token in html, f'Backup da alimentação incompleto: {token}')
+
+# Catálogo e praticidade / v12.5.1
+for token in ['nutritionRecipesV1251','nutritionMealTemplatesV1251','abrirCatalogoNutricao','lerCodigoBarrasNutricao','buscarCodigoOpenFoodFactsNutricao','carregarTacoNutricao','alimentoUsdaNutricao','adicionarMedidaAlimentoNutricao','salvarReceitaNutricao','salvarRefeicaoProntaNutricao']:
+    ok(token in html, f'Recurso de alimentação v12.5.1 ausente: {token}')
+for token in ['NutritionRecipeEntity','NutritionMealTemplateEntity','measuresJson','barcode']:
+    ok(token in entities, f'Entidade/campo Room v12.5.1 ausente: {token}')
+for token in ['nutritionRecipesV1251:localStorage.getItem','nutritionMealTemplatesV1251:localStorage.getItem']:
+    ok(token in html, f'Backup v12.5.1 incompleto: {token}')
+ok('android.permission.CAMERA' in manifest, 'Permissão da câmera para código de barras ausente')
+ok("@capacitor/barcode-scanner" in pkg.get('dependencies',{}), 'Plugin oficial de código de barras ausente')
+ok('scanBarcode' in bridge and 'CapacitorBarcodeScanner' in bridge, 'Bridge do leitor de código de barras ausente')
+taco_path=ROOT/'web/data/taco-v4.json'
+ok(taco_path.exists(), 'Catálogo TACO offline ausente')
+if taco_path.exists():
+    try:
+        taco=json.loads(taco_path.read_text(encoding='utf-8'))
+        ok(len(taco.get('foods',[]))==597, 'Catálogo TACO deve conter 597 alimentos')
+    except Exception as e: errors.append(f'Catálogo TACO inválido: {e}')
 
 # Fundação v12.4
 for token in ['modalContextoSessao','sessionRpe','sessionContext','setStartedAt','restBeforeSec','iniciarSeriePrecisao','selRestVibration','configureRestAlerts','openNotificationSettings']:

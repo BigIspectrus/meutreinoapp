@@ -36,6 +36,8 @@ import com.treinoapp.app.data.TreinoDatabase
 import com.treinoapp.app.data.NutritionEntryEntity
 import com.treinoapp.app.data.NutritionFoodEntity
 import com.treinoapp.app.data.NutritionGoalEntity
+import com.treinoapp.app.data.NutritionRecipeEntity
+import com.treinoapp.app.data.NutritionMealTemplateEntity
 import com.treinoapp.app.data.WorkoutSessionEntity
 import com.treinoapp.app.data.WorkoutSetEntity
 import com.treinoapp.app.widget.TreinoAppWidgetProvider
@@ -637,6 +639,8 @@ class TreinoNativePlugin : Plugin() {
         val goalObject = call.data.optJSONObject("goal")
         val foodsArray = call.getArray("foods") ?: JSArray()
         val entriesArray = call.getArray("entries") ?: JSArray()
+        val recipesArray = call.getArray("recipes") ?: JSArray()
+        val mealTemplatesArray = call.getArray("mealTemplates") ?: JSArray()
         scope.launch {
             try {
                 val goal = goalObject?.let { o ->
@@ -667,6 +671,10 @@ class TreinoNativePlugin : Plugin() {
                         fiber100 = o.optDouble("fiber100", 0.0).coerceAtLeast(0.0),
                         sodium100 = o.optDouble("sodium100", 0.0).coerceAtLeast(0.0),
                         favorite = o.optBoolean("favorite", false),
+                        source = o.optString("source", "manual").trim().ifBlank { "manual" }.take(24),
+                        sourceId = o.optString("sourceId").trim().take(120),
+                        barcode = o.optString("barcode").trim().take(48),
+                        measuresJson = (o.optJSONArray("measures") ?: JSArray()).toString(),
                         createdAt = o.optLong("createdAt", System.currentTimeMillis()),
                         updatedAt = o.optLong("updatedAt", System.currentTimeMillis()),
                         lastUsedAt = o.optLong("lastUsedAt", 0L),
@@ -697,11 +705,47 @@ class TreinoNativePlugin : Plugin() {
                         updatedAt = o.optLong("updatedAt", System.currentTimeMillis()),
                     )
                 }
-                db.workoutDao().replaceAllNutrition(goal, foods, entries)
+                val recipes = mutableListOf<NutritionRecipeEntity>()
+                for (i in 0 until recipesArray.length()) {
+                    val o = recipesArray.optJSONObject(i) ?: continue
+                    val id = o.optString("id").trim()
+                    val name = o.optString("name").trim()
+                    if (id.isBlank() || name.isBlank()) continue
+                    recipes += NutritionRecipeEntity(
+                        id = id,
+                        name = name.take(160),
+                        yieldGrams = o.optDouble("yieldGrams", 0.0).coerceAtLeast(0.0),
+                        servings = o.optDouble("servings", 1.0).coerceAtLeast(1.0),
+                        itemsJson = (o.optJSONArray("items") ?: JSArray()).toString(),
+                        favorite = o.optBoolean("favorite", false),
+                        createdAt = o.optLong("createdAt", System.currentTimeMillis()),
+                        updatedAt = o.optLong("updatedAt", System.currentTimeMillis()),
+                        lastUsedAt = o.optLong("lastUsedAt", 0L),
+                    )
+                }
+                val mealTemplates = mutableListOf<NutritionMealTemplateEntity>()
+                for (i in 0 until mealTemplatesArray.length()) {
+                    val o = mealTemplatesArray.optJSONObject(i) ?: continue
+                    val id = o.optString("id").trim()
+                    val name = o.optString("name").trim()
+                    if (id.isBlank() || name.isBlank()) continue
+                    mealTemplates += NutritionMealTemplateEntity(
+                        id = id,
+                        name = name.take(160),
+                        mealType = o.optString("mealType", "snack").trim().ifBlank { "snack" }.take(24),
+                        itemsJson = (o.optJSONArray("items") ?: JSArray()).toString(),
+                        createdAt = o.optLong("createdAt", System.currentTimeMillis()),
+                        updatedAt = o.optLong("updatedAt", System.currentTimeMillis()),
+                        lastUsedAt = o.optLong("lastUsedAt", 0L),
+                    )
+                }
+                db.workoutDao().replaceAllNutrition(goal, foods, entries, recipes, mealTemplates)
                 resolve(call, JSObject().apply {
                     put("synced", true)
                     put("foods", foods.size)
                     put("entries", entries.size)
+                    put("recipes", recipes.size)
+                    put("mealTemplates", mealTemplates.size)
                 })
             } catch (e: Exception) { reject(call, "Falha ao sincronizar dados de alimentação", e) }
         }

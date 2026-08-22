@@ -90,6 +90,12 @@ interface NativeWorkoutDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertNutritionEntries(entries: List<NutritionEntryEntity>)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertNutritionRecipes(recipes: List<NutritionRecipeEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertNutritionMealTemplates(templates: List<NutritionMealTemplateEntity>)
+
     @Query("DELETE FROM nutrition_goals")
     suspend fun clearNutritionGoals()
 
@@ -99,17 +105,29 @@ interface NativeWorkoutDao {
     @Query("DELETE FROM nutrition_entries")
     suspend fun clearNutritionEntries()
 
+    @Query("DELETE FROM nutrition_recipes")
+    suspend fun clearNutritionRecipes()
+
+    @Query("DELETE FROM nutrition_meal_templates")
+    suspend fun clearNutritionMealTemplates()
+
     @Transaction
     suspend fun replaceAllNutrition(
         goal: NutritionGoalEntity?,
         foods: List<NutritionFoodEntity>,
         entries: List<NutritionEntryEntity>,
+        recipes: List<NutritionRecipeEntity>,
+        mealTemplates: List<NutritionMealTemplateEntity>,
     ) {
         clearNutritionEntries()
+        clearNutritionMealTemplates()
+        clearNutritionRecipes()
         clearNutritionFoods()
         clearNutritionGoals()
         if (goal != null) upsertNutritionGoal(goal)
         if (foods.isNotEmpty()) upsertNutritionFoods(foods)
         if (entries.isNotEmpty()) upsertNutritionEntries(entries)
+        if (recipes.isNotEmpty()) upsertNutritionRecipes(recipes)
+        if (mealTemplates.isNotEmpty()) upsertNutritionMealTemplates(mealTemplates)
     }
 }

@@ -1,6 +1,7 @@
 import { Capacitor, registerPlugin } from '@capacitor/core';
 
 const Native = registerPlugin('TreinoNative');
+const BarcodeScanner = registerPlugin('CapacitorBarcodeScanner');
 const native = () => Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
 
 function call(method, payload = {}) {
@@ -48,4 +49,15 @@ window.TreinoNativeBridge = {
   syncNativeDatabase: data => call('syncNativeDatabase', data),
   saveWorkoutMirror: data => call('saveWorkoutMirror', data),
   syncNutritionData: data => call('syncNutritionData', data || {}),
+  scanBarcode: () => native() ? BarcodeScanner.scanBarcode({
+    hint: 17,
+    scanInstructions: 'Aponte para o código de barras do alimento',
+    scanButton: false,
+    cameraDirection: 1,
+    scanOrientation: 1,
+    cancelButtonAccessibilityLabel: 'Cancelar leitura',
+    torchButtonOnAccessibilityLabel: 'Desligar lanterna',
+    torchButtonOffAccessibilityLabel: 'Ligar lanterna',
+    android: { scanningLibrary: 'mlkit' }
+  }) : Promise.resolve({ native:false, available:false }),
 };

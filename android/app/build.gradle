@@ -15,8 +15,8 @@ android {
         applicationId 'com.treinoapp.app'
         minSdk 26
         targetSdk 36
-        versionCode 120500
-        versionName '12.5.0'
+        versionCode 120501
+        versionName '12.5.1'
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
         vectorDrawables { useSupportLibrary true }
         buildConfigField 'String', 'GIT_SHA', '"' + gitSha + '"'
@@ -80,6 +80,7 @@ android {
 
 dependencies {
     implementation project(':capacitor-android')
+    implementation project(':capacitor-barcode-scanner')
     implementation 'androidx.core:core-ktx:1.17.0'
     implementation 'androidx.appcompat:appcompat:1.7.1'
     implementation 'androidx.activity:activity-ktx:1.11.0'
