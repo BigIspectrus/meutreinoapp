@@ -33,6 +33,9 @@ import com.getcapacitor.annotation.CapacitorPlugin
 import com.treinoapp.app.BuildConfig
 import com.treinoapp.app.MainActivity
 import com.treinoapp.app.data.TreinoDatabase
+import com.treinoapp.app.data.NutritionEntryEntity
+import com.treinoapp.app.data.NutritionFoodEntity
+import com.treinoapp.app.data.NutritionGoalEntity
 import com.treinoapp.app.data.WorkoutSessionEntity
 import com.treinoapp.app.data.WorkoutSetEntity
 import com.treinoapp.app.widget.TreinoAppWidgetProvider
@@ -626,6 +629,81 @@ class TreinoNativePlugin : Plugin() {
                 HealthSyncScheduler.scheduleSoon(context)
                 resolve(call, JSObject().apply { put("saved", true); put("sets", nativeSets.size) })
             } catch (e: Exception) { reject(call, "Falha ao salvar espelho nativo", e) }
+        }
+    }
+
+    @PluginMethod
+    fun syncNutritionData(call: PluginCall) {
+        val goalObject = call.data.optJSONObject("goal")
+        val foodsArray = call.getArray("foods") ?: JSArray()
+        val entriesArray = call.getArray("entries") ?: JSArray()
+        scope.launch {
+            try {
+                val goal = goalObject?.let { o ->
+                    NutritionGoalEntity(
+                        kcal = o.optDouble("kcal", 0.0).coerceAtLeast(0.0),
+                        protein = o.optDouble("protein", 0.0).coerceAtLeast(0.0),
+                        carbs = o.optDouble("carbs", 0.0).coerceAtLeast(0.0),
+                        fat = o.optDouble("fat", 0.0).coerceAtLeast(0.0),
+                        updatedAt = o.optLong("updatedAt", System.currentTimeMillis()),
+                    )
+                }
+                val foods = mutableListOf<NutritionFoodEntity>()
+                for (i in 0 until foodsArray.length()) {
+                    val o = foodsArray.optJSONObject(i) ?: continue
+                    val id = o.optString("id").trim()
+                    val name = o.optString("name").trim()
+                    if (id.isBlank() || name.isBlank()) continue
+                    foods += NutritionFoodEntity(
+                        id = id,
+                        name = name.take(160),
+                        brand = o.optString("brand").trim().take(120),
+                        servingName = o.optString("servingName", "porção").trim().ifBlank { "porção" }.take(60),
+                        servingGrams = o.optDouble("servingGrams", 100.0).coerceAtLeast(0.1),
+                        kcal100 = o.optDouble("kcal100", 0.0).coerceAtLeast(0.0),
+                        protein100 = o.optDouble("protein100", 0.0).coerceAtLeast(0.0),
+                        carbs100 = o.optDouble("carbs100", 0.0).coerceAtLeast(0.0),
+                        fat100 = o.optDouble("fat100", 0.0).coerceAtLeast(0.0),
+                        fiber100 = o.optDouble("fiber100", 0.0).coerceAtLeast(0.0),
+                        sodium100 = o.optDouble("sodium100", 0.0).coerceAtLeast(0.0),
+                        favorite = o.optBoolean("favorite", false),
+                        createdAt = o.optLong("createdAt", System.currentTimeMillis()),
+                        updatedAt = o.optLong("updatedAt", System.currentTimeMillis()),
+                        lastUsedAt = o.optLong("lastUsedAt", 0L),
+                    )
+                }
+                val entries = mutableListOf<NutritionEntryEntity>()
+                for (i in 0 until entriesArray.length()) {
+                    val o = entriesArray.optJSONObject(i) ?: continue
+                    val id = o.optString("id").trim()
+                    val date = o.optString("date").trim()
+                    val name = o.optString("name").trim()
+                    if (id.isBlank() || date.isBlank() || name.isBlank()) continue
+                    entries += NutritionEntryEntity(
+                        id = id,
+                        date = date.take(10),
+                        time = o.optString("time").trim().take(5),
+                        mealType = o.optString("mealType", "snack").trim().ifBlank { "snack" }.take(24),
+                        foodId = o.optString("foodId").trim().takeIf { it.isNotBlank() },
+                        name = name.take(160),
+                        grams = o.optDouble("grams", 0.0).coerceAtLeast(0.0),
+                        kcal = o.optDouble("kcal", 0.0).coerceAtLeast(0.0),
+                        protein = o.optDouble("protein", 0.0).coerceAtLeast(0.0),
+                        carbs = o.optDouble("carbs", 0.0).coerceAtLeast(0.0),
+                        fat = o.optDouble("fat", 0.0).coerceAtLeast(0.0),
+                        fiber = o.optDouble("fiber", 0.0).coerceAtLeast(0.0),
+                        sodium = o.optDouble("sodium", 0.0).coerceAtLeast(0.0),
+                        createdAt = o.optLong("createdAt", System.currentTimeMillis()),
+                        updatedAt = o.optLong("updatedAt", System.currentTimeMillis()),
+                    )
+                }
+                db.workoutDao().replaceAllNutrition(goal, foods, entries)
+                resolve(call, JSObject().apply {
+                    put("synced", true)
+                    put("foods", foods.size)
+                    put("entries", entries.size)
+                })
+            } catch (e: Exception) { reject(call, "Falha ao sincronizar dados de alimentação", e) }
         }
     }
 

@@ -92,11 +92,24 @@ for token in ['longArgOrNull','getHealthExerciseDetail','heartRateSamples','hear
     ok(token in plugin, f'Bridge Health avançado ausente: {token}')
 for token in ['HeartRatePoint','readDetailedMetrics','BPM_MIN','heartRateSamples','getExerciseDetail']:
     ok(token in repo, f'Leitura Health detalhada ausente: {token}')
-ok('version = 4' in dbkt and all(x in dbkt for x in ['MIGRATION_1_2','MIGRATION_2_3','MIGRATION_3_4']) and '.addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)' in dbkt, 'Migrações Room 1->2->3->4 ausentes')
+ok('version = 5' in dbkt and all(x in dbkt for x in ['MIGRATION_1_2','MIGRATION_2_3','MIGRATION_3_4','MIGRATION_4_5']) and '.addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)' in dbkt, 'Migrações Room 1->2->3->4->5 ausentes')
 for token in ['modalDetalhesSessao','abrirDetalhesTreino','compartilharSessaoDetalhada','renderHealthPerformance','healthPerformanceChart','calcularZonasFc','calcularFcPorExercicio','normalizarAmostrasHealth','healthRelHtml','Galaxy Watch / Health Connect']:
     ok(token in html, f'UI de detalhes/performance/relatório ausente: {token}')
 ok('healthLinksV12:localStorage.getItem' in html, 'Backup não inclui vínculos Health')
-ok('DATA_SCHEMA_VERSION = 15' in html or 'DATA_SCHEMA_VERSION=15' in html, 'Schema web v15 esperado para contexto e horários precisos')
+ok('DATA_SCHEMA_VERSION = 16' in html or 'DATA_SCHEMA_VERSION=16' in html, 'Schema web v16 esperado para o diário alimentar')
+
+# Alimentação offline / v12.5.0
+entities=read('android/app/src/main/java/com/treinoapp/app/data/NativeEntities.kt')
+dao=read('android/app/src/main/java/com/treinoapp/app/data/NativeWorkoutDao.kt')
+bridge=read('src/native-bridge.js')
+for token in ['aba-nutricao','nutritionGoalsV125','nutritionFoodsV125','nutritionEntriesV125','salvarMetasNutricao','salvarAlimentoNutricao','salvarRegistroNutricao','copiarRefeicaoAnteriorNutricao','renderizarSemanaNutricao']:
+    ok(token in html, f'Recurso de alimentação v12.5.0 ausente: {token}')
+for token in ['NutritionGoalEntity','NutritionFoodEntity','NutritionEntryEntity']:
+    ok(token in entities, f'Entidade Room de alimentação ausente: {token}')
+ok('replaceAllNutrition' in dao, 'Transação Room da alimentação ausente')
+ok('syncNutritionData' in plugin and 'syncNutritionData' in bridge, 'Sincronização nativa da alimentação ausente')
+for token in ['nutritionGoalsV125:localStorage.getItem','nutritionFoodsV125:localStorage.getItem','nutritionEntriesV125:localStorage.getItem']:
+    ok(token in html, f'Backup da alimentação incompleto: {token}')
 
 # Fundação v12.4
 for token in ['modalContextoSessao','sessionRpe','sessionContext','setStartedAt','restBeforeSec','iniciarSeriePrecisao','selRestVibration','configureRestAlerts','openNotificationSettings']:

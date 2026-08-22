@@ -750,6 +750,24 @@
     .smart-technical{margin:10px 0 0;border:1px solid var(--border);border-radius:13px;background:var(--surface2);overflow:hidden}.smart-technical>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;list-style:none;padding:12px 13px;cursor:pointer;font-size:.78em;font-weight:800;color:var(--text-muted)}.smart-technical>summary::-webkit-details-marker{display:none}.smart-technical>summary::after{content:'⌄';font-size:1.15em}.smart-technical[open]>summary::after{content:'⌃'}.smart-technical-content{padding:0 10px 10px}.smart-technical-content>.session-health-card,.smart-technical-content>.health-match{margin-top:2px}
     .post-health-summary.smart-insight-card{margin-top:12px;text-align:left}
 
+    /* v12.5.0 - diário alimentar local e metas manuais */
+    .nutrition-datebar{display:grid;grid-template-columns:40px minmax(0,1fr) 40px;gap:8px;align-items:center;margin-bottom:12px}
+    .nutrition-datebar .btn{height:42px;padding:0}.nutrition-datebar input{text-align:center;font-weight:750;height:42px}
+    .nutrition-kcal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}.nutrition-kcal-value{font-family:'Arial Narrow','Segoe UI',Arial,sans-serif;font-size:2.1em;font-weight:900;line-height:1}.nutrition-kcal-value small{font:700 .38em system-ui;color:var(--text-muted)}
+    .nutrition-kcal-state{text-align:right;font-size:.76em;line-height:1.35;color:var(--text-muted)}.nutrition-kcal-state strong{display:block;color:var(--text);font-size:1.15em}
+    .nutrition-progress{height:9px;border-radius:999px;background:var(--surface2);overflow:hidden;margin:12px 0}.nutrition-progress>span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--primary),var(--success));border-radius:inherit;transition:width .25s}.nutrition-progress.over>span{background:var(--accent)}
+    .nutrition-macros{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.nutrition-macro{padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:11px;min-width:0}.nutrition-macro-name{font-size:.67em;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);font-weight:750}.nutrition-macro-value{font-size:.88em;font-weight:850;margin:3px 0 6px;white-space:nowrap}.nutrition-macro .nutrition-progress{height:5px;margin:0}
+    .nutrition-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px}.nutrition-actions .btn{min-height:44px}
+    .nutrition-meal{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:10px;overflow:hidden}.nutrition-meal>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:14px;cursor:pointer}.nutrition-meal>summary::-webkit-details-marker{display:none}.nutrition-meal-icon{font-size:1.28em}.nutrition-meal-title{flex:1;font-size:.9em;font-weight:850}.nutrition-meal-total{font-size:.76em;color:var(--text-muted);text-align:right}.nutrition-meal-total strong{color:var(--text);display:block}.nutrition-meal-content{padding:0 12px 12px}
+    .nutrition-entry{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:10px 3px;border-top:1px solid var(--border);cursor:pointer}.nutrition-entry-name{font-size:.84em;font-weight:750;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nutrition-entry-sub{font-size:.69em;color:var(--text-muted);margin-top:2px}.nutrition-entry-kcal{text-align:right;font-size:.78em;font-weight:800}.nutrition-entry-kcal small{display:block;color:var(--text-muted);font-weight:600;margin-top:2px}
+    .nutrition-meal-empty{font-size:.76em;color:var(--text-muted);padding:10px 3px;border-top:1px solid var(--border)}.nutrition-meal-footer{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:7px}.nutrition-meal-footer .btn{width:auto}
+    .nutrition-week-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}.nutrition-week-stat{background:var(--surface2);border-radius:10px;padding:9px 7px;text-align:center}.nutrition-week-stat strong{display:block;font-size:.91em}.nutrition-week-stat span{font-size:.63em;color:var(--text-muted)}
+    .nutrition-food-results{display:grid;gap:7px;max-height:300px;overflow:auto;margin:9px 0}.nutrition-food-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px;border:1px solid var(--border);border-radius:11px;background:var(--surface2);cursor:pointer}.nutrition-food-row.selected{border-color:var(--primary);background:var(--primary-dim)}.nutrition-food-name{font-size:.84em;font-weight:800}.nutrition-food-meta{font-size:.69em;color:var(--text-muted);margin-top:3px}.nutrition-food-kcal{font-size:.76em;font-weight:800;text-align:right}.nutrition-food-tools{display:flex;gap:5px;margin-top:5px;justify-content:flex-end}.nutrition-food-tools button{border:0;background:transparent;color:var(--text-muted);cursor:pointer;font-size:1.08em;padding:4px}
+    .nutrition-filter-chips{display:flex;gap:7px;overflow-x:auto;margin:9px 0;scrollbar-width:none}.nutrition-filter-chips button{white-space:nowrap;border:1px solid var(--border);border-radius:999px;background:var(--surface2);color:var(--text-muted);padding:7px 11px;font-size:.72em;font-weight:750}.nutrition-filter-chips button.active{border-color:var(--primary);background:var(--primary-dim);color:var(--primary)}
+    .nutrition-selected{border:1px solid var(--primary);background:var(--primary-dim);border-radius:11px;padding:11px;margin:10px 0}.nutrition-selected strong{font-size:.86em}.nutrition-note{font-size:.72em;line-height:1.45;color:var(--text-muted)}
+    .nutrition-dashboard{cursor:pointer}.nutrition-dashboard-row{display:flex;align-items:center;justify-content:space-between;gap:10px}.nutrition-dashboard-main{font-size:.84em}.nutrition-dashboard-main strong{font-size:1.25em}.nutrition-dashboard-arrow{color:var(--primary);font-weight:850}
+    #modalNutritionFood{z-index:610}#modalConfirm{z-index:700}
+
     @media(max-width:520px){
       .tab-content{padding:12px}
       .card{padding:15px;margin-bottom:11px}
@@ -757,6 +775,7 @@
       .timer-compact .tmini{display:none}
       .settings-hub{grid-template-columns:1fr 1fr}
       .smart-insight-card{padding:13px}.smart-insight-title{font-size:.98em}.smart-insight-head{gap:7px}
+      .bnav-btn{font-size:.57em;letter-spacing:0}.bnav-btn .bnav-icon{font-size:1.55em}.nutrition-week-grid{grid-template-columns:1fr 1fr}.nutrition-kcal-value{font-size:1.85em}
     }
 
 </style>
@@ -993,12 +1012,12 @@
 <!-- MODAL NOVIDADES -->
 <div class="modal-overlay" id="modalNovidades">
   <div class="modal" style="max-width:500px;">
-    <div class="modal-title">TreinoApp v12.4.2 Beta</div>
+    <div class="modal-title">TreinoApp v12.5.0 Beta</div>
     <div style="font-size:.88em;line-height:1.6;color:var(--text-muted);">
       <p style="color:var(--text);font-weight:700;margin-bottom:8px;">Principais novidades desta versão</p>
-      <p>Quando o descanso termina, o aviso no Galaxy Watch oferece “Iniciar série” para registrar o começo da próxima série sem pegar o celular.</p>
-      <p style="margin-top:8px;">O horário iniciado no relógio é guardado no Android e sincronizado com a série correta ao abrir ou voltar ao treino.</p>
-      <p style="margin-top:8px;">Preferências agora separa “Testar aviso” e “Testar botão”; o segundo teste é isolado e nunca altera um treino real.</p>
+      <p>A nova aba Alimentação reúne metas manuais de kcal e macros, diário dividido por refeições e um resumo claro do dia.</p>
+      <p style="margin-top:8px;">Cadastre seus próprios alimentos por 100 g ou porção, use favoritos e recentes, e copie uma refeição de ontem quando quiser.</p>
+      <p style="margin-top:8px;">Os registros funcionam offline, entram no backup e possuem um espelho protegido no banco Android.</p>
     </div>
     <div class="modal-footer"><button class="btn btn-primary" onclick="fecharNovidades()">Entendi</button></div>
   </div>
@@ -1079,6 +1098,82 @@
   </div>
 </div>
 
+<!-- MODAIS ALIMENTAÇÃO v12.5.0 -->
+<div class="modal-overlay" id="modalNutritionGoals">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-title">🎯 Metas diárias</div>
+    <p class="nutrition-note" style="margin-bottom:14px;">Você define todos os valores manualmente. O TreinoApp não calcula nem altera suas metas.</p>
+    <div class="form-group"><label>Calorias (kcal)</label><input type="number" id="nutritionGoalKcal" min="1" step="1" inputmode="decimal" placeholder="Ex: 2500"></div>
+    <div class="row">
+      <div class="form-group col"><label>Proteína (g)</label><input type="number" id="nutritionGoalProtein" min="0" step="1" inputmode="decimal" placeholder="Ex: 180"></div>
+      <div class="form-group col"><label>Carboidratos (g)</label><input type="number" id="nutritionGoalCarbs" min="0" step="1" inputmode="decimal" placeholder="Ex: 280"></div>
+      <div class="form-group col"><label>Gorduras (g)</label><input type="number" id="nutritionGoalFat" min="0" step="1" inputmode="decimal" placeholder="Ex: 70"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="fecharModal('modalNutritionGoals')">Cancelar</button><button class="btn btn-primary" onclick="salvarMetasNutricao()">Salvar metas</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalNutritionFood">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-title" id="nutritionFoodModalTitle">🍎 Cadastrar alimento</div>
+    <input type="hidden" id="nutritionFoodId">
+    <div class="row">
+      <div class="form-group col" style="flex:2"><label>Alimento</label><input type="text" id="nutritionFoodName" maxlength="80" placeholder="Ex: Arroz branco cozido"></div>
+      <div class="form-group col"><label>Marca (opcional)</label><input type="text" id="nutritionFoodBrand" maxlength="50" placeholder="Ex: Caseiro"></div>
+    </div>
+    <div class="row">
+      <div class="form-group col"><label>Valores informados por</label><select id="nutritionFoodBasis" onchange="atualizarBaseAlimentoNutricao()"><option value="100">100 g</option><option value="portion">Uma porção</option></select></div>
+      <div class="form-group col" id="nutritionServingNameGroup" style="display:none"><label>Nome da porção</label><input type="text" id="nutritionFoodServingName" maxlength="30" placeholder="Ex: 1 unidade"></div>
+      <div class="form-group col" id="nutritionServingGramsGroup" style="display:none"><label>Peso da porção (g)</label><input type="number" id="nutritionFoodServingGrams" min="0.1" step="0.1" inputmode="decimal" placeholder="Ex: 50"></div>
+    </div>
+    <div class="row">
+      <div class="form-group col"><label>Kcal</label><input type="number" id="nutritionFoodKcal" min="0" step="0.1" inputmode="decimal"></div>
+      <div class="form-group col"><label>Proteína (g)</label><input type="number" id="nutritionFoodProtein" min="0" step="0.1" inputmode="decimal"></div>
+      <div class="form-group col"><label>Carboidratos (g)</label><input type="number" id="nutritionFoodCarbs" min="0" step="0.1" inputmode="decimal"></div>
+      <div class="form-group col"><label>Gorduras (g)</label><input type="number" id="nutritionFoodFat" min="0" step="0.1" inputmode="decimal"></div>
+    </div>
+    <details style="margin-bottom:12px;"><summary style="font-size:.78em;color:var(--text-muted);cursor:pointer;">Campos opcionais</summary><div class="row" style="margin-top:10px;"><div class="form-group col"><label>Fibras (g)</label><input type="number" id="nutritionFoodFiber" min="0" step="0.1" inputmode="decimal"></div><div class="form-group col"><label>Sódio (mg)</label><input type="number" id="nutritionFoodSodium" min="0" step="0.1" inputmode="decimal"></div></div></details>
+    <label style="display:flex;gap:8px;align-items:center;text-transform:none;margin:4px 0 12px;"><input type="checkbox" id="nutritionFoodFavorite" style="width:auto"> Marcar como favorito</label>
+    <p class="nutrition-note">Os valores são normalizados e guardados por 100 g. Confira o rótulo ou a sua fonte antes de salvar.</p>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="fecharModal('modalNutritionFood')">Cancelar</button><button class="btn btn-primary" onclick="salvarAlimentoNutricao()">Salvar alimento</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalNutritionAdd">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-title">➕ Registrar alimento</div>
+    <div class="row"><div class="form-group col"><label>Refeição</label><select id="nutritionAddMeal"><option value="breakfast">Café da manhã</option><option value="lunch">Almoço</option><option value="dinner">Jantar</option><option value="snack">Lanches</option></select></div><div class="form-group col"><label>Horário</label><input type="time" id="nutritionAddTime"></div></div>
+    <input type="search" id="nutritionFoodSearch" placeholder="Buscar nos seus alimentos..." oninput="renderizarBuscaAlimentosNutricao()">
+    <div class="nutrition-filter-chips" id="nutritionFoodFilters"><button type="button" class="active" data-scope="recent" onclick="selecionarFiltroAlimentoNutricao('recent')">Recentes</button><button type="button" data-scope="favorites" onclick="selecionarFiltroAlimentoNutricao('favorites')">Favoritos</button><button type="button" data-scope="all" onclick="selecionarFiltroAlimentoNutricao('all')">Todos</button></div>
+    <div class="nutrition-food-results" id="nutritionFoodResults"></div>
+    <button class="btn btn-outline btn-sm" style="width:auto" onclick="abrirModalAlimentoNutricao()">+ Cadastrar novo alimento</button>
+    <div id="nutritionSelectedFood"></div>
+    <div class="row" id="nutritionAmountFields" style="display:none"><div class="form-group col"><label>Quantidade</label><input type="number" id="nutritionAddAmount" min="0.1" step="0.1" inputmode="decimal" oninput="atualizarPreviaRegistroNutricao()"></div><div class="form-group col"><label>Unidade</label><select id="nutritionAddUnit" onchange="atualizarPreviaRegistroNutricao()"><option value="grams">gramas</option><option value="portion">porção</option></select></div></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="fecharModal('modalNutritionAdd')">Cancelar</button><button class="btn btn-primary" id="nutritionAddSave" onclick="salvarRegistroNutricao()" disabled>Adicionar</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalNutritionFoods">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-title">📚 Meus alimentos</div>
+    <div class="row" style="align-items:center"><input class="col" type="search" id="nutritionManageSearch" placeholder="Buscar alimento..." oninput="renderizarGerenciadorAlimentosNutricao()"><button class="btn btn-primary btn-sm" style="width:auto" onclick="abrirModalAlimentoNutricao()">+ Novo</button></div>
+    <div class="nutrition-food-results" id="nutritionManageList" style="max-height:430px"></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="fecharModal('modalNutritionFoods')">Fechar</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalNutritionEntry">
+  <div class="modal" style="max-width:430px;">
+    <div class="modal-title">Editar registro</div>
+    <input type="hidden" id="nutritionEntryId">
+    <div id="nutritionEntryName" style="font-weight:850;margin-bottom:12px"></div>
+    <div class="row"><div class="form-group col"><label>Refeição</label><select id="nutritionEntryMeal"><option value="breakfast">Café da manhã</option><option value="lunch">Almoço</option><option value="dinner">Jantar</option><option value="snack">Lanches</option></select></div><div class="form-group col"><label>Horário</label><input type="time" id="nutritionEntryTime"></div></div>
+    <div class="form-group"><label>Quantidade (g)</label><input type="number" id="nutritionEntryGrams" min="0.1" step="0.1" inputmode="decimal" oninput="atualizarPreviaEdicaoNutricao()"></div>
+    <div class="nutrition-selected" id="nutritionEntryPreview"></div>
+    <div class="modal-footer"><button class="btn btn-danger" onclick="excluirRegistroNutricao()">Excluir</button><button class="btn btn-primary" onclick="salvarEdicaoRegistroNutricao()">Salvar</button></div>
+  </div>
+</div>
+
 <!-- FAB TIMER (visible during active workout) -->
 <div class="fab-timer" id="fabTimer">
   <div class="fab-timer-display idle" id="fabTimerDisplay">⏱ Descanso</div>
@@ -1134,6 +1229,7 @@
 <nav class="bottom-nav" id="bottomNav">
   <button class="bnav-btn active" data-tab="dashboard"><span class="bnav-icon">🏠</span>Início</button>
   <button class="bnav-btn" data-tab="treinar"><span class="bnav-icon">🏋️</span>Treinar</button>
+  <button class="bnav-btn" data-tab="nutricao"><span class="bnav-icon">🍎</span>Alimentação</button>
   <button class="bnav-btn" data-tab="historico"><span class="bnav-icon">📝</span>Histórico</button>
   <button class="bnav-btn" data-tab="config"><span class="bnav-icon">⚙️</span>Mais</button>
 </nav>
@@ -1142,6 +1238,7 @@
 <div class="tab-content" id="aba-dashboard">
   <div id="dashHero"></div>
   <div id="dashPlannedWorkout"></div>
+  <div id="dashNutritionToday"></div>
   <button type="button" class="dashboard-more-toggle" id="dashboardMoreToggle" onclick="toggleDashboardSecondary()" aria-expanded="false">Ver evolução e conquistas <span aria-hidden="true">⌄</span></button>
   <div class="dashboard-secondary" id="dashboardSecondary">
   <div id="dashDesafio"></div>
@@ -1314,6 +1411,22 @@
     </div>
   </div>
   </div><!-- /maisOpcoesContent -->
+</div>
+
+<!-- ═══════════════ ABA: ALIMENTAÇÃO ═══════════════ -->
+<div class="tab-content" id="aba-nutricao">
+  <div class="nutrition-datebar">
+    <button class="btn btn-ghost btn-icon" type="button" onclick="mudarDataNutricao(-1)" aria-label="Dia anterior">‹</button>
+    <input type="date" id="nutritionDate" onchange="selecionarDataNutricao(this.value)">
+    <button class="btn btn-ghost btn-icon" type="button" onclick="mudarDataNutricao(1)" aria-label="Próximo dia">›</button>
+  </div>
+  <div id="nutritionSummary"></div>
+  <div class="nutrition-actions">
+    <button class="btn btn-primary" type="button" onclick="abrirRegistroNutricao()">＋ Registrar alimento</button>
+    <button class="btn btn-ghost" type="button" onclick="abrirGerenciadorAlimentosNutricao()">📚 Meus alimentos</button>
+  </div>
+  <div id="nutritionMeals"></div>
+  <div id="nutritionWeekly"></div>
 </div>
 
 <!-- ═══════════════ ABA: HISTÓRICO ═══════════════ -->
@@ -1797,14 +1910,14 @@
 </div>
 
 <script>
-const APP_VERSION = '12.4.2';
-const APP_BUILD = '2026.08.21.3';
-const DATA_SCHEMA_VERSION = 15;
+const APP_VERSION = '12.5.0';
+const APP_BUILD = '2026.08.22.1';
+const DATA_SCHEMA_VERSION = 16;
 const GITHUB_REPO='BigIspectrus/meutreinoapp';
 const GITHUB_PAGES_BASE='https://bigispectrus.github.io/meutreinoapp';
 let _latestAndroidReleaseUrl='';
 let _nativeChannel='web';
-const APP_CACHE_VERSION = 'treinoapp-v12.4.2-202608213';
+const APP_CACHE_VERSION = 'treinoapp-v12.5.0-202608221';
 
 const SET_TYPES={workset:'Work set',warmup:'Aquecimento',topset:'Top set',backoff:'Back-off',dropset:'Drop set',cluster:'Cluster set',fst7:'FST-7',restpause:'Rest-pause',myoreps:'Myo-reps',amrap:'AMRAP'};
 function normalizarSetType(v){return SET_TYPES[v]?v:'workset';}
@@ -1960,14 +2073,14 @@ window.onload = async function() {
   document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
   document.getElementById('aba-dashboard').classList.add('active');
   const shortcutTab=new URLSearchParams(location.search).get('tab');
-  if(['dashboard','treinar','historico','progresso','config'].includes(shortcutTab)){ setTimeout(()=>irParaAba(shortcutTab),0); }
+  if(['dashboard','treinar','nutricao','historico','progresso','config'].includes(shortcutTab)){ setTimeout(()=>irParaAba(shortcutTab),0); }
   atualizarDiagnosticoUI();
 };
 
 // ════════════════════════════════════════════════
 // TABS — Bottom Nav + Sub-tabs
 // ════════════════════════════════════════════════
-const TAB_ORDER = ['dashboard','treinar','historico','config'];
+const TAB_ORDER = ['dashboard','treinar','nutricao','historico','config'];
 let _currentTab = 'dashboard';
 let _currentSubTab = 'evolucao';
 
@@ -1982,6 +2095,7 @@ function irParaAba(id) {
   if(navBtn) navBtn.classList.add('active');
   // Trigger renders
   if(id==='dashboard') renderizarDashboard();
+  if(id==='nutricao') renderizarNutricao();
   if(id==='historico') renderizarHistorico();
   if(id==='progresso') ativarSubTab(_currentSubTab);
   if(id==='config') { renderizarListaTreinosSalvos(); verificarStatusNotif(); carregarPerfil(); carregarSomConfig(); carregarAlertasDescanso(false); renderizarHistoricoBackup(); renderizarConfigPerfilPub(); carregarTemaConfig(); carregarAcademiaModeConfig(); carregarEffortMode(); abrirCategoriaConfig(localStorage.getItem('settingsCategory')||'treinos'); atualizarStorageStatus(); atualizarDiagnosticoUI(); atualizarBuildInfoUI(); }
@@ -3412,6 +3526,9 @@ function importarBackup(event) {
       if(d.healthWriteEnabled!==undefined&&d.healthWriteEnabled!==null) localStorage.setItem('healthWriteEnabled',d.healthWriteEnabled);
       if(d.weeklyPlanV12) localStorage.setItem('weeklyPlanV12',d.weeklyPlanV12);
       if(d.healthRecoveryCacheV12) localStorage.setItem('healthRecoveryCacheV12',d.healthRecoveryCacheV12);
+      if(d.nutritionGoalsV125) localStorage.setItem('nutritionGoalsV125',d.nutritionGoalsV125);
+      if(d.nutritionFoodsV125) localStorage.setItem('nutritionFoodsV125',d.nutritionFoodsV125);
+      if(d.nutritionEntriesV125) localStorage.setItem('nutritionEntriesV125',d.nutritionEntriesV125);
       toast('Backup importado! Recarregando...','success');
       invalidarCache();
       setTimeout(()=>location.reload(),1500);
@@ -3419,7 +3536,7 @@ function importarBackup(event) {
   };
   reader.readAsText(file);
 }
-function resetarDados() { const keys=['historicoTreinoV3','pesoCorporal','exerciciosCustomizadosV3','treinosTemplates','temaPreferido','userProfile','treinoMetas','conquistasDesbloqueadas','perfilPublico','treinoScores','timerSom','restVibration','restNotificationSound','backupConfig','descansoPadrao','effortMode','settingsCategory','_rascunhoTreino','_onboardingV9','_onboardingV10','_onboardingV11','_lastSeenVersion','_lastSnapshotDay','_restTimerEndAt','wakeLockEnabled','academiaModeEnabled','plateBarWeight','platePreset','healthLinksV12','healthPendingV12','healthHrMax','healthAutoSync','healthWriteEnabled','weeklyPlanV12','healthRecoveryCacheV12','_appErrors']; keys.forEach(k=>localStorage.removeItem(k)); invalidarCache(); toast('Dados do TreinoApp apagados. Recarregando...','info'); setTimeout(()=>location.reload(),1000); }
+function resetarDados() { const keys=['historicoTreinoV3','pesoCorporal','exerciciosCustomizadosV3','treinosTemplates','temaPreferido','userProfile','treinoMetas','conquistasDesbloqueadas','perfilPublico','treinoScores','timerSom','restVibration','restNotificationSound','backupConfig','descansoPadrao','effortMode','settingsCategory','_rascunhoTreino','_onboardingV9','_onboardingV10','_onboardingV11','_lastSeenVersion','_lastSnapshotDay','_restTimerEndAt','wakeLockEnabled','academiaModeEnabled','plateBarWeight','platePreset','healthLinksV12','healthPendingV12','healthHrMax','healthAutoSync','healthWriteEnabled','weeklyPlanV12','healthRecoveryCacheV12','nutritionGoalsV125','nutritionFoodsV125','nutritionEntriesV125','_nativeNutritionSyncV125','_appErrors']; keys.forEach(k=>localStorage.removeItem(k)); invalidarCache(); toast('Dados do TreinoApp apagados. Recarregando...','info'); setTimeout(()=>location.reload(),1000); }
 
 
 // ════════════════════════════════════════════════
@@ -4669,7 +4786,7 @@ function verificarBackupAuto() {
   }
 }
 
-function gerarObjetoBackup(){return {app:'TreinoApp',appVersion:APP_VERSION,build:APP_BUILD,schemaVersion:DATA_SCHEMA_VERSION,exportedAt:new Date().toISOString(),pesoCorporal:localStorage.getItem('pesoCorporal'),historicoTreinoV3:localStorage.getItem('historicoTreinoV3'),exerciciosCustomizadosV3:localStorage.getItem('exerciciosCustomizadosV3'),treinosTemplates:localStorage.getItem('treinosTemplates'),temaPreferido:localStorage.getItem('temaPreferido'),userProfile:localStorage.getItem('userProfile'),treinoMetas:localStorage.getItem('treinoMetas'),conquistasDesbloqueadas:localStorage.getItem('conquistasDesbloqueadas'),perfilPublico:localStorage.getItem('perfilPublico'),treinoScores:localStorage.getItem('treinoScores'),timerSom:localStorage.getItem('timerSom'),restVibration:localStorage.getItem('restVibration'),restNotificationSound:localStorage.getItem('restNotificationSound'),backupConfig:localStorage.getItem('backupConfig'),descansoPadrao:localStorage.getItem('descansoPadrao'),effortMode:localStorage.getItem('effortMode'),wakeLockEnabled:localStorage.getItem('wakeLockEnabled'),academiaModeEnabled:localStorage.getItem('academiaModeEnabled'),plateBarWeight:localStorage.getItem('plateBarWeight'),platePreset:localStorage.getItem('platePreset'),healthLinksV12:localStorage.getItem('healthLinksV12'),healthHrMax:localStorage.getItem('healthHrMax'),healthAutoSync:localStorage.getItem('healthAutoSync'),healthWriteEnabled:localStorage.getItem('healthWriteEnabled'),weeklyPlanV12:localStorage.getItem('weeklyPlanV12'),healthRecoveryCacheV12:localStorage.getItem('healthRecoveryCacheV12')};}
+function gerarObjetoBackup(){return {app:'TreinoApp',appVersion:APP_VERSION,build:APP_BUILD,schemaVersion:DATA_SCHEMA_VERSION,exportedAt:new Date().toISOString(),pesoCorporal:localStorage.getItem('pesoCorporal'),historicoTreinoV3:localStorage.getItem('historicoTreinoV3'),exerciciosCustomizadosV3:localStorage.getItem('exerciciosCustomizadosV3'),treinosTemplates:localStorage.getItem('treinosTemplates'),temaPreferido:localStorage.getItem('temaPreferido'),userProfile:localStorage.getItem('userProfile'),treinoMetas:localStorage.getItem('treinoMetas'),conquistasDesbloqueadas:localStorage.getItem('conquistasDesbloqueadas'),perfilPublico:localStorage.getItem('perfilPublico'),treinoScores:localStorage.getItem('treinoScores'),timerSom:localStorage.getItem('timerSom'),restVibration:localStorage.getItem('restVibration'),restNotificationSound:localStorage.getItem('restNotificationSound'),backupConfig:localStorage.getItem('backupConfig'),descansoPadrao:localStorage.getItem('descansoPadrao'),effortMode:localStorage.getItem('effortMode'),wakeLockEnabled:localStorage.getItem('wakeLockEnabled'),academiaModeEnabled:localStorage.getItem('academiaModeEnabled'),plateBarWeight:localStorage.getItem('plateBarWeight'),platePreset:localStorage.getItem('platePreset'),healthLinksV12:localStorage.getItem('healthLinksV12'),healthHrMax:localStorage.getItem('healthHrMax'),healthAutoSync:localStorage.getItem('healthAutoSync'),healthWriteEnabled:localStorage.getItem('healthWriteEnabled'),weeklyPlanV12:localStorage.getItem('weeklyPlanV12'),healthRecoveryCacheV12:localStorage.getItem('healthRecoveryCacheV12'),nutritionGoalsV125:localStorage.getItem('nutritionGoalsV125'),nutritionFoodsV125:localStorage.getItem('nutritionFoodsV125'),nutritionEntriesV125:localStorage.getItem('nutritionEntriesV125')};}
 async function compartilharBackup(){
   const dados=gerarObjetoBackup(),conteudo=JSON.stringify(dados),nome=`treinoapp_backup_v${APP_VERSION}_${hoje()}.json`;
   if(isNativeAndroid()&&window.TreinoNativeBridge?.shareTextFile){
@@ -5543,6 +5660,7 @@ async function inicializarNativeUI(){
   await importarResultadosHealthNativos();await atualizarHealthStatus();renderHealthLastMatch();await atualizarStorageStatus();atualizarDiagnosticoUI();
   await reconciliarEstadoNativo();
   if(localStorage.getItem('_nativeDbSyncedSchema')!==String(DATA_SCHEMA_VERSION))setTimeout(()=>sincronizarBancoNativo(false),1000);
+  setTimeout(()=>sincronizarNutricaoNativa(false),1250);
   setTimeout(()=>reconciliarHealthPendentes(false),1800);
 }
 async function conectarHealthConnect(){if(!isNativeAndroid())return toast('Health Connect está disponível somente no APK Android','info');try{await window.TreinoNativeBridge.requestCorePermissions();const r=await window.TreinoNativeBridge.requestHealthPermissions();toast(r?.granted?'Health Connect conectado':'Revise as permissões do Health Connect','info');await atualizarHealthStatus();if(r?.granted){await diagnosticarHealthConnect(false);reconciliarHealthPendentes(false);}}catch(e){toast('Não foi possível abrir as permissões do Health Connect','error');}}
@@ -5915,13 +6033,194 @@ atualizarResumoPosTreinoHealth=function(sessionId,health){
   if(analysis)raw.outerHTML=htmlAnaliseSessaoV1241(analysis,{post:true,compact:true});
 };
 
-function aplicarRuntimeAndroidUI(){const note=document.getElementById('runtimeStorageNote'),banner=document.getElementById('notifBannerText'),install=document.getElementById('webInstallCard'),diag=document.getElementById('diagnosticRuntimeLabel'),watch=document.getElementById('watchNotificationConfig');if(isNativeAndroid()){if(note)note.innerHTML='<strong>Seus dados ficam neste dispositivo.</strong> No APK, o histórico usa armazenamento privado do Android e espelho Room nativo. Atualizações assinadas sobre o mesmo pacote preservam os dados; desinstalar/apagar dados remove o armazenamento local, por isso mantenha backups.';if(banner)banner.textContent='Ative as notificações do Android para receber o timer e os avisos de descanso em segundo plano.';if(install)install.style.display='none';if(diag)diag.textContent='Versão Android, armazenamento, Health Connect e banco local';if(watch)watch.style.display='flex';}else{if(note)note.innerHTML='<strong>Seus dados ficam neste dispositivo.</strong> Na versão Web/PWA, histórico e preferências são armazenados localmente no navegador. Faça backups antes de limpar os dados do site ou trocar de aparelho.';if(install)install.style.display='block';if(diag)diag.textContent='Versão Web/PWA, armazenamento e quantidade de dados';if(watch)watch.style.display='none';}}
+// ════════════════════════════════════════════════
+// ALIMENTAÇÃO v12.5.0 — metas manuais e diário local
+// ════════════════════════════════════════════════
+const NUTRITION_GOALS_KEY='nutritionGoalsV125';
+const NUTRITION_FOODS_KEY='nutritionFoodsV125';
+const NUTRITION_ENTRIES_KEY='nutritionEntriesV125';
+const NUTRITION_MEALS=[
+  {id:'breakfast',label:'Café da manhã',icon:'☕'},
+  {id:'lunch',label:'Almoço',icon:'🍛'},
+  {id:'dinner',label:'Jantar',icon:'🍽️'},
+  {id:'snack',label:'Lanches',icon:'🍎'}
+];
+let _nutritionDate=hoje(),_nutritionFoodScope='recent',_nutritionSelectedFoodId=null,_nutritionNativeTimer=null;
+function numeroNutricao(v,fallback=0){const n=Number(v);return Number.isFinite(n)?Math.max(0,n):fallback;}
+function arredondarNutricao(v,casas=4){const p=Math.pow(10,casas);return Math.round((numeroNutricao(v)+Number.EPSILON)*p)/p;}
+function formatarNutricao(v,casas=0){return numeroNutricao(v).toLocaleString('pt-BR',{minimumFractionDigits:casas,maximumFractionDigits:casas});}
+function getMetasNutricao(){
+  const g=parseJSONSeguro(localStorage.getItem(NUTRITION_GOALS_KEY)||'null',null,NUTRITION_GOALS_KEY);
+  if(!g||numeroNutricao(g.kcal)<=0)return null;
+  return {kcal:numeroNutricao(g.kcal),protein:numeroNutricao(g.protein),carbs:numeroNutricao(g.carbs),fat:numeroNutricao(g.fat),updatedAt:Number(g.updatedAt)||Date.now()};
+}
+function getAlimentosNutricao(){
+  const foods=parseJSONSeguro(localStorage.getItem(NUTRITION_FOODS_KEY)||'[]',[],NUTRITION_FOODS_KEY);
+  return Array.isArray(foods)?foods.filter(f=>f&&f.id&&f.name).map(f=>({
+    id:String(f.id),name:String(f.name).trim(),brand:String(f.brand||'').trim(),basis:f.basis==='portion'?'portion':'100',
+    servingName:String(f.servingName||'porção').trim()||'porção',servingGrams:Math.max(.1,numeroNutricao(f.servingGrams,100)),
+    kcal100:numeroNutricao(f.kcal100),protein100:numeroNutricao(f.protein100),carbs100:numeroNutricao(f.carbs100),fat100:numeroNutricao(f.fat100),
+    fiber100:numeroNutricao(f.fiber100),sodium100:numeroNutricao(f.sodium100),favorite:!!f.favorite,
+    createdAt:Number(f.createdAt)||Date.now(),updatedAt:Number(f.updatedAt)||Date.now(),lastUsedAt:Number(f.lastUsedAt)||0
+  })):[];
+}
+function getRegistrosNutricao(){
+  const entries=parseJSONSeguro(localStorage.getItem(NUTRITION_ENTRIES_KEY)||'[]',[],NUTRITION_ENTRIES_KEY);
+  return Array.isArray(entries)?entries.filter(e=>e&&e.id&&/^\d{4}-\d{2}-\d{2}$/.test(e.date||'')&&e.name).map(e=>({
+    id:String(e.id),date:e.date,time:String(e.time||''),mealType:NUTRITION_MEALS.some(m=>m.id===e.mealType)?e.mealType:'snack',
+    foodId:e.foodId?String(e.foodId):null,name:String(e.name),grams:numeroNutricao(e.grams),
+    kcal:numeroNutricao(e.kcal),protein:numeroNutricao(e.protein),carbs:numeroNutricao(e.carbs),fat:numeroNutricao(e.fat),
+    fiber:numeroNutricao(e.fiber),sodium:numeroNutricao(e.sodium),createdAt:Number(e.createdAt)||Date.now(),updatedAt:Number(e.updatedAt)||Date.now()
+  })):[];
+}
+function salvarAlimentosNutricaoLocal(foods){localStorage.setItem(NUTRITION_FOODS_KEY,JSON.stringify(foods));}
+function salvarRegistrosNutricaoLocal(entries){localStorage.setItem(NUTRITION_ENTRIES_KEY,JSON.stringify(entries));}
+function totaisNutricao(entries){
+  return (entries||[]).reduce((a,e)=>{['kcal','protein','carbs','fat','fiber','sodium'].forEach(k=>a[k]+=numeroNutricao(e[k]));return a;},{kcal:0,protein:0,carbs:0,fat:0,fiber:0,sodium:0});
+}
+function percentualNutricao(valor,meta){return meta>0?Math.max(0,Math.min(100,valor/meta*100)):0;}
+function dataOffsetNutricao(date,delta){
+  const p=String(date).split('-').map(Number),d=new Date(p[0],p[1]-1,p[2]+delta);
+  return localDate(d);
+}
+function horarioNutricao(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+function nomeRefeicaoNutricao(id){return NUTRITION_MEALS.find(m=>m.id===id)?.label||'Lanches';}
+function barraNutricao(valor,meta){
+  const pct=percentualNutricao(valor,meta),over=meta>0&&valor>meta;
+  return '<div class="nutrition-progress'+(over?' over':'')+'"><span style="width:'+pct.toFixed(1)+'%"></span></div>';
+}
+function htmlMacroNutricao(nome,valor,meta){
+  return '<div class="nutrition-macro"><div class="nutrition-macro-name">'+nome+'</div><div class="nutrition-macro-value">'+formatarNutricao(valor,1)+' / '+formatarNutricao(meta,0)+' g</div>'+barraNutricao(valor,meta)+'</div>';
+}
+function renderizarResumoNutricao(entries){
+  const el=document.getElementById('nutritionSummary');if(!el)return;
+  const goals=getMetasNutricao(),tot=totaisNutricao(entries);
+  if(!goals){
+    el.innerHTML='<div class="card"><div class="card-title">🎯 Defina suas metas</div><p class="nutrition-note" style="margin-bottom:13px;">Informe manualmente kcal, proteína, carboidratos e gorduras. Nenhuma meta será calculada ou modificada automaticamente.</p><button class="btn btn-primary" onclick="abrirMetasNutricao()">Definir metas manuais</button></div>';
+    return;
+  }
+  const diff=goals.kcal-tot.kcal,state=diff>=0?formatarNutricao(diff,0)+' kcal restantes':formatarNutricao(Math.abs(diff),0)+' kcal acima da meta';
+  el.innerHTML='<div class="card"><div class="nutrition-kcal-head"><div><div class="nutrition-note">Consumido no dia</div><div class="nutrition-kcal-value">'+formatarNutricao(tot.kcal,0)+' <small>kcal</small></div></div><div class="nutrition-kcal-state"><strong>'+formatarNutricao(goals.kcal,0)+' kcal</strong>'+state+'</div></div>'+barraNutricao(tot.kcal,goals.kcal)+'<div class="nutrition-macros">'+htmlMacroNutricao('Proteína',tot.protein,goals.protein)+htmlMacroNutricao('Carbo',tot.carbs,goals.carbs)+htmlMacroNutricao('Gorduras',tot.fat,goals.fat)+'</div><button class="btn btn-ghost btn-sm" style="margin-top:12px" onclick="abrirMetasNutricao()">Editar metas manuais</button></div>';
+}
+function renderizarRefeicoesNutricao(entries){
+  const el=document.getElementById('nutritionMeals');if(!el)return;
+  const yesterday=dataOffsetNutricao(_nutritionDate,-1),all=getRegistrosNutricao();
+  el.innerHTML=NUTRITION_MEALS.map(meal=>{
+    const list=entries.filter(e=>e.mealType===meal.id).sort((a,b)=>(a.time||'').localeCompare(b.time||'')),tot=totaisNutricao(list);
+    const previous=all.filter(e=>e.date===yesterday&&e.mealType===meal.id).length;
+    const rows=list.length?list.map(e=>'<div class="nutrition-entry" onclick=\'abrirEdicaoRegistroNutricao('+jsArg(e.id)+')\'><div><div class="nutrition-entry-name">'+esc(e.name)+'</div><div class="nutrition-entry-sub">'+formatarNutricao(e.grams,1)+' g'+(e.time?' · '+esc(e.time):'')+' · P '+formatarNutricao(e.protein,1)+'g · C '+formatarNutricao(e.carbs,1)+'g · G '+formatarNutricao(e.fat,1)+'g</div></div><div class="nutrition-entry-kcal">'+formatarNutricao(e.kcal,0)+' kcal<small>Editar</small></div></div>').join(''):'<div class="nutrition-meal-empty">Nenhum alimento registrado.</div>';
+    return '<details class="nutrition-meal"'+(list.length?' open':'')+'><summary><span class="nutrition-meal-icon">'+meal.icon+'</span><span class="nutrition-meal-title">'+meal.label+'</span><span class="nutrition-meal-total"><strong>'+formatarNutricao(tot.kcal,0)+' kcal</strong>'+list.length+' '+(list.length===1?'item':'itens')+'</span></summary><div class="nutrition-meal-content">'+rows+'<div class="nutrition-meal-footer"><button class="btn btn-outline btn-sm" onclick=\'abrirRegistroNutricao('+jsArg(meal.id)+')\'>+ Adicionar</button>'+(previous?'<button class="btn btn-ghost btn-sm" onclick=\'copiarRefeicaoAnteriorNutricao('+jsArg(meal.id)+')\'>Copiar ontem</button>':'')+'</div></div></details>';
+  }).join('');
+}
+function renderizarSemanaNutricao(){
+  const el=document.getElementById('nutritionWeekly');if(!el)return;
+  const all=getRegistrosNutricao(),dates=Array.from({length:7},(_,i)=>dataOffsetNutricao(_nutritionDate,i-6));
+  const days=dates.map(date=>({date,entries:all.filter(e=>e.date===date)})),registered=days.filter(d=>d.entries.length),tot=totaisNutricao(registered.flatMap(d=>d.entries)),div=Math.max(1,registered.length);
+  el.innerHTML='<div class="card"><div class="card-title">📅 Resumo dos últimos 7 dias</div><div class="nutrition-week-grid"><div class="nutrition-week-stat"><strong>'+registered.length+'/7</strong><span>dias registrados</span></div><div class="nutrition-week-stat"><strong>'+formatarNutricao(tot.kcal/div,0)+'</strong><span>kcal / dia registrado</span></div><div class="nutrition-week-stat"><strong>'+formatarNutricao(tot.protein/div,1)+'g</strong><span>proteína média</span></div><div class="nutrition-week-stat"><strong>'+formatarNutricao(tot.carbs/div,1)+'g</strong><span>carbo médio</span></div></div><p class="nutrition-note" style="margin-top:10px;">A média considera somente os dias com algum alimento registrado.</p></div>';
+}
+function renderizarNutricao(){
+  const input=document.getElementById('nutritionDate');if(input)input.value=_nutritionDate;
+  const entries=getRegistrosNutricao().filter(e=>e.date===_nutritionDate);
+  renderizarResumoNutricao(entries);renderizarRefeicoesNutricao(entries);renderizarSemanaNutricao();renderizarNutricaoDashboard();
+}
+function renderizarNutricaoDashboard(){
+  const el=document.getElementById('dashNutritionToday');if(!el)return;
+  const goals=getMetasNutricao(),tot=totaisNutricao(getRegistrosNutricao().filter(e=>e.date===hoje()));
+  if(!goals){
+    el.innerHTML='<div class="card nutrition-dashboard" onclick="irParaAba(\'nutricao\')"><div class="nutrition-dashboard-row"><div class="nutrition-dashboard-main">🍎 <strong>Alimentação</strong><br><span class="nutrition-note">Defina suas metas manuais e comece o diário.</span></div><span class="nutrition-dashboard-arrow">Abrir ›</span></div></div>';
+    return;
+  }
+  el.innerHTML='<div class="card nutrition-dashboard" onclick="irParaAba(\'nutricao\')"><div class="nutrition-dashboard-row"><div class="nutrition-dashboard-main">🍎 <strong>'+formatarNutricao(tot.kcal,0)+' / '+formatarNutricao(goals.kcal,0)+' kcal</strong><br><span class="nutrition-note">Proteína '+formatarNutricao(tot.protein,1)+' / '+formatarNutricao(goals.protein,0)+' g</span></div><span class="nutrition-dashboard-arrow">Alimentação ›</span></div>'+barraNutricao(tot.kcal,goals.kcal)+'</div>';
+}
+function selecionarDataNutricao(value){if(/^\d{4}-\d{2}-\d{2}$/.test(value)){_nutritionDate=value;renderizarNutricao();}}
+function mudarDataNutricao(delta){_nutritionDate=dataOffsetNutricao(_nutritionDate,delta);renderizarNutricao();}
+function abrirMetasNutricao(){
+  const g=getMetasNutricao();document.getElementById('nutritionGoalKcal').value=g?.kcal||'';document.getElementById('nutritionGoalProtein').value=g?.protein||'';document.getElementById('nutritionGoalCarbs').value=g?.carbs||'';document.getElementById('nutritionGoalFat').value=g?.fat||'';document.getElementById('modalNutritionGoals').classList.add('open');
+}
+function salvarMetasNutricao(){
+  const g={kcal:numeroNutricao(document.getElementById('nutritionGoalKcal').value),protein:numeroNutricao(document.getElementById('nutritionGoalProtein').value),carbs:numeroNutricao(document.getElementById('nutritionGoalCarbs').value),fat:numeroNutricao(document.getElementById('nutritionGoalFat').value),updatedAt:Date.now()};
+  if(g.kcal<=0||g.protein<=0||g.carbs<=0||g.fat<=0)return toast('Preencha as quatro metas com valores maiores que zero.','warn');
+  localStorage.setItem(NUTRITION_GOALS_KEY,JSON.stringify(g));fecharModal('modalNutritionGoals');dadosNutricaoAlterados('Metas manuais salvas');
+}
+function atualizarBaseAlimentoNutricao(){
+  const portion=document.getElementById('nutritionFoodBasis').value==='portion';
+  document.getElementById('nutritionServingNameGroup').style.display=portion?'block':'none';document.getElementById('nutritionServingGramsGroup').style.display=portion?'block':'none';
+}
+function abrirModalAlimentoNutricao(id=null){
+  const f=id?getAlimentosNutricao().find(x=>x.id===id):null,basis=f?.basis||'100',factor=basis==='portion'?numeroNutricao(f.servingGrams,100)/100:1;
+  document.getElementById('nutritionFoodModalTitle').textContent=f?'✏️ Editar alimento':'🍎 Cadastrar alimento';document.getElementById('nutritionFoodId').value=f?.id||'';document.getElementById('nutritionFoodName').value=f?.name||'';document.getElementById('nutritionFoodBrand').value=f?.brand||'';document.getElementById('nutritionFoodBasis').value=basis;document.getElementById('nutritionFoodServingName').value=f?.servingName||'';document.getElementById('nutritionFoodServingGrams').value=f?.servingGrams||'';
+  document.getElementById('nutritionFoodKcal').value=f?arredondarNutricao(f.kcal100*factor,2):'';document.getElementById('nutritionFoodProtein').value=f?arredondarNutricao(f.protein100*factor,2):'';document.getElementById('nutritionFoodCarbs').value=f?arredondarNutricao(f.carbs100*factor,2):'';document.getElementById('nutritionFoodFat').value=f?arredondarNutricao(f.fat100*factor,2):'';document.getElementById('nutritionFoodFiber').value=f?arredondarNutricao(f.fiber100*factor,2):'';document.getElementById('nutritionFoodSodium').value=f?arredondarNutricao(f.sodium100*factor,2):'';document.getElementById('nutritionFoodFavorite').checked=!!f?.favorite;atualizarBaseAlimentoNutricao();document.getElementById('modalNutritionFood').classList.add('open');
+}
+function salvarAlimentoNutricao(){
+  const id=document.getElementById('nutritionFoodId').value||gerarId('food'),name=document.getElementById('nutritionFoodName').value.trim(),basis=document.getElementById('nutritionFoodBasis').value,portion=basis==='portion',servingGrams=portion?numeroNutricao(document.getElementById('nutritionFoodServingGrams').value):100;
+  if(!name)return toast('Informe o nome do alimento.','warn');if(portion&&servingGrams<=0)return toast('Informe o peso da porção em gramas.','warn');
+  const ids=['nutritionFoodKcal','nutritionFoodProtein','nutritionFoodCarbs','nutritionFoodFat','nutritionFoodFiber','nutritionFoodSodium'];if(ids.some(x=>Number(document.getElementById(x).value)<0))return toast('Os valores nutricionais não podem ser negativos.','warn');
+  const factor=100/servingGrams,now=Date.now(),foods=getAlimentosNutricao(),old=foods.find(f=>f.id===id);
+  const value=x=>arredondarNutricao(numeroNutricao(document.getElementById(x).value)*factor);
+  const food={id,name,brand:document.getElementById('nutritionFoodBrand').value.trim(),basis,servingName:portion?(document.getElementById('nutritionFoodServingName').value.trim()||'porção'):'100 g',servingGrams,kcal100:value('nutritionFoodKcal'),protein100:value('nutritionFoodProtein'),carbs100:value('nutritionFoodCarbs'),fat100:value('nutritionFoodFat'),fiber100:value('nutritionFoodFiber'),sodium100:value('nutritionFoodSodium'),favorite:document.getElementById('nutritionFoodFavorite').checked,createdAt:old?.createdAt||now,updatedAt:now,lastUsedAt:old?.lastUsedAt||0};
+  const idx=foods.findIndex(f=>f.id===id);if(idx>=0)foods[idx]=food;else foods.push(food);salvarAlimentosNutricaoLocal(foods);_nutritionSelectedFoodId=id;fecharModal('modalNutritionFood');renderizarGerenciadorAlimentosNutricao();dadosNutricaoAlterados(old?'Alimento atualizado':'Alimento cadastrado');if(document.getElementById('modalNutritionAdd').classList.contains('open'))selecionarAlimentoNutricao(id);else renderizarBuscaAlimentosNutricao();
+}
+function selecionarFiltroAlimentoNutricao(scope){
+  _nutritionFoodScope=['recent','favorites','all'].includes(scope)?scope:'all';document.querySelectorAll('#nutritionFoodFilters button').forEach(b=>b.classList.toggle('active',b.dataset.scope===_nutritionFoodScope));renderizarBuscaAlimentosNutricao();
+}
+function alimentosFiltradosNutricao(search='',scope='all'){
+  const q=search.trim().toLocaleLowerCase('pt-BR');let foods=getAlimentosNutricao();
+  if(q)foods=foods.filter(f=>(f.name+' '+f.brand).toLocaleLowerCase('pt-BR').includes(q));
+  else if(scope==='favorites')foods=foods.filter(f=>f.favorite);
+  else if(scope==='recent')foods=foods.filter(f=>f.lastUsedAt>0).sort((a,b)=>b.lastUsedAt-a.lastUsedAt).slice(0,12);
+  return foods.sort((a,b)=>scope==='recent'&&!q?0:Number(b.favorite)-Number(a.favorite)||a.name.localeCompare(b.name,'pt-BR'));
+}
+function htmlLinhaAlimentoNutricao(f,manage=false){
+  const meta=(f.brand?esc(f.brand)+' · ':'')+formatarNutricao(f.protein100,1)+'g P · '+formatarNutricao(f.carbs100,1)+'g C · '+formatarNutricao(f.fat100,1)+'g G por 100g';
+  const actions=manage?'<div class="nutrition-food-tools"><button title="Favorito" onclick=\'event.stopPropagation();toggleFavoritoAlimentoNutricao('+jsArg(f.id)+')\'>'+(f.favorite?'★':'☆')+'</button><button title="Editar" onclick=\'event.stopPropagation();abrirModalAlimentoNutricao('+jsArg(f.id)+')\'>✏️</button><button title="Excluir" onclick=\'event.stopPropagation();excluirAlimentoNutricao('+jsArg(f.id)+')\'>🗑️</button></div>':'';
+  return '<div class="nutrition-food-row'+(_nutritionSelectedFoodId===f.id&&!manage?' selected':'')+'" onclick=\''+(manage?'abrirModalAlimentoNutricao':'selecionarAlimentoNutricao')+'('+jsArg(f.id)+')\'><div><div class="nutrition-food-name">'+(f.favorite?'★ ':'')+esc(f.name)+'</div><div class="nutrition-food-meta">'+meta+'</div></div><div class="nutrition-food-kcal">'+formatarNutricao(f.kcal100,0)+' kcal<small style="display:block;color:var(--text-muted)">/ 100 g</small>'+actions+'</div></div>';
+}
+function renderizarBuscaAlimentosNutricao(){
+  const el=document.getElementById('nutritionFoodResults');if(!el)return;const search=document.getElementById('nutritionFoodSearch')?.value||'',foods=alimentosFiltradosNutricao(search,search?'all':_nutritionFoodScope);
+  el.innerHTML=foods.length?foods.map(f=>htmlLinhaAlimentoNutricao(f)).join(''):'<div class="empty-state" style="padding:18px"><div class="ei">🍎</div><p>'+(getAlimentosNutricao().length?'Nenhum alimento nesta lista.':'Cadastre seu primeiro alimento para começar.')+'</p></div>';
+}
+function abrirRegistroNutricao(meal='snack'){
+  _nutritionSelectedFoodId=null;document.getElementById('nutritionAddMeal').value=NUTRITION_MEALS.some(m=>m.id===meal)?meal:'snack';document.getElementById('nutritionAddTime').value=horarioNutricao();document.getElementById('nutritionFoodSearch').value='';document.getElementById('nutritionSelectedFood').innerHTML='';document.getElementById('nutritionAmountFields').style.display='none';document.getElementById('nutritionAddSave').disabled=true;selecionarFiltroAlimentoNutricao('recent');document.getElementById('modalNutritionAdd').classList.add('open');
+}
+function selecionarAlimentoNutricao(id){
+  const f=getAlimentosNutricao().find(x=>x.id===id);if(!f)return;_nutritionSelectedFoodId=id;const unit=document.getElementById('nutritionAddUnit');unit.innerHTML='<option value="grams">gramas</option>'+(f.basis==='portion'?'<option value="portion">'+esc(f.servingName)+' ('+formatarNutricao(f.servingGrams,1)+' g)</option>':'');unit.value=f.basis==='portion'?'portion':'grams';document.getElementById('nutritionAddAmount').value=f.basis==='portion'?1:100;document.getElementById('nutritionAmountFields').style.display='flex';document.getElementById('nutritionAddSave').disabled=false;renderizarBuscaAlimentosNutricao();atualizarPreviaRegistroNutricao();
+}
+function calcularPorGramasNutricao(f,grams){const factor=numeroNutricao(grams)/100;return {kcal:arredondarNutricao(f.kcal100*factor),protein:arredondarNutricao(f.protein100*factor),carbs:arredondarNutricao(f.carbs100*factor),fat:arredondarNutricao(f.fat100*factor),fiber:arredondarNutricao(f.fiber100*factor),sodium:arredondarNutricao(f.sodium100*factor)};}
+function quantidadeSelecionadaNutricao(f){const amount=numeroNutricao(document.getElementById('nutritionAddAmount').value);return document.getElementById('nutritionAddUnit').value==='portion'?amount*f.servingGrams:amount;}
+function atualizarPreviaRegistroNutricao(){
+  const f=getAlimentosNutricao().find(x=>x.id===_nutritionSelectedFoodId),el=document.getElementById('nutritionSelectedFood');if(!f||!el)return;const grams=quantidadeSelecionadaNutricao(f),v=calcularPorGramasNutricao(f,grams);el.innerHTML='<div class="nutrition-selected"><strong>'+esc(f.name)+'</strong><div class="nutrition-note">'+formatarNutricao(grams,1)+' g · '+formatarNutricao(v.kcal,0)+' kcal · P '+formatarNutricao(v.protein,1)+'g · C '+formatarNutricao(v.carbs,1)+'g · G '+formatarNutricao(v.fat,1)+'g</div></div>';
+}
+function salvarRegistroNutricao(){
+  const foods=getAlimentosNutricao(),f=foods.find(x=>x.id===_nutritionSelectedFoodId);if(!f)return toast('Escolha um alimento.','warn');const grams=quantidadeSelecionadaNutricao(f);if(grams<=0)return toast('Informe uma quantidade maior que zero.','warn');const now=Date.now(),v=calcularPorGramasNutricao(f,grams),entry={id:gerarId('meal'),date:_nutritionDate,time:document.getElementById('nutritionAddTime').value||horarioNutricao(),mealType:document.getElementById('nutritionAddMeal').value,foodId:f.id,name:f.name,grams:arredondarNutricao(grams),...v,createdAt:now,updatedAt:now};const entries=getRegistrosNutricao();entries.push(entry);salvarRegistrosNutricaoLocal(entries);f.lastUsedAt=now;f.updatedAt=Math.max(f.updatedAt||0,now);salvarAlimentosNutricaoLocal(foods);fecharModal('modalNutritionAdd');dadosNutricaoAlterados('Alimento registrado');
+}
+function abrirGerenciadorAlimentosNutricao(){document.getElementById('nutritionManageSearch').value='';renderizarGerenciadorAlimentosNutricao();document.getElementById('modalNutritionFoods').classList.add('open');}
+function renderizarGerenciadorAlimentosNutricao(){const el=document.getElementById('nutritionManageList');if(!el)return;const foods=alimentosFiltradosNutricao(document.getElementById('nutritionManageSearch')?.value||'','all');el.innerHTML=foods.length?foods.map(f=>htmlLinhaAlimentoNutricao(f,true)).join(''):'<div class="empty-state"><div class="ei">📚</div><p>Nenhum alimento cadastrado.</p></div>';}
+function toggleFavoritoAlimentoNutricao(id){const foods=getAlimentosNutricao(),f=foods.find(x=>x.id===id);if(!f)return;f.favorite=!f.favorite;f.updatedAt=Date.now();salvarAlimentosNutricaoLocal(foods);renderizarGerenciadorAlimentosNutricao();renderizarBuscaAlimentosNutricao();dadosNutricaoAlterados(f.favorite?'Adicionado aos favoritos':'Removido dos favoritos',false);}
+function excluirAlimentoNutricao(id){const f=getAlimentosNutricao().find(x=>x.id===id);if(!f)return;confirmarAcao('Excluir alimento','Excluir "'+f.name+'"? Os registros antigos serão preservados.',()=>{salvarAlimentosNutricaoLocal(getAlimentosNutricao().filter(x=>x.id!==id));if(_nutritionSelectedFoodId===id)_nutritionSelectedFoodId=null;renderizarGerenciadorAlimentosNutricao();renderizarBuscaAlimentosNutricao();dadosNutricaoAlterados('Alimento excluído');});}
+function copiarRefeicaoAnteriorNutricao(meal){
+  const sourceDate=dataOffsetNutricao(_nutritionDate,-1),source=getRegistrosNutricao().filter(e=>e.date===sourceDate&&e.mealType===meal);if(!source.length)return toast('Não há itens nessa refeição ontem.','info');
+  confirmarAcao('Copiar '+nomeRefeicaoNutricao(meal),'Adicionar '+source.length+' '+(source.length===1?'item':'itens')+' de ontem neste dia?',()=>{const now=Date.now(),all=getRegistrosNutricao(),copies=source.map((e,i)=>({...e,id:gerarId('meal'),date:_nutritionDate,createdAt:now+i,updatedAt:now+i}));salvarRegistrosNutricaoLocal(all.concat(copies));dadosNutricaoAlterados('Refeição copiada');});
+}
+function abrirEdicaoRegistroNutricao(id){const e=getRegistrosNutricao().find(x=>x.id===id);if(!e)return;document.getElementById('nutritionEntryId').value=e.id;document.getElementById('nutritionEntryName').textContent=e.name;document.getElementById('nutritionEntryMeal').value=e.mealType;document.getElementById('nutritionEntryTime').value=e.time||'';document.getElementById('nutritionEntryGrams').value=arredondarNutricao(e.grams,2);atualizarPreviaEdicaoNutricao();document.getElementById('modalNutritionEntry').classList.add('open');}
+function atualizarPreviaEdicaoNutricao(){const e=getRegistrosNutricao().find(x=>x.id===document.getElementById('nutritionEntryId')?.value),el=document.getElementById('nutritionEntryPreview');if(!e||!el)return;const grams=numeroNutricao(document.getElementById('nutritionEntryGrams').value),ratio=e.grams>0?grams/e.grams:0;el.innerHTML='<strong>'+formatarNutricao(e.kcal*ratio,0)+' kcal</strong><div class="nutrition-note">P '+formatarNutricao(e.protein*ratio,1)+'g · C '+formatarNutricao(e.carbs*ratio,1)+'g · G '+formatarNutricao(e.fat*ratio,1)+'g</div>';}
+function salvarEdicaoRegistroNutricao(){const entries=getRegistrosNutricao(),e=entries.find(x=>x.id===document.getElementById('nutritionEntryId').value),grams=numeroNutricao(document.getElementById('nutritionEntryGrams').value);if(!e||grams<=0)return toast('Informe uma quantidade maior que zero.','warn');const ratio=e.grams>0?grams/e.grams:0;['kcal','protein','carbs','fat','fiber','sodium'].forEach(k=>e[k]=arredondarNutricao(e[k]*ratio));e.grams=arredondarNutricao(grams);e.mealType=document.getElementById('nutritionEntryMeal').value;e.time=document.getElementById('nutritionEntryTime').value;e.updatedAt=Date.now();salvarRegistrosNutricaoLocal(entries);fecharModal('modalNutritionEntry');dadosNutricaoAlterados('Registro atualizado');}
+function excluirRegistroNutricao(){const id=document.getElementById('nutritionEntryId').value,e=getRegistrosNutricao().find(x=>x.id===id);if(!e)return;confirmarAcao('Excluir registro','Remover "'+e.name+'" deste dia?',()=>{salvarRegistrosNutricaoLocal(getRegistrosNutricao().filter(x=>x.id!==id));fecharModal('modalNutritionEntry');dadosNutricaoAlterados('Registro excluído');});}
+function dadosNutricaoAlterados(message='',showToast=true){renderizarNutricao();atualizarStorageStatus();if(message&&showToast)toast(message,'success');agendarSincronizacaoNutricaoNativa();}
+function agendarSincronizacaoNutricaoNativa(){clearTimeout(_nutritionNativeTimer);_nutritionNativeTimer=setTimeout(()=>sincronizarNutricaoNativa(false),250);}
+async function sincronizarNutricaoNativa(force=false){
+  if(!isNativeAndroid()||!window.TreinoNativeBridge?.syncNutritionData)return;
+  const signature=String(getMetasNutricao()?.updatedAt||0)+'|'+getAlimentosNutricao().length+'|'+getRegistrosNutricao().length+'|'+Math.max(0,...getAlimentosNutricao().map(f=>f.updatedAt),...getRegistrosNutricao().map(e=>e.updatedAt));
+  if(!force&&localStorage.getItem('_nativeNutritionSyncV125')===signature)return;
+  try{await window.TreinoNativeBridge.syncNutritionData({goal:getMetasNutricao(),foods:getAlimentosNutricao(),entries:getRegistrosNutricao()});localStorage.setItem('_nativeNutritionSyncV125',signature);}catch(e){console.warn('Falha ao sincronizar alimentação no banco nativo',e);}
+}
+
+function aplicarRuntimeAndroidUI(){const note=document.getElementById('runtimeStorageNote'),banner=document.getElementById('notifBannerText'),install=document.getElementById('webInstallCard'),diag=document.getElementById('diagnosticRuntimeLabel'),watch=document.getElementById('watchNotificationConfig');if(isNativeAndroid()){if(note)note.innerHTML='<strong>Seus dados ficam neste dispositivo.</strong> No APK, o histórico e a alimentação usam armazenamento privado do Android com espelho Room nativo. Atualizações assinadas sobre o mesmo pacote preservam os dados; desinstalar/apagar dados remove o armazenamento local, por isso mantenha backups.';if(banner)banner.textContent='Ative as notificações do Android para receber o timer e os avisos de descanso em segundo plano.';if(install)install.style.display='none';if(diag)diag.textContent='Versão Android, armazenamento, Health Connect e banco local';if(watch)watch.style.display='flex';}else{if(note)note.innerHTML='<strong>Seus dados ficam neste dispositivo.</strong> Na versão Web/PWA, histórico, alimentação e preferências são armazenados localmente no navegador. Faça backups antes de limpar os dados do site ou trocar de aparelho.';if(install)install.style.display='block';if(diag)diag.textContent='Versão Web/PWA, armazenamento e quantidade de dados';if(watch)watch.style.display='none';}}
 const _v122OldNotifStatus=verificarStatusNotif;verificarStatusNotif=async function(){if(!isNativeAndroid())return _v122OldNotifStatus.apply(this,arguments);const status=document.getElementById('notifStatus'),btn=document.getElementById('btnNotifConfig'),banner=document.getElementById('notifBanner');if(status)status.textContent='Gerenciadas pelas permissões do Android';if(btn){btn.textContent='Revisar';btn.disabled=false;}if(banner)banner.style.display='none';};
 const _v122OldRequestNotif=pedirPermissaoNotif;pedirPermissaoNotif=async function(){if(!isNativeAndroid())return _v122OldRequestNotif.apply(this,arguments);try{await window.TreinoNativeBridge.requestCorePermissions({});toast('Permissões de notificação revisadas no Android','success');verificarStatusNotif();}catch(e){toast('Não foi possível solicitar as permissões do Android','warn');}};
-const _v122OldDashboard=renderizarDashboard;renderizarDashboard=function(){const r=_v122OldDashboard.apply(this,arguments);renderizarTreinoPlanejadoDashboard();return r;};
+const _v122OldDashboard=renderizarDashboard;renderizarDashboard=function(){const r=_v122OldDashboard.apply(this,arguments);renderizarTreinoPlanejadoDashboard();renderizarNutricaoDashboard();return r;};
 const _v122OldSubTab=ativarSubTab;ativarSubTab=function(subId){const r=_v122OldSubTab.apply(this,arguments);if(subId==='recovery'){carregarRecoveryHealth(false);renderizarCargaRecenteRecovery();}if(subId==='agenda'){renderizarPlanoSemanal();renderizarAgendaMensal();}return r;};
 const _v122OldCopyPrev=copiarSerieAnterior;copiarSerieAnterior=function(btn,fromQuick=false){const row=fromQuick?_quickInputTarget?.closest('.serie-row'):btn.closest('.serie-row'),rows=row?[...row.closest('.ex-card-body')?.querySelectorAll('.serie-row')||[]]:[],idx=rows.indexOf(row),prev=idx>0?rows[idx-1]:null;const r=_v122OldCopyPrev.apply(this,arguments);if(prev&&row){const a=prev.querySelector('.ativo-rir')?.value,b=prev.querySelector('.ativo-rpe')?.value;if(a!==undefined&&row.querySelector('.ativo-rir'))row.querySelector('.ativo-rir').value=a;if(b!==undefined&&row.querySelector('.ativo-rpe'))row.querySelector('.ativo-rpe').value=b;salvarRascunho();}return r;};
-setTimeout(()=>{aplicarRuntimeAndroidUI();renderizarTreinoPlanejadoDashboard();},250);
+setTimeout(()=>{aplicarRuntimeAndroidUI();renderizarTreinoPlanejadoDashboard();renderizarNutricaoDashboard();},250);
 
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){reconciliarEstadoNativo();reconciliarHealthPendentes(false);}});
 window.addEventListener('load',()=>setTimeout(inicializarNativeUI,350));

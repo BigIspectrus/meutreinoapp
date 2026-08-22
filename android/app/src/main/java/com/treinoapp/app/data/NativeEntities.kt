@@ -1,6 +1,7 @@
 package com.treinoapp.app.data
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "workout_sessions")
@@ -49,4 +50,55 @@ data class WorkoutSetEntity(
     val startedAt: Long? = null,
     val restBeforeSec: Int? = null,
     val timingQuality: String = "legacy",
+)
+
+@Entity(tableName = "nutrition_goals")
+data class NutritionGoalEntity(
+    @PrimaryKey val id: String = "default",
+    val kcal: Double,
+    val protein: Double,
+    val carbs: Double,
+    val fat: Double,
+    val updatedAt: Long,
+)
+
+@Entity(tableName = "nutrition_foods")
+data class NutritionFoodEntity(
+    @PrimaryKey val id: String,
+    val name: String,
+    val brand: String,
+    val servingName: String,
+    val servingGrams: Double,
+    val kcal100: Double,
+    val protein100: Double,
+    val carbs100: Double,
+    val fat100: Double,
+    val fiber100: Double,
+    val sodium100: Double,
+    val favorite: Boolean,
+    val createdAt: Long,
+    val updatedAt: Long,
+    val lastUsedAt: Long,
+)
+
+@Entity(
+    tableName = "nutrition_entries",
+    indices = [Index(value = ["date"]), Index(value = ["foodId"])],
+)
+data class NutritionEntryEntity(
+    @PrimaryKey val id: String,
+    val date: String,
+    val time: String,
+    val mealType: String,
+    val foodId: String?,
+    val name: String,
+    val grams: Double,
+    val kcal: Double,
+    val protein: Double,
+    val carbs: Double,
+    val fat: Double,
+    val fiber: Double,
+    val sodium: Double,
+    val createdAt: Long,
+    val updatedAt: Long,
 )

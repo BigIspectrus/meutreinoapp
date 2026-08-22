@@ -47,4 +47,5 @@ window.TreinoNativeBridge = {
   syncWeight: data => call('syncWeight', data),
   syncNativeDatabase: data => call('syncNativeDatabase', data),
   saveWorkoutMirror: data => call('saveWorkoutMirror', data),
+  syncNutritionData: data => call('syncNutritionData', data || {}),
 };

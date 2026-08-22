@@ -8,8 +8,14 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
-    entities = [WorkoutSessionEntity::class, WorkoutSetEntity::class],
-    version = 4,
+    entities = [
+        WorkoutSessionEntity::class,
+        WorkoutSetEntity::class,
+        NutritionGoalEntity::class,
+        NutritionFoodEntity::class,
+        NutritionEntryEntity::class,
+    ],
+    version = 5,
     exportSchema = true
 )
 abstract class TreinoDatabase : RoomDatabase() {
@@ -48,12 +54,70 @@ abstract class TreinoDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `nutrition_goals` (
+                        `id` TEXT NOT NULL,
+                        `kcal` REAL NOT NULL,
+                        `protein` REAL NOT NULL,
+                        `carbs` REAL NOT NULL,
+                        `fat` REAL NOT NULL,
+                        `updatedAt` INTEGER NOT NULL,
+                        PRIMARY KEY(`id`)
+                    )
+                """.trimIndent())
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `nutrition_foods` (
+                        `id` TEXT NOT NULL,
+                        `name` TEXT NOT NULL,
+                        `brand` TEXT NOT NULL,
+                        `servingName` TEXT NOT NULL,
+                        `servingGrams` REAL NOT NULL,
+                        `kcal100` REAL NOT NULL,
+                        `protein100` REAL NOT NULL,
+                        `carbs100` REAL NOT NULL,
+                        `fat100` REAL NOT NULL,
+                        `fiber100` REAL NOT NULL,
+                        `sodium100` REAL NOT NULL,
+                        `favorite` INTEGER NOT NULL,
+                        `createdAt` INTEGER NOT NULL,
+                        `updatedAt` INTEGER NOT NULL,
+                        `lastUsedAt` INTEGER NOT NULL,
+                        PRIMARY KEY(`id`)
+                    )
+                """.trimIndent())
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `nutrition_entries` (
+                        `id` TEXT NOT NULL,
+                        `date` TEXT NOT NULL,
+                        `time` TEXT NOT NULL,
+                        `mealType` TEXT NOT NULL,
+                        `foodId` TEXT,
+                        `name` TEXT NOT NULL,
+                        `grams` REAL NOT NULL,
+                        `kcal` REAL NOT NULL,
+                        `protein` REAL NOT NULL,
+                        `carbs` REAL NOT NULL,
+                        `fat` REAL NOT NULL,
+                        `fiber` REAL NOT NULL,
+                        `sodium` REAL NOT NULL,
+                        `createdAt` INTEGER NOT NULL,
+                        `updatedAt` INTEGER NOT NULL,
+                        PRIMARY KEY(`id`)
+                    )
+                """.trimIndent())
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_nutrition_entries_date` ON `nutrition_entries` (`date`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_nutrition_entries_foodId` ON `nutrition_entries` (`foodId`)")
+            }
+        }
+
         fun get(context: Context): TreinoDatabase = INSTANCE ?: synchronized(this) {
             INSTANCE ?: Room.databaseBuilder(
                 context.applicationContext,
                 TreinoDatabase::class.java,
                 "treinoapp_native.db"
-            ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build().also { INSTANCE = it }
+            ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5).build().also { INSTANCE = it }
         }
     }
 }

@@ -1,4 +1,4 @@
-# TreinoApp v12.4.2 Beta — Início de Série pelo Galaxy Watch
+# TreinoApp v12.5.0 Beta — Treino e Alimentação
 
 TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capacitor. A variante Beta pode coexistir com a Stable.
 
@@ -6,10 +6,22 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 
 - Stable: `com.treinoapp.app`
 - Beta: `com.treinoapp.beta`
-- Versão: `12.4.2`
-- versionCode: `120402`
+- Versão: `12.5.0`
+- versionCode: `120500`
 - Android: compile/target API 36, minSdk 26
-- Room: schema 4, somente migrações explícitas
+- Room: schema 5, somente migrações explícitas
+
+## Alimentação
+
+- metas diárias de kcal, proteína, carboidratos e gorduras definidas somente pelo usuário;
+- diário por café da manhã, almoço, jantar e lanches;
+- alimentos próprios cadastrados por 100 g ou porção;
+- valores opcionais de fibras e sódio;
+- favoritos, alimentos recentes e busca local;
+- cópia de uma refeição do dia anterior;
+- totais diários e média dos últimos sete dias registrados;
+- histórico imutável por snapshot: editar ou excluir um alimento não altera refeições antigas;
+- funcionamento offline, inclusão no backup JSON e espelho Room no APK.
 
 ## Treino e execução
 
@@ -99,7 +111,7 @@ O TreinoApp não cria um "readiness score" opaco. Os componentes são exibidos s
 ## Interface
 
 - Início prioriza o próximo treino e recolhe evolução/conquistas;
-- navegação inferior com Início, Treinar, Histórico e Mais;
+- navegação inferior com Início, Treinar, Alimentação, Histórico e Mais;
 - Histórico reúne Sessões e Evolução & Health;
 - Mais organiza treinos, preferências, Health, dados e aplicativo por categoria;
 - durante a sessão, cabeçalho e navegação saem de cena para ampliar o espaço útil;
@@ -122,9 +134,9 @@ Na versão Web/PWA, os fluxos de navegador permanecem disponíveis.
 ## Dados
 
 - histórico Web é a base funcional principal;
-- Room mantém espelho nativo de sessões/séries;
-- Room schema 4 adiciona contexto da sessão e horários precisos via `MIGRATION_3_4`;
+- Room mantém espelho nativo de sessões/séries e dos dados de alimentação;
+- Room schema 5 adiciona metas, alimentos e registros por `MIGRATION_4_5`, preservando os schemas anteriores;
 - `fallbackToDestructiveMigration()` continua proibido;
-- backup JSON inclui vínculos Health, plano semanal, cache de Recovery e preferências de aviso.
+- backup JSON inclui vínculos Health, plano semanal, cache de Recovery, preferências de aviso e todos os dados de alimentação.
 
-Antes de promover para Stable, execute `TESTE_v12.4.2_BETA.md`.
+Antes de promover para Stable, execute `TESTE_v12.5.0_BETA.md`.

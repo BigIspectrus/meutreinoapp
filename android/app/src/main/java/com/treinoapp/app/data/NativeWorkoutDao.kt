@@ -80,4 +80,36 @@ interface NativeWorkoutDao {
         clearSets()
         if (sets.isNotEmpty()) upsertLegacySets(sets)
     }
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertNutritionGoal(goal: NutritionGoalEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertNutritionFoods(foods: List<NutritionFoodEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertNutritionEntries(entries: List<NutritionEntryEntity>)
+
+    @Query("DELETE FROM nutrition_goals")
+    suspend fun clearNutritionGoals()
+
+    @Query("DELETE FROM nutrition_foods")
+    suspend fun clearNutritionFoods()
+
+    @Query("DELETE FROM nutrition_entries")
+    suspend fun clearNutritionEntries()
+
+    @Transaction
+    suspend fun replaceAllNutrition(
+        goal: NutritionGoalEntity?,
+        foods: List<NutritionFoodEntity>,
+        entries: List<NutritionEntryEntity>,
+    ) {
+        clearNutritionEntries()
+        clearNutritionFoods()
+        clearNutritionGoals()
+        if (goal != null) upsertNutritionGoal(goal)
+        if (foods.isNotEmpty()) upsertNutritionFoods(foods)
+        if (entries.isNotEmpty()) upsertNutritionEntries(entries)
+    }
 }
