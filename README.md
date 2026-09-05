@@ -1,4 +1,4 @@
-# TreinoApp v12.6.0 Beta — Foco, menos poluição e atalhos
+# TreinoApp v12.6.1 Beta — Exercícios flexíveis durante a sessão
 
 TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capacitor. A variante Beta pode coexistir com a Stable.
 
@@ -6,8 +6,8 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 
 - Stable: `com.treinoapp.app`
 - Beta: `com.treinoapp.beta`
-- Versão: `12.6.0`
-- versionCode: `120600`
+- Versão: `12.6.1`
+- versionCode: `120601`
 - Android: compile/target API 36, minSdk 26
 - Room: schema 7, somente migrações explícitas
 
@@ -59,6 +59,12 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 - ação “Iniciar série” no aviso de fim do descanso do Galaxy Watch, com confirmação e sincronização durável do horário no celular;
 - testes separados de encaminhamento do aviso e do botão do relógio, sem alterar treinos reais;
 - progressão de carga sugerida, nunca aplicada automaticamente.
+- criação de exercício com nome e grupo muscular sem sair do treino em andamento;
+- inclusão após o exercício atual ou substituição temporária de um aparelho ocupado;
+- parâmetros próprios de séries, repetições, descanso e incremento para o exercício inserido;
+- identificação visual de exercícios planejados, adicionados e substitutos na visão geral;
+- reordenação da sessão, desfazer seguro e restauração integral pelo rascunho automático;
+- atualização do treino pré-montado somente após confirmação ao finalizar a sessão.
 
 ## Galaxy Watch / Health Connect
 

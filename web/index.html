@@ -218,6 +218,7 @@
     /* ── MODAL ── */
     .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:500;align-items:center;justify-content:center;padding:18px;}
     .modal-overlay.open{display:flex;}
+    #modalConfirm{z-index:800}
     .modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;width:100%;max-width:500px;max-height:88vh;overflow-y:auto;}
     .modal-title{font-family:'Arial Narrow','Segoe UI',Arial,sans-serif;font-size:1.25em;font-weight:800;margin-bottom:16px;color:var(--accent);}
     .modal-footer{display:flex;gap:9px;margin-top:16px;}
@@ -686,8 +687,7 @@
     body.workout-mode .workout-sticky-bar{bottom:0;padding:9px 12px calc(9px + env(safe-area-inset-bottom));border-top-color:color-mix(in srgb,var(--primary) 55%,var(--border));box-shadow:0 -10px 28px rgba(0,0,0,.34)}
     body.workout-mode .rest-inline{bottom:82px}
     body.workout-mode #treinoAtivoCard>.row:last-child{display:none!important}
-    body.workout-mode .session-add-wrap{margin:12px 0 4px}
-    body.workout-mode .session-add-wrap .btn{border-color:var(--border);color:var(--text-muted)}
+    body.workout-mode .session-add-wrap{display:none}
     body.workout-mode #exerciciosAtivos>p{display:none}
     body.workout-mode #exerciciosAtivos .exercicio-card{padding:0;margin:0 0 9px;background:transparent;border-color:transparent;border-radius:14px}
     body.workout-mode #exerciciosAtivos .exercicio-card.focus-active{border:0;box-shadow:none}
@@ -702,6 +702,10 @@
     body.workout-mode.workout-overview #exerciciosAtivos .exercicio-card .ex-card-body{display:none!important}
     body.workout-mode.workout-overview #exerciciosAtivos .exercicio-card .ex-card-header{padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
     body.workout-mode.workout-overview #exerciciosAtivos .exercicio-card.focus-active .ex-card-header{border-color:var(--primary);background:var(--primary-dim)}
+    .session-origin-badge,.session-order-btn{display:none}.session-origin-badge{border:1px solid var(--border);border-radius:999px;padding:3px 7px;font-size:.62em;font-weight:850;color:var(--text-muted)}.session-origin-badge.added{border-color:var(--success);color:var(--success);background:var(--success-dim)}.session-origin-badge.replacement{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}.session-origin-badge.replaced{border-color:var(--danger);color:var(--danger);background:var(--danger-dim)}
+    body.workout-mode.workout-overview .session-origin-badge,body.workout-mode.workout-overview .session-order-btn{display:inline-flex}.session-order-btn{width:30px;height:30px;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);font-weight:850;cursor:pointer}body.workout-mode.workout-overview .ex-history-btn{display:none}
+    .session-change-bar{display:none;align-items:center;gap:9px;padding:9px 10px;margin:0 0 9px;border:1px solid color-mix(in srgb,var(--accent) 55%,var(--border));border-radius:11px;background:var(--accent-dim);font-size:.72em;color:var(--text-muted)}.session-change-bar.visible{display:flex}.session-change-bar strong{display:block;color:var(--text);font-size:1.05em}.session-change-copy{flex:1;min-width:0}.session-change-bar .btn{width:auto;flex:none;padding:7px 10px}
+    .session-ex-source{display:flex;gap:5px;padding:4px;margin-bottom:13px;border:1px solid var(--border);border-radius:13px;background:var(--surface2)}.session-ex-source button{flex:1;border:0;border-radius:9px;padding:10px 8px;background:transparent;color:var(--text-muted);font-weight:800;cursor:pointer}.session-ex-source button.active{background:var(--surface);color:var(--primary);box-shadow:0 2px 8px rgba(0,0,0,.18)}.session-ex-note{padding:10px 11px;margin:8px 0 12px;border-radius:10px;background:var(--primary-dim);font-size:.73em;line-height:1.45;color:var(--text-muted)}.session-ex-note strong{color:var(--text)}.session-ex-advanced{margin:4px 0 12px;border:1px solid var(--border);border-radius:11px;overflow:hidden}.session-ex-advanced>summary{list-style:none;padding:11px 12px;font-size:.76em;font-weight:800;color:var(--text-muted);cursor:pointer}.session-ex-advanced>summary::-webkit-details-marker{display:none}.session-ex-advanced>summary::after{content:'⌄';float:right}.session-ex-advanced[open]>summary::after{content:'⌃'}.session-ex-advanced-body{padding:0 11px 2px}
 
     body.workout-mode #exerciciosAtivos .serie-row{display:grid;grid-template-columns:48px minmax(0,1fr) 48px;grid-template-areas:'heading heading heading' 'prev prev prev' 'start start start' 'weight-label weight-label weight-label' 'minus weight plus' 'reps-label reps-label reps-label' 'reps reps reps' 'effort effort effort' 'type-toggle type-toggle type-toggle' 'type type type' 'quick quick quick' 'check check check';gap:8px;padding:16px 12px;margin:0;border:0;background:transparent;overflow:visible}
     body.workout-mode #exerciciosAtivos .serie-row+.serie-row{margin-top:7px}
@@ -994,14 +998,36 @@
 
 <!-- MODAL ADICIONAR EXERCÍCIO À SESSÃO -->
 <div class="modal-overlay" id="modalAddSessaoEx">
-  <div class="modal">
-    <div class="modal-title">Adicionar exercício à sessão</div>
-    <div class="row">
-      <div class="form-group col"><label>Grupo</label><select id="addSessaoGrupo" onchange="atualizarExsAddSessao()"><option value="">Escolha...</option><option value="Peito">Peito</option><option value="Costas">Costas</option><option value="Pernas">Pernas</option><option value="Ombros">Ombros</option><option value="Braços">Braços</option><option value="Outros">Outros</option></select></div>
-      <div class="form-group col"><label>Exercício</label><select id="addSessaoEx"><option value="">Selecione...</option></select></div>
+  <div class="modal" style="max-width:520px">
+    <div class="modal-title">Trocar ou adicionar exercício</div>
+    <div class="session-ex-source">
+      <button type="button" id="addSessaoSourceExisting" class="active" onclick="selecionarFonteAddSessao('existing')">Buscar existente</button>
+      <button type="button" id="addSessaoSourceNew" onclick="selecionarFonteAddSessao('new')">Criar novo</button>
     </div>
-    <div class="form-group"><label>Séries</label><select id="addSessaoSeries"><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option></select></div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="fecharModal('modalAddSessaoEx')" style="flex:1">Cancelar</button><button class="btn btn-primary" onclick="confirmarAddExSessao()" style="flex:1">Adicionar</button></div>
+    <div id="addSessaoExistingFields">
+      <div class="row">
+        <div class="form-group col"><label>Grupo muscular</label><select id="addSessaoGrupo" onchange="atualizarExsAddSessao()"><option value="">Escolha...</option><option value="Peito">Peito</option><option value="Costas">Costas</option><option value="Pernas">Pernas</option><option value="Ombros">Ombros</option><option value="Braços">Braços</option><option value="Outros">Outros</option></select></div>
+        <div class="form-group col"><label>Exercício</label><select id="addSessaoEx"><option value="">Selecione...</option></select></div>
+      </div>
+    </div>
+    <div id="addSessaoNewFields" style="display:none">
+      <div class="row">
+        <div class="form-group col"><label>Grupo muscular</label><select id="addSessaoNovoGrupo"><option value="">Escolha...</option><option value="Peito">Peito</option><option value="Costas">Costas</option><option value="Pernas">Pernas</option><option value="Ombros">Ombros</option><option value="Braços">Braços</option><option value="Outros">Outros</option></select></div>
+        <div class="form-group col"><label>Nome do exercício</label><input type="text" id="addSessaoNovoNome" maxlength="80" placeholder="Ex.: Remada articulada"></div>
+      </div>
+      <div class="session-ex-note">O exercício novo será salvo no catálogo deste aparelho e ficará disponível nos próximos treinos.</div>
+    </div>
+    <div class="form-group"><label>O que fazer</label><select id="addSessaoAction" onchange="atualizarAcaoAddSessao()"><option value="add">Adicionar após o exercício atual</option><option value="replace">Substituir o exercício atual</option></select></div>
+    <div class="session-ex-note" id="addSessaoActionNote"></div>
+    <div class="row">
+      <div class="form-group col"><label>Séries</label><select id="addSessaoSeries"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></div>
+      <div class="form-group col"><label>Faixa de repetições</label><select id="addSessaoRepRange"><option value="livre">Livre</option><option value="4-6">4–6</option><option value="6-8">6–8</option><option value="8-10">8–10</option><option value="10-12">10–12</option><option value="12-15">12–15</option><option value="15-20">15–20</option></select></div>
+    </div>
+    <details class="session-ex-advanced"><summary>Descanso e incremento</summary><div class="session-ex-advanced-body"><div class="row">
+      <div class="form-group col"><label>Descanso</label><select id="addSessaoRest"><option value="60">1 min</option><option value="90" selected>1 min 30 s</option><option value="120">2 min</option><option value="150">2 min 30 s</option><option value="180">3 min</option><option value="240">4 min</option></select></div>
+      <div class="form-group col"><label>Incremento de carga</label><select id="addSessaoIncrement"><option value="0.5">0,5 kg</option><option value="1">1 kg</option><option value="2.5" selected>2,5 kg</option><option value="5">5 kg</option><option value="10">10 kg</option></select></div>
+    </div></div></details>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="fecharModal('modalAddSessaoEx')" style="flex:1">Cancelar</button><button class="btn btn-primary" id="btnConfirmAddSessao" onclick="confirmarAddExSessao()" style="flex:1">Adicionar</button></div>
   </div>
 </div>
 
@@ -1023,12 +1049,12 @@
 <!-- MODAL NOVIDADES -->
 <div class="modal-overlay" id="modalNovidades">
   <div class="modal" style="max-width:500px;">
-    <div class="modal-title">TreinoApp v12.6.0 Beta</div>
+    <div class="modal-title">TreinoApp v12.6.1 Beta</div>
     <div style="font-size:.88em;line-height:1.6;color:var(--text-muted);">
       <p style="color:var(--text);font-weight:700;margin-bottom:8px;">Principais novidades desta versão</p>
-      <p>O modo treino ficou mais limpo e orientado à série atual, com contexto da próxima série durante o descanso e ação rápida para começar.</p>
-      <p style="margin-top:8px;">Agora é possível desfazer a última série concluída sem perder o ritmo, e o rodapé mostra o exercício atual com mais clareza.</p>
-      <p style="margin-top:8px;">O cabeçalho se adapta à área aberta e a Alimentação ganhou atalhos para itens recentes, refeições prontas e cópia do dia anterior.</p>
+      <p>Durante um treino, o botão ＋ permite buscar um exercício existente ou criar um novo com nome e grupamento muscular.</p>
+      <p style="margin-top:8px;">Você pode adicionar após o exercício atual ou substituir um aparelho ocupado, sem alterar automaticamente o treino pré-montado.</p>
+      <p style="margin-top:8px;">Adições e substituições podem ser desfeitas, sobrevivem ao rascunho e podem ser aplicadas ao template somente após sua confirmação.</p>
     </div>
     <div class="modal-footer"><button class="btn btn-primary" onclick="fecharNovidades()">Entendi</button></div>
   </div>
@@ -1385,8 +1411,10 @@
       <button type="button" class="btn btn-ghost btn-sm" onclick="navegarExercicioFoco(-1)" aria-label="Exercício anterior">‹</button>
       <button type="button" class="workout-focus-label" id="workoutFocusLabel" onclick="toggleVisaoGeralTreino()" aria-expanded="false" title="Ver lista de exercícios">Exercício 1</button>
       <button type="button" class="btn btn-ghost btn-sm" onclick="navegarExercicioFoco(1)" aria-label="Próximo exercício">›</button>
-      <button type="button" class="btn btn-outline btn-sm" onclick="abrirModalAnilhas()" title="Calculadora de anilhas">Anilhas</button>
+      <button type="button" class="btn btn-outline btn-sm" onclick="abrirAddExSessao()" title="Trocar ou adicionar exercício" aria-label="Trocar ou adicionar exercício">＋</button>
+      <button type="button" class="btn btn-outline btn-sm" onclick="abrirModalAnilhas()" title="Calculadora de anilhas" aria-label="Calculadora de anilhas">◉</button>
     </div>
+    <div class="session-change-bar" id="sessionChangeBar"></div>
     <div id="exerciciosAtivos"></div>
     <div class="session-add-wrap"><button class="btn btn-outline btn-sm" onclick="abrirAddExSessao()">Adicionar exercício à sessão</button></div>
     <div class="row" style="margin-top:8px;gap:8px;">
@@ -1993,14 +2021,14 @@
 </div>
 
 <script>
-const APP_VERSION = '12.6.0';
-const APP_BUILD = '2026.08.22.1';
+const APP_VERSION = '12.6.1';
+const APP_BUILD = '2026.09.05.2';
 const DATA_SCHEMA_VERSION = 18;
 const GITHUB_REPO='BigIspectrus/meutreinoapp';
 const GITHUB_PAGES_BASE='https://bigispectrus.github.io/meutreinoapp';
 let _latestAndroidReleaseUrl='';
 let _nativeChannel='web';
-const APP_CACHE_VERSION = 'treinoapp-v12.6.0-202608221';
+const APP_CACHE_VERSION = 'treinoapp-v12.6.1-202609052';
 
 const SET_TYPES={workset:'Work set',warmup:'Aquecimento',topset:'Top set',backoff:'Back-off',dropset:'Drop set',cluster:'Cluster set',fst7:'FST-7',restpause:'Rest-pause',myoreps:'Myo-reps',amrap:'AMRAP'};
 function normalizarSetType(v){return SET_TYPES[v]?v:'workset';}
@@ -2329,7 +2357,8 @@ function toast(msg, tipo='success') {
 function confirmarAcao(titulo, msg, cb) {
   document.getElementById('modalConfirmTitle').innerText = titulo;
   document.getElementById('modalConfirmMsg').innerText = msg;
-  document.getElementById('modalConfirmOk').onclick = () => { fecharModal('modalConfirm'); cb(); };
+  const ok=document.getElementById('modalConfirmOk');ok.textContent='Confirmar';ok.className='btn btn-danger';
+  ok.onclick = () => { fecharModal('modalConfirm'); cb(); };
   document.getElementById('modalConfirm').classList.add('open');
 }
 function fecharModal(id) { document.getElementById(id).classList.remove('open'); }
@@ -2527,6 +2556,7 @@ function selecionarTreino(template, btnEl) {
   document.querySelectorAll('.treino-card-btn').forEach(b => b.classList.remove('selected'));
   btnEl?.classList?.add('selected');
   treinoAtivoTemplate = template;
+  _sessionExerciseChanges=[];_sessionOrderChanged=false;atualizarBarraAlteracoesSessao();
 
   document.getElementById('treinoAtivoNome').innerHTML = `${template.icone||'💪'} ${esc(template.nome)}`;
   const container = document.getElementById('exerciciosAtivos');
@@ -2546,8 +2576,9 @@ function selecionarTreino(template, btnEl) {
     const card = document.createElement('div');
     card.className = 'exercicio-card';
     card.dataset.ex = ex;
-    let seriesHTML = '';
     const exSeries = template.seriesMap?.[ex] || template.series;
+    card.dataset.sessionOrigin='planned';card.dataset.group=grupoDoExercicio(ex);card.dataset.rest=String(Number(template.restMap?.[ex])||getDescansoPadrao());card.dataset.increment=String(Number(template.incrementMap?.[ex])||2.5);card.dataset.repRange=template.repRangeMap?.[ex]||'livre';
+    let seriesHTML = '';
     for(let i=1; i<=exSeries; i++) {
       const prev = ultimo?.mapa?.[ex]?.[i];
       const prevTxt = prev
@@ -2609,8 +2640,8 @@ function salvarRascunho() {
     if(carga.value || reps?.value || chk?.classList.contains('checked') || row.dataset.setStartedAt) valores.push({exercicio:carga.dataset.ex,serie:parseInt(carga.dataset.serie),carga:carga.value,reps:reps?.value||'',rir:effortInt(row.querySelector('.ativo-rir')?.value),rpe:effortFloat(row.querySelector('.ativo-rpe')?.value),concluida:!!chk?.classList.contains('checked'),completedAt:Number(row.dataset.completedAt)||null,setStartedAt:Number(row.dataset.setStartedAt)||null,restBeforeSec:row.dataset.restBeforeSec!==undefined?Number(row.dataset.restBeforeSec):null,timingQuality:row.dataset.timingQuality||'completion_only',setType:normalizarSetType(row.querySelector('.ativo-tipo')?.value)});
   });
   const cards=[...document.querySelectorAll('#exerciciosAtivos .exercicio-card')],skippedExs=cards.filter(c=>c.classList.contains('skipped')).map(c=>c.dataset.ex).filter(Boolean);
-  const baseExs=new Set(treinoAtivoTemplate.exercicios||[]),extraExs=cards.filter(c=>c.dataset.ex&&!baseExs.has(c.dataset.ex)).map(c=>({ex:c.dataset.ex,series:c.querySelectorAll('.serie-row').length}));
-  const payload={schemaVersion:DATA_SCHEMA_VERSION,sessionId:window._treinoSessionId||gerarId('sessao'),templateId:treinoAtivoTemplate.id||null,templateSnapshot:treinoAtivoTemplate?.isAdHoc?treinoAtivoTemplate:null,data:document.getElementById('dataTreinoAtivo')?.value||hoje(),valores,skippedExs,extraExs,startedAt:window._treinoStartedAt||Date.now(),paused:!!window._treinoPaused,pauseStartedAt:window._treinoPauseStartedAt||null,totalPausedMs:Number(window._treinoTotalPausedMs)||0,timestamp:Date.now()};
+  const extraExs=cards.filter(c=>c.dataset.sessionOrigin&&c.dataset.sessionOrigin!=='planned').map(c=>({ex:c.dataset.ex,series:c.querySelectorAll('.serie-row').length,group:c.dataset.group||grupoDoExercicio(c.dataset.ex),rest:Number(c.dataset.rest)||getDescansoPadrao(),increment:Number(c.dataset.increment)||2.5,repRange:c.dataset.repRange||'livre',origin:c.dataset.sessionOrigin,replacedEx:c.dataset.replacedEx||'',changeId:c.dataset.changeId||''}));
+  const payload={schemaVersion:DATA_SCHEMA_VERSION,sessionId:window._treinoSessionId||gerarId('sessao'),templateId:treinoAtivoTemplate.id||null,templateSnapshot:treinoAtivoTemplate?.isAdHoc?treinoAtivoTemplate:null,data:document.getElementById('dataTreinoAtivo')?.value||hoje(),valores,skippedExs,extraExs,exerciseOrder:cards.map(c=>c.dataset.ex).filter(Boolean),sessionExerciseChanges:_sessionExerciseChanges,sessionOrderChanged:_sessionOrderChanged,startedAt:window._treinoStartedAt||Date.now(),paused:!!window._treinoPaused,pauseStartedAt:window._treinoPauseStartedAt||null,totalPausedMs:Number(window._treinoTotalPausedMs)||0,timestamp:Date.now()};
   window._treinoSessionId=payload.sessionId;
   try{localStorage.setItem('_rascunhoTreino',JSON.stringify(payload))}catch(e){console.warn('Falha ao salvar rascunho',e)}
 }
@@ -2621,7 +2652,10 @@ function restaurarRascunho() {
     if(!rasc || !rasc.templateId || (Date.now()-rasc.timestamp)>86400000){ limparRascunho(); return; }
     if(treinoAtivoTemplate && String(rasc.templateId)===String(treinoAtivoTemplate.id) && Array.isArray(rasc.valores)){
       window._treinoSessionId=rasc.sessionId||window._treinoSessionId; window._treinoStartedAt=Number(rasc.startedAt)||window._treinoStartedAt; window._treinoTotalPausedMs=Number(rasc.totalPausedMs)||0; window._treinoPaused=!!rasc.paused; window._treinoPauseStartedAt=rasc.pauseStartedAt||null;
-      (rasc.extraExs||[]).forEach(x=>{if(x?.ex&&![...document.querySelectorAll('#exerciciosAtivos .exercicio-card')].some(c=>c.dataset.ex===x.ex))criarCardExercicioSessao(x.ex,Number(x.series)||3,true);});
+      _sessionExerciseChanges=Array.isArray(rasc.sessionExerciseChanges)?rasc.sessionExerciseChanges:[];_sessionOrderChanged=!!rasc.sessionOrderChanged;
+      (rasc.extraExs||[]).forEach(x=>{if(x?.ex&&!getExerciseCards().some(c=>c.dataset.ex===x.ex))criarCardExercicioSessao(x.ex,Number(x.series)||3,true,{group:x.group,rest:x.rest,increment:x.increment,repRange:x.repRange,origin:x.origin||'added',replacedEx:x.replacedEx,changeId:x.changeId});});
+      _sessionExerciseChanges.filter(x=>x.type==='replace').forEach(x=>{const old=getExerciseCards().find(c=>c.dataset.ex===x.replacedEx),novo=getExerciseCards().find(c=>c.dataset.ex===x.ex);if(old&&novo){old.dataset.replacedBy=x.ex;novo.dataset.replacedEx=x.replacedEx;novo.dataset.changeId=x.id;novo.dataset.sessionOrigin='replacement';}});
+      if(Array.isArray(rasc.exerciseOrder)){const container=document.getElementById('exerciciosAtivos');rasc.exerciseOrder.forEach(ex=>{const card=getExerciseCards().find(c=>c.dataset.ex===ex);if(card)container.appendChild(card);});}
       let restaurados=0;
       rasc.valores.forEach(v=>{
         const carga=[...document.querySelectorAll('.ativo-carga')].find(i=>i.dataset.ex===v.exercicio && parseInt(i.dataset.serie)===v.serie);
@@ -2630,9 +2664,9 @@ function restaurarRascunho() {
       });
       if(rasc.data) document.getElementById('dataTreinoAtivo').value=rasc.data; if(rasc.startedAt) window._treinoStartedAt=rasc.startedAt;
       atualizarProgressoTreino();
-      (rasc.skippedExs||[]).forEach(ex=>{const card=[...document.querySelectorAll('#exerciciosAtivos .exercicio-card')].find(c=>c.dataset.ex===ex);if(card){card.classList.add('skipped');const b=card.querySelector('.ex-skip-btn');if(b)b.textContent='Reativar';}});
-      atualizarFocoSeries(); aplicarModoAcademia(); atualizarEstadoPausaUI(); atualizarProgressoTreino();
-      if(restaurados || (rasc.skippedExs||[]).length) toast('Treino em andamento restaurado','info');
+      (rasc.skippedExs||[]).forEach(ex=>{const card=getExerciseCards().find(c=>c.dataset.ex===ex);if(card)definirExercicioPulado(card,true,{save:false});});
+      atualizarBarraAlteracoesSessao();prepararModoAcademiaCards();atualizarFocoSeries(); aplicarModoAcademia(); atualizarEstadoPausaUI(); atualizarProgressoTreino();
+      if(restaurados || (rasc.skippedExs||[]).length || (rasc.extraExs||[]).length) toast('Treino em andamento restaurado','info');
     }
   } catch(e) { console.warn('Falha ao restaurar rascunho',e); }
 }
@@ -2668,6 +2702,24 @@ function confirmarEncerramentoTreino(){
 }
 function contextoLabel(tag){return({sono_ruim:'Sono ruim',estresse_alto:'Estresse alto',pouca_alimentacao:'Pouca alimentação',dor_desconforto:'Dor/desconforto',pouco_tempo:'Pouco tempo',treino_excelente:'Treino excelente'})[tag]||tag;}
 
+function capturarPropostaTemplateSessao(){
+  if(!treinoAtivoTemplate||treinoAtivoTemplate.isAdHoc||!treinoAtivoTemplate.id||(!_sessionExerciseChanges.length&&!_sessionOrderChanged))return null;
+  const cards=getExerciseCards().filter(c=>!(c.classList.contains('skipped')&&c.dataset.replacedBy)),configs={};
+  cards.forEach(c=>{configs[c.dataset.ex]={series:c.querySelectorAll('.serie-row').length,rest:Number(c.dataset.rest)||getDescansoPadrao(),increment:Number(c.dataset.increment)||2.5,repRange:c.dataset.repRange||'livre'};});
+  return{templateId:treinoAtivoTemplate.id,templateName:treinoAtivoTemplate.nome||'Treino',exercicios:cards.map(c=>c.dataset.ex).filter(Boolean),configs,changes:_sessionExerciseChanges.map(x=>({...x})),orderChanged:_sessionOrderChanged};
+}
+function aplicarAtualizacaoTemplateSessao(proposta){
+  const treinos=getTreinosSalvos(),idx=treinos.findIndex(t=>String(t.id)===String(proposta.templateId));if(idx<0)return toast('O treino pré-montado não foi encontrado','warn');
+  const atual=treinos[idx],seriesMap={},restMap={},incrementMap={},repRangeMap={};
+  proposta.exercicios.forEach(ex=>{const cfg=proposta.configs[ex]||{};seriesMap[ex]=Number(cfg.series)||Number(atual.seriesMap?.[ex])||Number(atual.series)||3;restMap[ex]=Number(cfg.rest)||Number(atual.restMap?.[ex])||getDescansoPadrao();incrementMap[ex]=Number(cfg.increment)||Number(atual.incrementMap?.[ex])||2.5;repRangeMap[ex]=cfg.repRange||atual.repRangeMap?.[ex]||'livre';});
+  treinos[idx]={...atual,exercicios:[...proposta.exercicios],seriesMap,restMap,incrementMap,repRangeMap};setTreinosSalvos(treinos);renderizarTreinoSelector();renderizarListaTreinosSalvos();renderizarPlanoSemanal();renderizarAgendaMensal();toast(`“${proposta.templateName}” atualizado`,'success');
+}
+function oferecerAtualizacaoTemplateSessao(proposta){
+  if(!proposta)return;const trocas=proposta.changes.filter(x=>x.type==='replace').length,adicoes=proposta.changes.filter(x=>x.type==='add').length,partes=[];if(trocas)partes.push(`${trocas} substituição(ões)`);if(adicoes)partes.push(`${adicoes} adição(ões)`);if(proposta.orderChanged)partes.push('nova ordem');
+  confirmarAcao('Atualizar treino pré-montado?',`Você alterou ${partes.join(', ')} durante a sessão. Deseja aplicar isso permanentemente em “${proposta.templateName}”?`,()=>aplicarAtualizacaoTemplateSessao(proposta));
+  const ok=document.getElementById('modalConfirmOk');if(ok){ok.textContent='Atualizar ficha';ok.className='btn btn-primary';}
+}
+
 function salvarTreinoAtivo(sessionContext={sessionRpe:null,contextTags:[],sessionNote:''}) {
   const data=document.getElementById('dataTreinoAtivo').value;
   if(!data) return toast('Preencha a data','error');
@@ -2680,6 +2732,7 @@ function salvarTreinoAtivo(sessionContext={sessionRpe:null,contextTags:[],sessio
   if(faltamTotal>0){
     if(!confirm(`${faltamTotal} série(s) ainda não foram concluídas. Finalizar agora e salvar somente as ${concluidas.length} série(s) concluídas?`)) return;
   }
+  const propostaTemplate=capturarPropostaTemplateSessao();
   const historico=getHist().slice();
   const prAntes=calcularMaxPorEx(historico);
   const agora=new Date();
@@ -2711,8 +2764,9 @@ function salvarTreinoAtivo(sessionContext={sessionRpe:null,contextTags:[],sessio
   const nativeSets=usar.map(row=>({id:gerarId('native'),exercise:row.querySelector('.ativo-carga')?.dataset.ex||'',setNumber:Number(row.querySelector('.ativo-carga')?.dataset.serie)||0,weight:Number(row.querySelector('.ativo-carga')?.value)||0,reps:Number(row.querySelector('.ativo-reps')?.value)||0,setType:normalizarSetType(row.querySelector('.ativo-tipo')?.value),rir:effortInt(row.querySelector('.ativo-rir')?.value),rpe:effortFloat(row.querySelector('.ativo-rpe')?.value),completedAt:Number(row.dataset.completedAt)||finishedAt,startedAt:Number(row.dataset.setStartedAt)||null,restBeforeSec:row.dataset.restBeforeSec!==undefined?Number(row.dataset.restBeforeSec):null,timingQuality:row.dataset.timingQuality||'completion_only'}));
   try{window.TreinoNativeBridge?.onWorkoutFinished?.({sessionId,templateId:treinoAtivoTemplate?.id||null,name:treinoAtivoTemplate?.nome||'Treino',startMs:startedAt,endMs:finishedAt,durationSec,completedSets:usar.length,totalSets:rows.length,skippedExercises:skippedExs,sessionRpe:sessionContext.sessionRpe??null,contextTags:sessionContext.contextTags||[],sessionNote:sessionContext.sessionNote||'',sets:nativeSets});}catch(e){console.warn('Integração nativa ao finalizar',e)}
   if(treinoAtivoTemplate?.isAdHoc) localStorage.removeItem('_adhocTemplateV12');
-  treinoAtivoTemplate=null; window._treinoSessionId=null; window._treinoStartedAt=null; window._treinoTotalPausedMs=0; window._treinoPaused=false; window._treinoPauseStartedAt=null; pararRelogioTreino(); liberarWakeLock(); atualizarDiagnosticoUI();
+  treinoAtivoTemplate=null;_sessionExerciseChanges=[];_sessionOrderChanged=false;atualizarBarraAlteracoesSessao(); window._treinoSessionId=null; window._treinoStartedAt=null; window._treinoTotalPausedMs=0; window._treinoPaused=false; window._treinoPauseStartedAt=null; pararRelogioTreino(); liberarWakeLock(); atualizarDiagnosticoUI();
   atualizarGrafico(); renderizarHistorico(); renderizarDashboard(); salvarSnapshotSeguro('treino_concluido'); haptic(100);
+  if(propostaTemplate)setTimeout(()=>oferecerAtualizacaoTemplateSessao(propostaTemplate),450);
 }
 
 function calcularMaxPorEx(hist) {
@@ -5500,12 +5554,101 @@ function getPausaAcumuladaAgora(){return (Number(window._treinoTotalPausedMs)||0
 function atualizarTempoTreinoUI(){if(!treinoAtivoTemplate)return;const seg=Math.max(0,Math.floor((Date.now()-(Number(window._treinoStartedAt)||Date.now())-getPausaAcumuladaAgora())/1000)),m=Math.floor(seg/60),s=String(seg%60).padStart(2,'0'),sub=document.getElementById('workoutStickySub');if(sub){const base=sub.textContent.replace(/ · \d+:\d{2}$/,'');sub.innerHTML=`${base} · <span class="workout-elapsed">${m}:${s}</span>`;}}
 function atualizarEstadoPausaUI(){const b=document.getElementById('btnPauseWorkout');if(b)b.textContent=window._treinoPaused?'Retomar':'Pausar';}
 function togglePausaTreino(){if(!treinoAtivoTemplate)return;if(window._treinoPaused){window._treinoTotalPausedMs=(Number(window._treinoTotalPausedMs)||0)+Math.max(0,Date.now()-Number(window._treinoPauseStartedAt||Date.now()));window._treinoPauseStartedAt=null;window._treinoPaused=false;}else{window._treinoPaused=true;window._treinoPauseStartedAt=Date.now();}atualizarEstadoPausaUI();salvarRascunho();}
-function togglePularExercicio(btn){const card=btn.closest('.exercicio-card');if(!card)return;const pulando=!card.classList.contains('skipped');card.classList.toggle('skipped',pulando);btn.textContent=pulando?'Reativar':'Pular';card.querySelectorAll('input,button.serie-check,button.inc-btn').forEach(el=>{if(el!==btn)el.disabled=pulando;});atualizarProgressoTreino();salvarRascunho();}
+function definirExercicioPulado(card,pulando,{save=true}={}){
+  if(!card)return;
+  card.classList.toggle('skipped',!!pulando);
+  const btn=card.querySelector('.ex-skip-toggle')||[...card.querySelectorAll('.ex-skip-btn')].find(b=>(b.getAttribute('onclick')||'').includes('togglePularExercicio'));
+  if(btn){btn.classList.add('ex-skip-toggle');btn.textContent=pulando?(card.dataset.replacedBy?'Substituído':'Reativar'):'Pular';}
+  card.querySelectorAll('input,select,button.serie-check,button.inc-btn,button.set-mini-btn').forEach(el=>el.disabled=!!pulando);
+  atualizarMarcadorOrigemSessao(card);
+  atualizarEstadoCardExercicio(card);
+  atualizarProgressoTreino();
+  if(save)salvarRascunho();
+}
+function togglePularExercicio(btn){
+  const card=btn.closest('.exercicio-card');if(!card)return;
+  if(card.classList.contains('skipped')&&card.dataset.replacedBy){
+    const change=_sessionExerciseChanges.find(x=>x.type==='replace'&&x.replacedEx===card.dataset.ex&&x.ex===card.dataset.replacedBy);
+    if(change)return desfazerAlteracaoExercicioSessao(change.id);
+  }
+  definirExercicioPulado(card,!card.classList.contains('skipped'));
+}
 function toggleHistoricoExercicio(btn){const card=btn.closest('.exercicio-card'),box=card?.querySelector('.ex-history-mini'),ex=card?.dataset.ex;if(!box||!ex)return;const abrir=!box.classList.contains('open');if(!abrir){box.classList.remove('open');return;}const regs=getHist().filter(r=>r.exercicio===ex),sessoes=agruparSessoes(regs),ultimas=Object.values(sessoes).sort((a,b)=>getSessionTimestamp(b)-getSessionTimestamp(a)).slice(0,3);box.innerHTML=ultimas.length?ultimas.map(arr=>{const d=arr[0]?.data?.split('-').reverse().join('/')||'',sets=[...arr].sort((a,b)=>(a.numSerie||0)-(b.numSerie||0)).map(r=>`${r.carga}kg×${r.reps||0}`).join(' · ');return `<div class="ex-history-line"><strong>${d}</strong><span>${sets}</span></div>`}).join(''):'Sem sessões anteriores.';box.classList.add('open');}
-function abrirAddExSessao(){if(!treinoAtivoTemplate)return toast('Inicie um treino primeiro','warn');document.getElementById('addSessaoGrupo').value='';document.getElementById('addSessaoEx').innerHTML='<option value="">Selecione...</option>';document.getElementById('addSessaoSeries').value='3';document.getElementById('modalAddSessaoEx').classList.add('open');}
-function atualizarExsAddSessao(){const g=document.getElementById('addSessaoGrupo').value,sel=document.getElementById('addSessaoEx');sel.innerHTML='<option value="">Selecione...</option>';if(!g)return;(obterExerciciosSalvos()[g]||[]).sort().forEach(ex=>sel.add(new Option(ex,ex)));}
-function confirmarAddExSessao(){const ex=document.getElementById('addSessaoEx').value,n=parseInt(document.getElementById('addSessaoSeries').value)||3;if(!ex)return toast('Selecione um exercício','warn');if([...document.querySelectorAll('#exerciciosAtivos .exercicio-card')].some(c=>c.dataset.ex===ex))return toast('Este exercício já está na sessão','warn');criarCardExercicioSessao(ex,n);fecharModal('modalAddSessaoEx');salvarRascunho();atualizarProgressoTreino();setTimeout(()=>{const cards=[...document.querySelectorAll('#exerciciosAtivos .exercicio-card')];cards[cards.length-1]?.scrollIntoView({behavior:'smooth',block:'center'});},120);}
-function criarCardExercicioSessao(ex,n=3,restaurando=false){const container=document.getElementById('exerciciosAtivos');if(!container)return;const hist=getHist().filter(r=>r.exercicio===ex),sessoes=agruparSessoes(hist),ultima=Object.values(sessoes).sort((a,b)=>getSessionTimestamp(b)-getSessionTimestamp(a))[0]||[],mapa={};ultima.forEach(r=>mapa[r.numSerie]=r);const inc=2.5,desc=getDescansoPadrao();let seriesHTML='';for(let i=1;i<=n;i++){const prev=mapa[i],prevTxt=prev?`<span>${prev.carga}kg</span><span style="font-size:.7em">${prev.reps||0}r</span>`:'<span style="color:var(--border)">—</span>',exEncoded=encodeURIComponent(ex);seriesHTML+=`<div class="serie-row" data-rest="${desc}" data-inc="${inc}" data-prev-carga="${prev?.carga||''}" data-prev-reps="${prev?.reps||''}"><div class="serie-badge">S${i}</div><div class="prev-val" title="Último treino">${prevTxt}</div><button type="button" class="inc-btn" aria-label="Diminuir carga" onclick="ajustarCarga(decodeURIComponent('${exEncoded}'),${i},-${inc})">−</button><input type="number" class="ativo-carga" data-ex="${esc(ex)}" data-serie="${i}" step="${inc}" placeholder="kg" ${prev?`value="${prev.carga}"`:''} inputmode="decimal"><button type="button" class="inc-btn" aria-label="Aumentar carga" onclick="ajustarCarga(decodeURIComponent('${exEncoded}'),${i},${inc})">+</button><input type="number" class="ativo-reps" data-ex="${esc(ex)}" data-serie="${i}" placeholder="reps" ${prev?.reps?`value="${prev.reps}"`:''} inputmode="numeric"><select class="set-type-select ativo-tipo" data-kind="workset" aria-label="Tipo da série ${i}" onchange="atualizarSetTypeVisual(this)">${setTypeOptionsHtml('workset')}</select><button type="button" class="serie-check" onclick="toggleSerieCheck(this)" aria-label="Concluir série ${i}">✓</button>${effortControlsHtml(i)}<div class="set-quick-tools"><button type="button" class="set-mini-btn" onclick="copiarSerieAnterior(this)">Série anterior</button><button type="button" class="set-mini-btn" onclick="copiarCargaAnterior(this)">Carga anterior</button></div>${serieFocusExtrasHtml(i,n)}</div>`;}const card=document.createElement('div');card.className='exercicio-card';card.dataset.ex=ex;card.innerHTML=`<div class="ex-card-header"><span class="ex-name">${esc(ex)}</span><span class="focus-done-mark">Concluído</span><div class="ex-header-actions"><span class="badge badge-primary">${n}s</span><button type="button" class="ex-skip-btn" onclick="toggleHistoricoExercicio(this)">Hist.</button><button type="button" class="ex-skip-btn" onclick="togglePularExercicio(this)">Pular</button></div></div><div class="ex-history-mini"></div><div class="ex-card-body">${seriesHTML}</div>`;container.appendChild(card);prepararModoAcademiaCards();aplicarModoAcademia();if(!restaurando)marcarDadosNaoSalvos();}
+let _addSessaoSource='existing',_sessionExerciseChanges=[],_sessionOrderChanged=false;
+function chaveExercicioSessao(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR').replace(/\s+/g,' ').trim();}
+function cardExercicioAtivoSessao(){return getExerciseCards().find(c=>c.classList.contains('focus-active')&&!c.classList.contains('skipped'))||getExerciseCards().find(c=>!c.classList.contains('skipped'))||null;}
+function selecionarFonteAddSessao(source){
+  _addSessaoSource=source==='new'?'new':'existing';
+  document.getElementById('addSessaoExistingFields').style.display=_addSessaoSource==='existing'?'block':'none';
+  document.getElementById('addSessaoNewFields').style.display=_addSessaoSource==='new'?'block':'none';
+  document.getElementById('addSessaoSourceExisting').classList.toggle('active',_addSessaoSource==='existing');
+  document.getElementById('addSessaoSourceNew').classList.toggle('active',_addSessaoSource==='new');
+  setTimeout(()=>document.getElementById(_addSessaoSource==='new'?'addSessaoNovoNome':'addSessaoGrupo')?.focus(),30);
+}
+function abrirAddExSessao(){
+  if(!treinoAtivoTemplate)return toast('Inicie um treino primeiro','warn');
+  const active=cardExercicioAtivoSessao(),rows=active?.querySelectorAll('.serie-row')||[];
+  document.getElementById('addSessaoGrupo').value='';document.getElementById('addSessaoEx').innerHTML='<option value="">Selecione...</option>';
+  document.getElementById('addSessaoNovoGrupo').value='';document.getElementById('addSessaoNovoNome').value='';
+  document.getElementById('addSessaoAction').value='add';document.getElementById('addSessaoSeries').value=String(Math.min(6,Math.max(1,rows.length||3)));
+  document.getElementById('addSessaoRest').value=String(Number(active?.dataset.rest)||getDescansoPadrao());
+  document.getElementById('addSessaoIncrement').value=String(Number(active?.dataset.increment)||2.5);
+  document.getElementById('addSessaoRepRange').value=active?.dataset.repRange||'livre';
+  selecionarFonteAddSessao('existing');atualizarAcaoAddSessao();document.getElementById('modalAddSessaoEx').classList.add('open');
+}
+function atualizarExsAddSessao(){const g=document.getElementById('addSessaoGrupo').value,sel=document.getElementById('addSessaoEx');sel.innerHTML='<option value="">Selecione...</option>';if(!g)return;(obterExerciciosSalvos()[g]||[]).sort((a,b)=>a.localeCompare(b,'pt-BR')).forEach(ex=>sel.add(new Option(ex,ex)));}
+function atualizarAcaoAddSessao(){
+  const target=cardExercicioAtivoSessao(),sel=document.getElementById('addSessaoAction'),replace=sel.value==='replace';
+  const opt=sel.querySelector('option[value="replace"]');if(opt)opt.disabled=!target;
+  if(replace&&target){const rows=target.querySelectorAll('.serie-row');document.getElementById('addSessaoSeries').value=String(Math.min(6,Math.max(1,rows.length||3)));document.getElementById('addSessaoRest').value=String(Number(target.dataset.rest)||getDescansoPadrao());document.getElementById('addSessaoIncrement').value=String(Number(target.dataset.increment)||2.5);document.getElementById('addSessaoRepRange').value=target.dataset.repRange||'livre';}
+  const note=document.getElementById('addSessaoActionNote'),btn=document.getElementById('btnConfirmAddSessao');
+  if(note)note.textContent=replace&&target?`“${target.dataset.ex}” ficará marcado como substituído apenas neste treino.`:`O exercício entrará logo após ${target?'“'+target.dataset.ex+'”':'o último da sessão'}.`;
+  if(btn)btn.textContent=replace?'Substituir':'Adicionar';
+}
+function salvarExercicioNovoDaSessao(nome,grupo){
+  const chave=chaveExercicioSessao(nome),todos=obterExerciciosSalvos();
+  for(const lista of Object.values(todos))if((lista||[]).some(x=>chaveExercicioSessao(x)===chave))return false;
+  const custom=parseJSONSeguro(localStorage.getItem('exerciciosCustomizadosV3')||'{}',{},'exerciciosCustomizadosV3');
+  if(!Array.isArray(custom[grupo]))custom[grupo]=[];custom[grupo].push(nome);localStorage.setItem('exerciciosCustomizadosV3',JSON.stringify(custom));invalidarCache();atualizarSelectGrafico();return true;
+}
+function confirmarAddExSessao(){
+  const grupo=_addSessaoSource==='new'?document.getElementById('addSessaoNovoGrupo').value:document.getElementById('addSessaoGrupo').value;
+  const ex=(_addSessaoSource==='new'?document.getElementById('addSessaoNovoNome').value:document.getElementById('addSessaoEx').value).replace(/\s+/g,' ').trim().slice(0,80);
+  if(!grupo)return toast('Selecione o grupo muscular','warn');if(!ex)return toast(_addSessaoSource==='new'?'Digite o nome do exercício':'Selecione um exercício','warn');
+  const chave=chaveExercicioSessao(ex);if(getExerciseCards().some(c=>chaveExercicioSessao(c.dataset.ex)===chave))return toast('Este exercício já está na sessão','warn');
+  if(_addSessaoSource==='new'&&!salvarExercicioNovoDaSessao(ex,grupo))return toast('Já existe um exercício com este nome no catálogo','warn');
+  const target=cardExercicioAtivoSessao(),type=document.getElementById('addSessaoAction').value==='replace'&&target?'replace':'add';
+  const config={group:grupo,rest:Number(document.getElementById('addSessaoRest').value)||getDescansoPadrao(),increment:Number(document.getElementById('addSessaoIncrement').value)||2.5,repRange:document.getElementById('addSessaoRepRange').value||'livre',origin:type==='replace'?'replacement':'added',replacedEx:type==='replace'?target.dataset.ex:'',changeId:gerarId('session-change'),insertAfter:target};
+  const n=parseInt(document.getElementById('addSessaoSeries').value)||3,card=criarCardExercicioSessao(ex,n,false,config);if(!card)return;
+  const change={id:config.changeId,type,ex,replacedEx:config.replacedEx,group:grupo,series:n,rest:config.rest,increment:config.increment,repRange:config.repRange,createdAt:Date.now()};
+  _sessionExerciseChanges.push(change);
+  if(type==='replace'){target.dataset.replacedBy=ex;definirExercicioPulado(target,true,{save:false});}
+  atualizarBarraAlteracoesSessao();fecharModal('modalAddSessaoEx');salvarRascunho();atualizarProgressoTreino();focarExercicioCard(card,true);toast(type==='replace'?`${ex} substituiu ${target.dataset.ex} nesta sessão`:`${ex} adicionado à sessão`,'success');
+}
+function criarCardExercicioSessao(ex,n=3,restaurando=false,config={}){
+  const container=document.getElementById('exerciciosAtivos');if(!container)return null;
+  const hist=getHist().filter(r=>r.exercicio===ex),sessoes=agruparSessoes(hist),ultima=Object.values(sessoes).sort((a,b)=>getSessionTimestamp(b)-getSessionTimestamp(a))[0]||[],mapa={};ultima.forEach(r=>mapa[r.numSerie]=r);
+  const inc=Number(config.increment)||2.5,desc=Number(config.rest)||getDescansoPadrao(),repRange=config.repRange||'livre';let seriesHTML='';
+  for(let i=1;i<=n;i++){const prev=mapa[i],prevTxt=prev?`<span>${prev.carga}kg</span><span style="font-size:.7em">${prev.reps||0}r</span>`:'<span style="color:var(--border)">—</span>',exEncoded=encodeURIComponent(ex);seriesHTML+=`<div class="serie-row" data-rest="${desc}" data-inc="${inc}" data-prev-carga="${prev?.carga||''}" data-prev-reps="${prev?.reps||''}"><div class="serie-badge">S${i}</div><div class="prev-val" title="Último treino">${prevTxt}${repRange!=='livre'?`<span class="set-target">meta ${esc(repRange)}</span>`:''}</div><button type="button" class="inc-btn" aria-label="Diminuir carga" onclick="ajustarCarga(decodeURIComponent('${exEncoded}'),${i},-${inc})">−</button><input type="number" class="ativo-carga" data-ex="${esc(ex)}" data-serie="${i}" step="${inc}" placeholder="kg" ${prev?`value="${prev.carga}"`:''} inputmode="decimal"><button type="button" class="inc-btn" aria-label="Aumentar carga" onclick="ajustarCarga(decodeURIComponent('${exEncoded}'),${i},${inc})">+</button><input type="number" class="ativo-reps" data-ex="${esc(ex)}" data-serie="${i}" placeholder="${repRange==='livre'?'reps':esc(repRange)+' reps'}" ${prev?.reps?`value="${prev.reps}"`:''} inputmode="numeric"><select class="set-type-select ativo-tipo" data-kind="workset" aria-label="Tipo da série ${i}" onchange="atualizarSetTypeVisual(this)">${setTypeOptionsHtml('workset')}</select><button type="button" class="serie-check" onclick="toggleSerieCheck(this)" aria-label="Concluir série ${i}">✓</button>${effortControlsHtml(i)}<div class="set-quick-tools"><button type="button" class="set-mini-btn" onclick="copiarSerieAnterior(this)">Série anterior</button><button type="button" class="set-mini-btn" onclick="copiarCargaAnterior(this)">Carga anterior</button></div>${serieFocusExtrasHtml(i,n)}</div>`;}
+  const card=document.createElement('div');card.className='exercicio-card';card.dataset.ex=ex;card.dataset.group=config.group||grupoDoExercicio(ex)||'Outros';card.dataset.rest=String(desc);card.dataset.increment=String(inc);card.dataset.repRange=repRange;card.dataset.sessionOrigin=config.origin||'added';if(config.replacedEx)card.dataset.replacedEx=config.replacedEx;if(config.changeId)card.dataset.changeId=config.changeId;
+  card.innerHTML=`<div class="ex-card-header"><span class="ex-name">${esc(ex)}</span><span class="focus-done-mark">Concluído</span><div class="ex-header-actions">${repRange!=='livre'?`<span class="badge badge-accent">${esc(repRange)}</span>`:''}<span class="badge badge-primary">${n}s</span><button type="button" class="ex-skip-btn ex-history-btn" onclick="toggleHistoricoExercicio(this)">Hist.</button><button type="button" class="ex-skip-btn ex-skip-toggle" onclick="togglePularExercicio(this)">Pular</button></div></div><div class="ex-history-mini"></div><div class="ex-card-body">${seriesHTML}</div>`;
+  if(config.insertAfter?.parentNode===container)config.insertAfter.after(card);else container.appendChild(card);prepararModoAcademiaCards();aplicarModoAcademia();if(!restaurando)marcarDadosNaoSalvos();return card;
+}
+function atualizarBarraAlteracoesSessao(){
+  const el=document.getElementById('sessionChangeBar');if(!el)return;const last=_sessionExerciseChanges.at(-1);
+  if(!last){el.classList.remove('visible');el.innerHTML='';return;}
+  const texto=last.type==='replace'?`${last.replacedEx} → ${last.ex}`:`${last.ex} adicionado`;
+  el.innerHTML=`<span class="session-change-copy"><strong>Alteração nesta sessão:</strong> ${esc(texto)}</span><button type="button" class="btn btn-outline btn-sm" onclick="desfazerAlteracaoExercicioSessao('${esc(last.id)}')">Desfazer</button>`;el.classList.add('visible');
+}
+function desfazerAlteracaoExercicioSessao(changeId){
+  const change=_sessionExerciseChanges.find(x=>String(x.id)===String(changeId));if(!change)return;
+  const added=getExerciseCards().find(c=>c.dataset.changeId===change.id),hasData=!!added?.querySelector('.serie-check.checked,.ativo-carga:not(:placeholder-shown),.ativo-reps:not(:placeholder-shown)');
+  const run=()=>executarDesfazerAlteracaoSessao(change,added);if(hasData)return confirmarAcao('Desfazer alteração','Este exercício já possui dados preenchidos. Remover mesmo assim?',run);run();
+}
+function executarDesfazerAlteracaoSessao(change,added){
+  let target=null;if(change.type==='replace'){target=getExerciseCards().find(c=>c.dataset.ex===change.replacedEx&&c.dataset.replacedBy===change.ex);if(target){delete target.dataset.replacedBy;definirExercicioPulado(target,false,{save:false});}}
+  added?.remove();_sessionExerciseChanges=_sessionExerciseChanges.filter(x=>x.id!==change.id);atualizarBarraAlteracoesSessao();prepararModoAcademiaCards();atualizarProgressoTreino();salvarRascunho();const focus=target||cardExercicioAtivoSessao();if(focus)focarExercicioCard(focus,true);toast('Alteração desfeita','info');
+}
 async function atualizarStorageStatus(){
   const st=document.getElementById('storagePersistStatus'),btn=document.getElementById('btnPersistStorage'),fill=document.getElementById('storageMeterFill');
   if(isNativeAndroid()){
@@ -5682,7 +5825,27 @@ function atualizarResumoCompactoSerie(row){if(!row)return;const trigger=row.quer
 function atualizarFocoSeries(targetCard=null){const cards=targetCard?[targetCard]:getExerciseCards();cards.forEach(card=>{const rows=[...card.querySelectorAll('.serie-row')];if(!rows.length)return;const manual=rows.find(r=>r.classList.contains('serie-manual'));const current=manual||rows.find(r=>!r.querySelector('.serie-check')?.classList.contains('checked'))||rows.at(-1);rows.forEach(row=>{const isCurrent=row===current;row.classList.toggle('serie-current',isCurrent);row.classList.toggle('serie-collapsed',!isCurrent);const trigger=row.querySelector('.serie-compact-trigger');if(trigger)trigger.setAttribute('aria-expanded',String(isCurrent));const sel=row.querySelector('.ativo-tipo'),toggle=row.querySelector('.set-type-toggle');if(sel&&toggle)toggle.textContent=`Tipo de série · ${setTypeLabel(sel.value)}`;atualizarResumoCompactoSerie(row);});});}
 function abrirSerieFocada(btn){const row=btn?.closest('.serie-row'),card=row?.closest('.exercicio-card');if(!row||!card)return;card.querySelectorAll('.serie-row').forEach(r=>r.classList.toggle('serie-manual',r===row));atualizarFocoSeries(card);setTimeout(()=>row.scrollIntoView({behavior:'smooth',block:'center'}),30);}
 function toggleDetalhesSerie(btn){const row=btn?.closest('.serie-row');if(!row)return;const open=row.classList.toggle('advanced-open');btn.setAttribute('aria-expanded',String(open));}
-function prepararModoAcademiaCards(){getExerciseCards().forEach(card=>{const h=card.querySelector('.ex-card-header');if(h&&!h.dataset.focusBound){h.dataset.focusBound='1';h.addEventListener('click',e=>{if(e.target.closest('button,select,input'))return;focarExercicioCard(card,true);});}atualizarEstadoCardExercicio(card);});atualizarFocoSeries();}
+function atualizarMarcadorOrigemSessao(card){
+  if(!card)return;const badge=card.querySelector('.session-origin-badge');if(!badge)return;
+  let type=card.dataset.sessionOrigin||'planned',label='Planejado';if(card.dataset.replacedBy){type='replaced';label='Substituído';}else if(type==='added')label='Adicionado';else if(type==='replacement')label='Substituto';
+  badge.className=`session-origin-badge ${type}`;badge.textContent=label;
+}
+function moverExercicioSessao(btn,dir){
+  const card=btn?.closest('.exercicio-card'),container=card?.parentNode;if(!card||!container)return;
+  const cards=getExerciseCards(),idx=cards.indexOf(card),other=cards[idx+Number(dir)];if(!other)return;
+  if(Number(dir)<0)container.insertBefore(card,other);else container.insertBefore(other,card);
+  _sessionOrderChanged=true;prepararModoAcademiaCards();salvarRascunho();focarExercicioCard(card,false);document.body.classList.add('workout-overview');document.getElementById('workoutFocusLabel')?.setAttribute('aria-expanded','true');haptic(25);
+}
+function prepararModoAcademiaCards(){
+  getExerciseCards().forEach(card=>{
+    const h=card.querySelector('.ex-card-header'),actions=h?.querySelector('.ex-header-actions');
+    if(h&&!h.dataset.focusBound){h.dataset.focusBound='1';h.addEventListener('click',e=>{if(e.target.closest('button,select,input'))return;focarExercicioCard(card,true);});}
+    if(actions&&!actions.querySelector('.session-origin-badge'))actions.insertAdjacentHTML('afterbegin','<span class="session-origin-badge"></span><button type="button" class="session-order-btn" onclick="moverExercicioSessao(this,-1)" aria-label="Mover exercício para cima">↑</button><button type="button" class="session-order-btn" onclick="moverExercicioSessao(this,1)" aria-label="Mover exercício para baixo">↓</button>');
+    const history=[...card.querySelectorAll('.ex-skip-btn')].find(b=>(b.getAttribute('onclick')||'').includes('toggleHistoricoExercicio'));if(history)history.classList.add('ex-history-btn');
+    const skip=[...card.querySelectorAll('.ex-skip-btn')].find(b=>(b.getAttribute('onclick')||'').includes('togglePularExercicio'));if(skip)skip.classList.add('ex-skip-toggle');
+    atualizarMarcadorOrigemSessao(card);atualizarEstadoCardExercicio(card);
+  });atualizarFocoSeries();
+}
 function atualizarEstadoCardExercicio(card){if(!card)return;const rows=[...card.querySelectorAll('.serie-row')],all=rows.length>0&&rows.every(r=>r.querySelector('.serie-check')?.classList.contains('checked'));card.classList.toggle('focus-complete',all);if(card.classList.contains('focus-active'))atualizarRotulosFoco();}
 function aplicarModoAcademia(){const enabled=!!treinoAtivoTemplate&&getAcademiaModeEnabled();document.body.classList.toggle('academia-mode',enabled);prepararModoAcademiaCards();const cards=getExerciseCards();if(!enabled){cards.forEach(c=>c.classList.remove('focus-active','focus-inactive'));return;}if(!cards.some(c=>c.classList.contains('focus-active')))focarPrimeiroExercicioPendente(false);else{atualizarFocoSeries(cards.find(c=>c.classList.contains('focus-active')));atualizarRotulosFoco();}}
 function toggleVisaoGeralTreino(){const open=document.body.classList.toggle('workout-overview'),label=document.getElementById('workoutFocusLabel');if(label)label.setAttribute('aria-expanded',String(open));if(open)setTimeout(()=>document.getElementById('exerciciosAtivos')?.scrollIntoView({behavior:'smooth',block:'start'}),30);else{const active=getExerciseCards().find(c=>c.classList.contains('focus-active'));if(active)focarExercicioCard(active,true);}}
