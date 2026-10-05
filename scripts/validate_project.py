@@ -131,6 +131,10 @@ if taco_path.exists():
     except Exception as e: errors.append(f'Catálogo TACO inválido: {e}')
 
 # Integrações e análises / v12.5.2
+ok((ROOT/'web/data/common-foods.js').exists(), 'Banco de alimentos comuns offline ausente')
+ok('src="./data/common-foods.js"' in html and "'./data/common-foods.js'" in sw, 'Banco comum não carregado ou fora do shell offline')
+for token in ['getAlimentosDisponiveisNutricao','referenciaComumNutricao','liquidGramsPerMl','TBCA / USP']:
+    ok(token in html, f'Recurso de catálogo comum ausente: {token}')
 for token in ['NUTRITION_MICROS','micros100','importarLoteAlimentosNutricao','abrirRelatorioMensalNutricao','correlacaoNutricao','nutritionHealthEnabledV1252','sincronizarNutritionHealthRecentes']:
     ok(token in html, f'Recurso de alimentação v12.5.2 ausente: {token}')
 for token in ['microsJson','NutritionRecord','syncNutritionDay','nutritionPermissions']:

@@ -1,4 +1,4 @@
-# TreinoApp v12.7.0 Beta — Interface móvel renovada
+# TreinoApp v12.7.1 Beta — Alimentos do dia a dia
 
 TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capacitor. A variante Beta pode coexistir com a Stable.
 
@@ -6,8 +6,8 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 
 - Stable: `com.treinoapp.app`
 - Beta: `com.treinoapp.beta`
-- Versão: `12.7.0`
-- versionCode: `120700`
+- Versão: `12.7.1`
+- versionCode: `120701`
 - Android: compile/target API 36, minSdk 26
 - Room: schema 7, somente migrações explícitas
 
@@ -24,7 +24,22 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 - painéis inferiores com fechamento, foco de teclado e suporte a movimento reduzido;
 - sem mudança de permissões Android, assinaturas, IDs de pacote ou schema de dados.
 
-Validação: `npm run validate`, `npm run test:ui` e roteiro `TESTE_v12.7.0_BETA.md`.
+Validação: `npm run validate`, `npm run test:ui` e roteiros `TESTE_v12.7.0_BETA.md` / `TESTE_v12.7.1_BETA.md`.
+
+## Banco comum v12.7.1
+
+- 57 alimentos disponíveis diretamente no diário e nas receitas, mesmo sem internet;
+- 54 composições da TACO 4ª edição (NEPA/UNICAMP), mais leites líquidos e macarrão cozido da TBCA (USP/FoRC/BRASILFOODS);
+- pão de queijo assado com opções pequeno (25 g) e grande (50 g), ambas aproximações editáveis;
+- leites integral/desnatado líquidos em mL, com equivalência aproximada de 1 mL ≈ 1 g, conforme as medidas de referência da TBCA;
+- cru/cozido e líquido/pó explicitamente separados; busca por palavras, sem acentos, com aliases populares;
+- cadastros pessoais têm prioridade; cópia salva apenas ao usar/editar, sem migração ou sobrescrita do histórico;
+- os itens TACO 457/458 têm macros ausentes na fonte original (`*`); o catálogo usa os registros completos TBCA BRC0070G/BRC0044G, identificando a fonte, sem corrigir automaticamente registros pessoais antigos;
+- medidas caseiras estimadas pelo aplicativo não são medidas oficiais TACO. Pese o alimento ou confira o rótulo quando precisar de mais precisão;
+- fontes e configuração em `web/data/common-foods-config.json`; asset gerado por `scripts/build-common-foods.mjs` durante o build;
+- TBCA BRC0070G usa a amostra Vigor; BRC0044G é média de amostras; BRC0116A é macarrão cozido/drenado sem óleo/sal. Valores de referência não substituem o rótulo de outra marca.
+
+Fontes: [TACO / UNICAMP](https://nepa.unicamp.br/taco/), [leite desnatado TBCA](https://www.tbca.net.br/base-dados-en/int_food_composition.php?cod_produto=BRC0070G), [leite integral TBCA](https://www.tbca.net.br/base-dados-en/int_food_composition.php?cod_produto=BRC0044G), [macarrão cozido TBCA](https://www.tbca.net.br/base-dados-en/int_food_composition.php?cod_produto=BRC0116A).
 
 ## Alimentação
 

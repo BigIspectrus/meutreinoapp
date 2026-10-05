@@ -2,12 +2,14 @@ import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildSync } from 'esbuild';
+import { writeCommonFoods } from './build-common-foods.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '..');
 const web = resolve(root, 'web');
 const vendor = resolve(web, 'vendor');
 mkdirSync(vendor, { recursive: true });
+writeCommonFoods();
 
 buildSync({
   entryPoints:[resolve(root, 'src/native-bridge.js')],
