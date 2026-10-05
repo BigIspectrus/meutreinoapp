@@ -24,6 +24,7 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: npm run build:web
       - run: python scripts/validate_project.py
+      - run: npm run test:ui
       - run: npm run prepare:android
       - name: Restaurar chave de assinatura
         shell: bash

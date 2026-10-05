@@ -181,6 +181,15 @@ for token in ['ativo-rir','ativo-rpe','calcularRecuperacaoSeries','setMarkersV12
 ok('rir' in read('android/app/src/main/java/com/treinoapp/app/data/NativeEntities.kt') and 'rpe' in read('android/app/src/main/java/com/treinoapp/app/data/NativeEntities.kt'), 'Room não persiste RIR/RPE')
 ok("onclick='abrirDetalhesTreino(${jsArg(sessionKey)})'" in html, 'Botão Detalhes ainda pode quebrar por aspas no HTML dinâmico')
 
+# Interface móvel / v12.7: apresentação incluída no APK e recursos offline.
+mobilecss=ROOT/'web/mobile-ui.css'
+ok(mobilecss.exists() and 'href="./mobile-ui.css"' in html, 'Interface móvel não referenciada no HTML')
+ok("'./mobile-ui.css'" in sw, 'Interface móvel fora do shell offline')
+for token in ['iniciarSugestaoDashboardUI','filtrarTreinosUI','workoutRestChipUI','nutritionDayContext','ui-modal-open','aria-current','partialConfirmed']:
+    ok(token in html, f'Recurso de interface móvel ausente: {token}')
+if mobilecss.exists():
+    ok('prefers-reduced-motion' in mobilecss.read_text(encoding='utf-8'), 'Movimento reduzido não suportado')
+
 if errors:
     print('VALIDAÇÃO FALHOU')
     for e in errors: print(' -',e)

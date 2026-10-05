@@ -1,4 +1,4 @@
-# TreinoApp v12.6.1 Beta — Exercícios flexíveis durante a sessão
+# TreinoApp v12.7.0 Beta — Interface móvel renovada
 
 TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capacitor. A variante Beta pode coexistir com a Stable.
 
@@ -6,10 +6,25 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 
 - Stable: `com.treinoapp.app`
 - Beta: `com.treinoapp.beta`
-- Versão: `12.6.1`
-- versionCode: `120601`
+- Versão: `12.7.0`
+- versionCode: `120700`
 - Android: compile/target API 36, minSdk 26
 - Room: schema 7, somente migrações explícitas
+
+## Interface móvel v12.7
+
+- navegação por ícones vetoriais locais e seleção identificada para acessibilidade;
+- nova hierarquia, cores nos três temas, campos e alvos de toque confortáveis;
+- início com uma ação que prioriza sessão ativa, rascunho, planejamento e última rotina;
+- rotinas com resumo de grupos/séries, última sessão e busca sem acentos;
+- carga/repetições lado a lado, detalhes de série sob demanda e opções em painel inferior;
+- volta ao início sem reconstruir a sessão; descanso no fluxo, com contador tocável no cabeçalho;
+- metas manuais mais legíveis, refeições recolhidas com estado lembrado e abertura após novos registros;
+- histórico resumido, séries/filtros/comparativos sob demanda;
+- painéis inferiores com fechamento, foco de teclado e suporte a movimento reduzido;
+- sem mudança de permissões Android, assinaturas, IDs de pacote ou schema de dados.
+
+Validação: `npm run validate`, `npm run test:ui` e roteiro `TESTE_v12.7.0_BETA.md`.
 
 ## Alimentação
 

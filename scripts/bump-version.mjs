@@ -33,6 +33,7 @@ g = g.replace(/versionCode\s+\d+/, `versionCode ${versionCode}`).replace(/versio
 fs.writeFileSync(gradlePath, g);
 const indexPath = path.join(root,'web/index.html'); let html = fs.readFileSync(indexPath,'utf8');
 html = html.replace(/const APP_VERSION = '[^']+';/, `const APP_VERSION = '${version}';`).replace(/const APP_BUILD = '[^']+';/, `const APP_BUILD = '${build}';`).replace(/const APP_CACHE_VERSION = '[^']+';/, `const APP_CACHE_VERSION = 'treinoapp-v${version}-${build.replace(/\./g,'')}';`);
+html = html.replace(/(<meta name="treinoapp-version" content=")[^"]+/, `$1${version}`).replace(/(<meta name="treinoapp-build" content=")[^"]+/, `$1${build}`);
 fs.writeFileSync(indexPath,html);
 const swPath = path.join(root,'web/sw.js'); let sw = fs.readFileSync(swPath,'utf8');
 sw = sw.replace(/const APP_VERSION = '[^']+';/, `const APP_VERSION = '${version}';`).replace(/const BUILD = '[^']+';/, `const BUILD = '${build}';`);

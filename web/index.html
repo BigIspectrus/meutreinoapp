@@ -10,8 +10,8 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <title>TreinoApp v12</title>
-  <meta name="treinoapp-version" content="12.0.1">
-  <meta name="treinoapp-build" content="2026.08.18.4">
+  <meta name="treinoapp-version" content="12.7.0">
+  <meta name="treinoapp-build" content="2026.10.05.1">
   <script defer src="./vendor/chart.umd.js"></script>
   <script defer src="./vendor/jspdf.umd.min.js"></script>
   <script defer src="./vendor/qrcode.min.js"></script>
@@ -794,6 +794,7 @@
     }
 
 </style>
+  <link rel="stylesheet" href="./mobile-ui.css">
 </head>
 <body>
 
@@ -1049,12 +1050,13 @@
 <!-- MODAL NOVIDADES -->
 <div class="modal-overlay" id="modalNovidades">
   <div class="modal" style="max-width:500px;">
-    <div class="modal-title">TreinoApp v12.6.1 Beta</div>
+    <div class="modal-title">TreinoApp v12.7.0 Beta</div>
     <div style="font-size:.88em;line-height:1.6;color:var(--text-muted);">
       <p style="color:var(--text);font-weight:700;margin-bottom:8px;">Principais novidades desta versão</p>
-      <p>Durante um treino, o botão ＋ permite buscar um exercício existente ou criar um novo com nome e grupamento muscular.</p>
-      <p style="margin-top:8px;">Você pode adicionar após o exercício atual ou substituir um aparelho ocupado, sem alterar automaticamente o treino pré-montado.</p>
-      <p style="margin-top:8px;">Adições e substituições podem ser desfeitas, sobrevivem ao rascunho e podem ser aplicadas ao template somente após sua confirmação.</p>
+      <p>Interface renovada: menos informações competindo, navegação com ícones consistentes, botões confortáveis e formulários em painéis inferiores.</p>
+      <p style="margin-top:8px;">Início com uma ação principal para começar ou continuar; rotinas com busca e resumo; carga e repetições lado a lado durante a série.</p>
+      <p style="margin-top:8px;">Use ••• no treino para adicionar ou trocar exercícios, ver a sequência e calcular anilhas. O botão de voltar permite consultar outras telas sem perder a sessão.</p>
+      <p style="margin-top:8px;">Alimentação com metas mais legíveis e refeições recolhidas; histórico com análises e séries sob demanda. Metas manuais e integrações existentes foram preservadas.</p>
     </div>
     <div class="modal-footer"><button class="btn btn-primary" onclick="fecharNovidades()">Entendi</button></div>
   </div>
@@ -1301,6 +1303,17 @@
 
 <!-- CANVAS OCULTO PARA COMPARTILHAR -->
 <canvas id="shareCanvas" width="1080" height="1080"></canvas>
+<div class="modal-overlay" id="modalWorkoutToolsUI" onclick="fecharFerramentasFundoUI(event)">
+  <div class="modal">
+    <div class="modal-title">Opções do treino</div>
+    <p class="nutrition-note" style="margin-bottom:18px">A sessão continua em andamento.</p>
+    <div class="ui-tools-list">
+      <button class="btn btn-ghost" onclick="fecharModal('modalWorkoutToolsUI');abrirAddExSessao()"><span data-ui-icon="plus" aria-hidden="true"></span><span>Adicionar ou trocar exercício<small>Inclusive criar um novo nesta sessão</small></span></button>
+      <button class="btn btn-ghost" onclick="fecharModal('modalWorkoutToolsUI');toggleVisaoGeralTreino()"><span data-ui-icon="history" aria-hidden="true"></span><span>Ver todos os exercícios<small>Consultar a sequência e reordenar</small></span></button>
+      <button class="btn btn-ghost" onclick="fecharModal('modalWorkoutToolsUI');abrirModalAnilhas()"><span data-ui-icon="train" aria-hidden="true"></span><span>Calculadora de anilhas<small>Conferir a carga de cada lado</small></span></button>
+    </div>
+  </div>
+</div>
 
 <!-- HEADER -->
 <header class="app-header">
@@ -1314,18 +1327,18 @@
       <div class="timer-disp" id="timerCompact">00:00</div>
       <button class="tmini stop" onclick="pararTimer()">■</button>
     </div>
-    <button class="theme-btn" onclick="alternarTema()" id="btnTema">🌙</button>
+    <button class="theme-btn" onclick="alternarTema()" id="btnTema" aria-label="Alternar tema">🌙</button>
   </div>
 </header>
 <div class="update-banner" id="updateBanner"><span id="updateBannerText">Nova versão disponível.</span><button class="btn btn-primary btn-sm" onclick="aplicarAtualizacaoPWA()">Atualizar</button><button class="btn btn-ghost btn-sm" onclick="adiarAtualizacaoPWA()">Depois</button></div>
 
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav" id="bottomNav">
-  <button class="bnav-btn active" data-tab="dashboard"><span class="bnav-icon">🏠</span>Início</button>
-  <button class="bnav-btn" data-tab="treinar"><span class="bnav-icon">🏋️</span>Treinar</button>
-  <button class="bnav-btn" data-tab="nutricao"><span class="bnav-icon">🍎</span>Alimentação</button>
-  <button class="bnav-btn" data-tab="historico"><span class="bnav-icon">📝</span>Histórico</button>
-  <button class="bnav-btn" data-tab="config"><span class="bnav-icon">⚙️</span>Mais</button>
+  <button class="bnav-btn active" data-tab="dashboard" aria-current="page"><span class="bnav-icon" data-ui-icon="home" aria-hidden="true"></span>Início</button>
+  <button class="bnav-btn" data-tab="treinar"><span class="bnav-icon" data-ui-icon="train" aria-hidden="true"></span>Treinar</button>
+  <button class="bnav-btn" data-tab="nutricao"><span class="bnav-icon" data-ui-icon="food" aria-hidden="true"></span>Alimentação</button>
+  <button class="bnav-btn" data-tab="historico"><span class="bnav-icon" data-ui-icon="history" aria-hidden="true"></span>Histórico</button>
+  <button class="bnav-btn" data-tab="config"><span class="bnav-icon" data-ui-icon="settings" aria-hidden="true"></span>Mais</button>
 </nav>
 
 <!-- ═══════════════ ABA: DASHBOARD ═══════════════ -->
@@ -1380,8 +1393,9 @@
   </div>
 
   <!-- timer mobile -->
-  <div class="card" id="timerCardMobile" style="display:none;">
-    <div class="card-title">⏱️ Cronômetro</div>
+  <details class="card utility-disclosure" id="timerCardMobile" style="display:none;">
+    <summary>Cronômetro avulso <span>Usar fora do treino</span></summary>
+    <div class="utility-body">
     <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
       <button class="btn btn-ghost btn-sm" style="width:auto;" onclick="iniciarTimer(90)">1m 30s</button>
       <button class="btn btn-ghost btn-sm" style="width:auto;" onclick="iniciarTimer(150)">2m 30s</button>
@@ -1391,28 +1405,33 @@
     <div style="text-align:center;margin-top:10px;">
       <div style="font-family:'Arial Narrow','Segoe UI',Arial,sans-serif;font-size:2.5em;font-weight:800;" id="timerBig">00:00</div>
     </div>
-  </div>
+    </div>
+  </details>
 
   <!-- selecionar treino -->
-  <div class="card">
-    <div class="card-title">🗂️ Selecionar Treino</div>
+  <div class="card workout-picker">
+    <div class="section-heading"><div><h2>Seus treinos</h2><p>Escolha uma rotina para começar.</p></div><button class="btn btn-ghost btn-icon" onclick="abrirModalTreino()" aria-label="Criar treino">＋</button></div>
+    <label class="visually-hidden" for="treinoBusca">Buscar treino</label>
+    <input type="search" id="treinoBusca" placeholder="Buscar treino ou grupo muscular" oninput="filtrarTreinosUI()" autocomplete="off">
     <div class="treino-selector" id="treinoSelector"></div>
-    <button class="btn btn-outline btn-sm" style="width:auto;" onclick="abrirModalTreino()">+ Criar Novo Treino</button>
+    <p id="treinoBuscaVazia" class="nutrition-note" role="status" hidden>Nenhum treino encontrado. Tente outro nome ou grupo.</p>
+    <button class="btn btn-outline" onclick="abrirModalTreino()">Criar novo treino</button>
   </div>
 
   <!-- treino ativo -->
   <div class="card" id="treinoAtivoCard" style="display:none;">
     <div class="card-title" style="justify-content:space-between;">
+      <button class="workout-back" type="button" onclick="irParaAba('dashboard')" aria-label="Voltar ao início sem encerrar treino">‹</button>
       <span id="treinoAtivoNome">—</span>
-      <input type="date" id="dataTreinoAtivo" style="width:auto;padding:6px 10px;font-size:.83em;">
+      <button type="button" class="workout-rest-chip" id="workoutRestChipUI" onclick="abrirDescansoUI()" aria-label="Ver descanso e ajustar tempo" hidden>00:00</button>
+      <input type="date" id="dataTreinoAtivo" aria-label="Data do treino" style="width:auto;padding:6px 10px;font-size:.83em;">
     </div>
     <div class="treino-progress" id="treinoProgressBar" style="display:none;"><span style="font-size:.82em;">📊</span><div class="treino-progress-bar"><div class="treino-progress-fill" id="treinoProgressFill" style="width:0%"></div></div><span class="treino-progress-text" id="treinoProgressText">0%</span></div>
     <div class="workout-focus-nav" id="workoutFocusNav">
       <button type="button" class="btn btn-ghost btn-sm" onclick="navegarExercicioFoco(-1)" aria-label="Exercício anterior">‹</button>
       <button type="button" class="workout-focus-label" id="workoutFocusLabel" onclick="toggleVisaoGeralTreino()" aria-expanded="false" title="Ver lista de exercícios">Exercício 1</button>
       <button type="button" class="btn btn-ghost btn-sm" onclick="navegarExercicioFoco(1)" aria-label="Próximo exercício">›</button>
-      <button type="button" class="btn btn-outline btn-sm" onclick="abrirAddExSessao()" title="Trocar ou adicionar exercício" aria-label="Trocar ou adicionar exercício">＋</button>
-      <button type="button" class="btn btn-outline btn-sm" onclick="abrirModalAnilhas()" title="Calculadora de anilhas" aria-label="Calculadora de anilhas">◉</button>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="abrirFerramentasTreinoUI()" aria-label="Opções do treino">•••</button>
     </div>
     <div class="session-change-bar" id="sessionChangeBar"></div>
     <div id="exerciciosAtivos"></div>
@@ -1513,9 +1532,10 @@
 <div class="tab-content" id="aba-nutricao">
   <div class="nutrition-datebar">
     <button class="btn btn-ghost btn-icon" type="button" onclick="mudarDataNutricao(-1)" aria-label="Dia anterior">‹</button>
-    <input type="date" id="nutritionDate" onchange="selecionarDataNutricao(this.value)">
+    <input type="date" id="nutritionDate" aria-label="Data do diário alimentar" onchange="selecionarDataNutricao(this.value)">
     <button class="btn btn-ghost btn-icon" type="button" onclick="mudarDataNutricao(1)" aria-label="Próximo dia">›</button>
   </div>
+  <div class="nutrition-day-context" id="nutritionDayContext" aria-live="polite"></div>
   <div id="nutritionSummary"></div>
   <div class="nutrition-primary-actions">
     <button class="btn btn-primary" type="button" onclick="abrirRegistroNutricao(refeicaoSugeridaNutricao())">＋ Registrar alimento</button>
@@ -1546,13 +1566,13 @@
   <div id="resumoSemanalContainer"></div>
 
   <div class="card">
-    <div class="card-title">📝 Registros</div>
+    <div class="card-title">Seus treinos registrados</div>
+    <label class="visually-hidden" for="histBusca">Buscar no histórico</label>
+    <div class="hist-search"><input type="search" id="histBusca" placeholder="Buscar treino, exercício ou data" oninput="debouncedHistorico()"></div>
+    <details class="ui-disclosure"><summary>Filtros e modo de visualização</summary><div class="ui-disclosure-body">
     <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
       <button class="periodo-btn active" id="modoHistBtn" onclick="toggleModoHist(this)">📋 Agrupado por sessão</button>
       <button class="periodo-btn" id="modoListBtn" onclick="toggleModoHist(this)">☰ Lista detalhada</button>
-    </div>
-    <div class="hist-search">
-      <input type="text" id="histBusca" placeholder="🔍 Buscar exercício, data..." oninput="debouncedHistorico()">
     </div>
     <div class="filter-bar" id="filtroGrupos">
       <button class="filter-btn active" data-grupo="" onclick="filtrarHistorico(this)">Todos</button>
@@ -1563,8 +1583,9 @@
       <button class="filter-btn" data-grupo="Braços" onclick="filtrarHistorico(this)">Braços</button>
       <button class="filter-btn" data-grupo="Outros" onclick="filtrarHistorico(this)">Outros</button>
     </div>
+    </div></details>
     <div id="listaHistorico"></div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:11px;">
+    <div id="histPaginationUI" style="display:flex;justify-content:space-between;align-items:center;margin-top:11px;">
       <span style="font-size:.78em;color:var(--text-muted);" id="histPagInfo"></span>
       <div style="display:flex;gap:7px;">
         <button class="btn btn-ghost btn-sm" style="width:auto;" id="btnHistPrev" onclick="mudarPagHist(-1)">‹ Ant</button>
@@ -1573,15 +1594,17 @@
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-title">📊 Comparativo de Períodos</div>
+  <details class="card utility-disclosure">
+    <summary>Comparativo de períodos <span>7, 30 ou 90 dias</span></summary>
+    <div class="utility-body">
     <div class="periodo-sel" id="periodoSel">
       <button class="periodo-btn active" data-p="7" onclick="selecionarPeriodo(this)">7 dias</button>
       <button class="periodo-btn" data-p="30" onclick="selecionarPeriodo(this)">30 dias</button>
       <button class="periodo-btn" data-p="90" onclick="selecionarPeriodo(this)">3 meses</button>
     </div>
     <div id="comparativoContainer"></div>
-  </div>
+    </div>
+  </details>
 </div>
 
 <!-- ═══════════════ ABA: PROGRESSO ═══════════════ -->
@@ -1848,6 +1871,7 @@
 
 <!-- ═══════════════ ABA: CONFIG ═══════════════ -->
 <div class="tab-content" id="aba-config">
+  <div class="section-heading"><div><h2>Ajustes e ferramentas</h2><p>Encontre o que precisa por categoria.</p></div></div>
   <div class="privacy-note" id="runtimeStorageNote"><strong>Seus dados ficam neste dispositivo.</strong> O TreinoApp usa armazenamento local privado. Faça backups periódicos antes de trocar de aparelho ou apagar os dados do app.</div>
   <div class="settings-hub" aria-label="Categorias de ajustes">
     <button type="button" data-settings-tab="treinos" onclick="abrirCategoriaConfig('treinos')">🏋️ <div>Treinos<span>Rotinas e exercícios</span></div></button>
@@ -2021,14 +2045,14 @@
 </div>
 
 <script>
-const APP_VERSION = '12.6.1';
-const APP_BUILD = '2026.09.05.2';
+const APP_VERSION = '12.7.0';
+const APP_BUILD = '2026.10.05.1';
 const DATA_SCHEMA_VERSION = 18;
 const GITHUB_REPO='BigIspectrus/meutreinoapp';
 const GITHUB_PAGES_BASE='https://bigispectrus.github.io/meutreinoapp';
 let _latestAndroidReleaseUrl='';
 let _nativeChannel='web';
-const APP_CACHE_VERSION = 'treinoapp-v12.6.1-202609052';
+const APP_CACHE_VERSION = 'treinoapp-v12.7.0-202610051';
 
 const SET_TYPES={workset:'Work set',warmup:'Aquecimento',topset:'Top set',backoff:'Back-off',dropset:'Drop set',cluster:'Cluster set',fst7:'FST-7',restpause:'Rest-pause',myoreps:'Myo-reps',amrap:'AMRAP'};
 function normalizarSetType(v){return SET_TYPES[v]?v:'workset';}
@@ -2130,6 +2154,11 @@ window.onload = async function() {
   renderizarTreinoSelector();
   renderizarListaTreinosSalvos();
   verificarStatusNotif();
+  // Navegação pronta antes de aguardar o registro Web do service worker.
+  document.querySelectorAll('.bnav-btn').forEach(btn=>btn.addEventListener('click',()=>irParaAba(btn.dataset.tab)));
+  document.querySelectorAll('#subTabsProgresso .sub-tab').forEach(btn=>btn.addEventListener('click',()=>ativarSubTab(btn.dataset.sub)));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.getElementById('aba-dashboard').classList.add('active');
 
   // Service Worker
   if(!isNativeAndroid() && 'serviceWorker' in navigator) {
@@ -2172,17 +2201,6 @@ window.onload = async function() {
   verificarNovidadesVersao();
   salvarSnapshotDiario();
   if(!localStorage.getItem('_onboardingV10')){ setTimeout(()=>{ toast('Comece criando ou escolhendo um treino. Seus dados ficam salvos neste aparelho.','info'); localStorage.setItem('_onboardingV10','1'); },700); }
-  // Bottom nav click handlers
-  document.querySelectorAll('.bnav-btn').forEach(btn=>{
-    btn.addEventListener('click',()=>irParaAba(btn.dataset.tab));
-  });
-  // Sub-tabs click handlers
-  document.querySelectorAll('#subTabsProgresso .sub-tab').forEach(btn=>{
-    btn.addEventListener('click',()=>ativarSubTab(btn.dataset.sub));
-  });
-  // Set dashboard as active tab
-  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
-  document.getElementById('aba-dashboard').classList.add('active');
   const shortcutTab=new URLSearchParams(location.search).get('tab');
   if(['dashboard','treinar','nutricao','historico','progresso','config'].includes(shortcutTab)){ setTimeout(()=>irParaAba(shortcutTab),0); }
   atualizarCabecalhoAdaptavel();
@@ -2213,14 +2231,17 @@ function atualizarCabecalhoAdaptavel(){
 }
 
 function irParaAba(id) {
+  if(!document.getElementById('aba-'+id))return;
+  fecharQuickInput();
   // O treino continua ativo ao navegar entre abas; a barra fixa permite voltar/finalizar.
   _currentTab = id;
+  document.body.classList.toggle('workout-mode',!!treinoAtivoTemplate&&id==='treinar');
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.bnav-btn').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.bnav-btn').forEach(t => {t.classList.remove('active');t.removeAttribute('aria-current');});
   document.getElementById('aba-'+id).classList.add('active');
   const navTarget = id==='progresso' ? 'historico' : id;
   const navBtn = document.querySelector(`.bnav-btn[data-tab="${navTarget}"]`);
-  if(navBtn) navBtn.classList.add('active');
+  if(navBtn){navBtn.classList.add('active');navBtn.setAttribute('aria-current','page');}
   // Trigger renders
   if(id==='dashboard') renderizarDashboard();
   if(id==='nutricao') renderizarNutricao();
@@ -2228,7 +2249,7 @@ function irParaAba(id) {
   if(id==='progresso') ativarSubTab(_currentSubTab);
   if(id==='config') { renderizarListaTreinosSalvos(); verificarStatusNotif(); carregarPerfil(); carregarSomConfig(); carregarAlertasDescanso(false); renderizarHistoricoBackup(); renderizarConfigPerfilPub(); carregarTemaConfig(); carregarAcademiaModeConfig(); carregarEffortMode(); abrirCategoriaConfig(localStorage.getItem('settingsCategory')||'treinos'); atualizarStorageStatus(); atualizarDiagnosticoUI(); atualizarBuildInfoUI(); }
   atualizarCabecalhoAdaptavel();
-  window.scrollTo({top:0,behavior:'smooth'});
+  window.scrollTo({top:0,behavior:'instant'});
 }
 
 function toggleDashboardSecondary(){
@@ -2512,7 +2533,9 @@ function renderizarTreinoSelector() {
   const treinos = getTreinosSalvos();
   sel.innerHTML = '';
   if(treinos.length === 0) {
-    sel.innerHTML = '<p style="color:var(--text-muted);font-size:.85em;">Nenhum treino criado. Crie um!</p>';
+    sel.innerHTML = '<div class="empty-state"><p>Seu primeiro treino começa aqui.</p><p class="nutrition-note" style="margin-top:8px">Crie uma rotina com seus exercícios. Depois, basta tocar nela para treinar.</p></div>';
+    document.getElementById('treinoBusca').hidden=true;
+    document.getElementById('treinoBuscaVazia').hidden=true;
     return;
   }
   treinos.forEach(t => {
@@ -2520,10 +2543,16 @@ function renderizarTreinoSelector() {
     btn.type = 'button';
     btn.className = 'treino-card-btn';
     btn.dataset.id = t.id;
-    btn.innerHTML = `<span class="tc-icon">${t.icone||'💪'}</span>${esc(t.nome)}`;
+    const exs=t.exercicios||[],groups=[...new Set(exs.map(grupoDoExercicio))].filter(Boolean);
+    const total=exs.reduce((sum,ex)=>sum+(Number(t.seriesMap?.[ex])||Number(t.series)||0),0);
+    const last=ultimoTreinoDoTemplate(t),draft=getRascunhoValido(t.id);
+    btn.dataset.search=normalizarBuscaUI([t.nome,...groups,...exs].join(' '));
+    btn.innerHTML = `<span class="tc-icon" aria-hidden="true">${esc(t.icone||'💪')}</span><span class="tc-copy"><span class="tc-name">${esc(t.nome)}</span><span class="tc-meta">${exs.length} exercícios · ${total} séries · ${esc(groups.join(' / '))}</span><span class="tc-last">${draft?'Sessão em andamento · continuar':last?'Última sessão: '+last.data.split('-').reverse().join('/'):'Pronto para sua primeira sessão'}</span></span><span class="tc-chevron" aria-hidden="true">›</span>`;
     btn.onclick = () => selecionarTreino(t, btn);
     sel.appendChild(btn);
   });
+  document.getElementById('treinoBusca').hidden=treinos.length<3;
+  filtrarTreinosUI();
 }
 
 // Buscar último treino desse template para comparativo
@@ -2720,7 +2749,7 @@ function oferecerAtualizacaoTemplateSessao(proposta){
   const ok=document.getElementById('modalConfirmOk');if(ok){ok.textContent='Atualizar ficha';ok.className='btn btn-primary';}
 }
 
-function salvarTreinoAtivo(sessionContext={sessionRpe:null,contextTags:[],sessionNote:''}) {
+function salvarTreinoAtivo(sessionContext={sessionRpe:null,contextTags:[],sessionNote:''},partialConfirmed=false) {
   const data=document.getElementById('dataTreinoAtivo').value;
   if(!data) return toast('Preencha a data','error');
   const rows=[...document.querySelectorAll('#exerciciosAtivos .serie-row')].filter(r=>!r.closest('.exercicio-card')?.classList.contains('skipped'));
@@ -2729,8 +2758,10 @@ function salvarTreinoAtivo(sessionContext={sessionRpe:null,contextTags:[],sessio
   if(!concluidas.length) return toast('Marque pelo menos uma série como concluída antes de finalizar o treino','warn');
   const usar=concluidas;
   const faltamTotal=rows.length-concluidas.length;
-  if(faltamTotal>0){
-    if(!confirm(`${faltamTotal} série(s) ainda não foram concluídas. Finalizar agora e salvar somente as ${concluidas.length} série(s) concluídas?`)) return;
+  if(faltamTotal>0&&!partialConfirmed){
+    confirmarAcao('Concluir treino parcial?',`${faltamTotal} série(s) ainda não foram concluídas. Salvar somente as ${concluidas.length} série(s) concluídas?`,()=>salvarTreinoAtivo(sessionContext,true));
+    const ok=document.getElementById('modalConfirmOk');ok.textContent='Salvar treino';ok.className='btn btn-primary';
+    return;
   }
   const propostaTemplate=capturarPropostaTemplateSessao();
   const historico=getHist().slice();
@@ -3137,6 +3168,7 @@ function renderizarHistorico() {
   renderHealthPerformance();
 
   const busca = getBusca();
+  document.getElementById('histPaginationUI').hidden=histModoAgrupado;
   if(histModoAgrupado) {
     renderizarHistoricoAgrupado(lista, busca);
     document.getElementById('histPagInfo').innerText='';
@@ -3189,7 +3221,7 @@ function renderizarHistoricoAgrupado(lista, busca='') {
     Object.entries(porEx).forEach(([ex,series])=>{ const temPR=series.some(x=>x.carga===maxEx[ex]), temPlateau=plateau.includes(ex); const pills=series.sort((a,b)=>a.numSerie-b.numSerie).map(x=>`<span class="serie-pill${x.carga===maxEx[ex]?' pr':''}">${x.carga}kg×${x.reps||'?'}</span>`).join(''); exsHTML+=`<div class="hist-sessao-ex"><div class="hist-sessao-ex-nome">${esc(ex)}${temPR?'<span class="pr-badge">PR</span>':''}${temPlateau?'<span class="plateau-badge">Plateau</span>':''}</div><div class="hist-sessao-series">${pills}</div></div>`; });
     const sessao=document.createElement('div'); sessao.className='hist-sessao';
     const hlink=getHealthLinks?.()?.[sessionKey];
-    sessao.innerHTML=`<div class="hist-sessao-header"><div><div class="hist-sessao-title">${esc(nomeSessao)} · ${dataBr}${hlink?'<span class="hist-health-badge">Relógio</span>':''}</div><div class="hist-sessao-meta">${grupos.join(', ')} · ${totalSeries} séries${durTxt}${hlink?.avgHr?' · '+Math.round(hlink.avgHr)+' bpm':''}${hlink?.kcal?' · '+Math.round(hlink.kcal)+' kcal':''}</div></div><div style="display:flex;gap:6px"><button class="btn btn-outline btn-sm" onclick='abrirDetalhesTreino(${jsArg(sessionKey)})'>Detalhes</button><button class="btn btn-danger btn-sm btn-icon" aria-label="Excluir sessão" onclick='apagarSessao(${jsArg(sessionKey)})'>×</button></div></div><div class="hist-sessao-body" onclick='abrirDetalhesTreino(${jsArg(sessionKey)})' style="cursor:pointer">${exsHTML}</div>`;
+    sessao.innerHTML=`<div class="hist-sessao-header"><div class="eyebrow">${dataBr}${hlink?' · Relógio conectado aos dados':''}</div><div class="hist-sessao-title">${esc(nomeSessao)}</div><div class="hist-sessao-meta">${Object.keys(porEx).length} exercícios · ${totalSeries} séries${durTxt}<br>${esc(grupos.join(' / '))}${hlink?.avgHr?' · '+Math.round(hlink.avgHr)+' bpm':''}</div><div class="hist-session-actions"><button class="btn btn-outline btn-sm" onclick='abrirDetalhesTreino(${jsArg(sessionKey)})'>Análise do treino ›</button><button class="btn btn-danger btn-sm btn-icon" style="flex:none" aria-label="Excluir sessão" onclick='apagarSessao(${jsArg(sessionKey)})'>×</button></div></div><details class="hist-session-details"><summary>Ver exercícios e séries</summary><div class="hist-sessao-body">${exsHTML}</div></details>`;
     lista.appendChild(sessao);
   });
 }
@@ -3719,6 +3751,8 @@ function atualizarTimerUI(seg) {
   if(tb) tb.innerText=str;
   if(fd){ if(seg>0){ fd.innerText=str; fd.classList.remove('idle'); } else{ fd.innerText='Descanso'; fd.classList.add('idle'); } }
   const ri=document.getElementById('restInline'), rt=document.getElementById('restInlineTime'); if(rt) rt.textContent=str; if(ri){ri.classList.toggle('visible',seg>0 && !!treinoAtivoTemplate);ri.classList.toggle('ending',seg>0&&seg<=10);}
+  const chip=document.getElementById('workoutRestChipUI');if(chip){chip.hidden=seg<=0||!treinoAtivoTemplate;chip.textContent=str;}
+  document.body.classList.toggle('ui-resting',seg>0&&!!treinoAtivoTemplate);
   atualizarCabecalhoAdaptavel();
 }
 
@@ -4654,36 +4688,19 @@ function renderizarDashboard() {
   const hora = new Date().getHours();
   const saudacao = hora<12?'Bom dia':hora<18?'Boa tarde':'Boa noite';
 
-  hero.innerHTML=`
-    <div class="dash-hero">
-      <div class="dash-hero-top">
-        <div>
-          <div class="dash-greeting">${p.avatar||'💪'} ${saudacao}${p.nome?`, <span>${p.nome}</span>`:''}!</div>
-          <div style="font-size:.78em;color:var(--text-muted);margin-top:5px;">Seu próximo treino está a um toque.</div>
-        </div>
-        <div style="text-align:right;">
-          <div class="dash-streak">${streak}</div>
-          <div class="dash-streak-lbl">dias de streak 🔥</div>
-        </div>
-      </div>
-      <div class="dash-kpis">
-        <div class="dash-kpi"><div class="dash-kpi-val">${semDias}</div><div class="dash-kpi-lbl">Treinos semana</div></div>
-        <div class="dash-kpi"><div class="dash-kpi-val">${(semVol/1000).toFixed(1)}t</div><div class="dash-kpi-lbl">Volume semana</div></div>
-      </div>
-      ${ultimaDateBr?`<div class="dash-last">Último: <strong>${ultimaDateBr}</strong> · ${ultimaExs.slice(0,2).join(', ')}${ultimaExs.length>2?' +'+(ultimaExs.length-2):''}</div>`:''}
-      ${(()=>{const ts=getTreinosSalvos();let rasc=getRascunhoValido(); const draftT=rasc?ts.find(t=>String(t.id)===String(rasc.templateId)):null;if(draftT)return `<button class="cta-treinar" onclick='iniciarTreinoPorId(${jsArg(draftT.id)})'>CONTINUAR ${esc(draftT.nome).toUpperCase()}</button>`;if(rasc?.templateSnapshot?.isAdHoc)return `<button class="cta-treinar" onclick="continuarSessaoAvulsa()">CONTINUAR SESSÃO AVULSA</button>`;const lastTid=ultimaRegs.find(r=>r.templateId)?.templateId||null;const lastT=ts.find(t=>String(t.id)===String(lastTid));return lastT?`<button class="cta-treinar" onclick='iniciarTreinoPorId(${jsArg(lastT.id)})'>REPETIR ${esc(lastT.nome).toUpperCase()}</button>`:`<button class="cta-treinar" onclick="irParaAba('treinar')">INICIAR TREINO</button>`;})()}
-    </div>`;
-
-  // Animar números do dashboard
-  setTimeout(()=>{
-    const streakEl = document.querySelector('.dash-streak');
-    if(streakEl && streak>0) animateCountUp(streakEl, streak, 600);
-    document.querySelectorAll('.dash-kpi-val').forEach(el => {
-      const txt = el.textContent;
-      const num = parseFloat(txt);
-      if(!isNaN(num) && num>0) animateCountUp(el, num, 700);
-    });
-  }, 100);
+  const ts=getTreinosSalvos(),draft=getRascunhoValido(),planned=getTreinoPlanejadoHoje();
+  const draftT=draft?(ts.find(t=>String(t.id)===String(draft.templateId))||draft.templateSnapshot):null;
+  const lastT=ts.find(t=>String(t.id)===String(ultimaRegs.find(r=>r.templateId)?.templateId));
+  const suggested=treinoAtivoTemplate||draftT||planned||lastT||ts[0];
+  const continuing=!!(treinoAtivoTemplate||draftT),exCount=suggested?.exercicios?.length||0;
+  const heading=continuing?'Seu treino está te esperando':planned?'Planejado para hoje':'Vamos treinar?';
+  const action=continuing?'Continuar treino':'Começar treino';
+  hero.innerHTML=`<div class="home-greeting"><div><h1>${saudacao}${p.nome?', '+esc(p.nome.split(' ')[0]):''}.</h1><p>${esc(new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'}))}</p></div><div class="home-avatar" aria-hidden="true">${esc(p.avatar||'💪')}</div></div>
+    <section class="home-workout"><div class="eyebrow">${heading}</div><h2>${esc(suggested?.nome||'Seu próximo treino')}</h2><p>${suggested?exCount+' exercícios · '+esc([...new Set((suggested.exercicios||[]).map(grupoDoExercicio))].join(' / ')):'Escolha ou crie uma rotina para registrar sua evolução.'}</p><button class="btn btn-primary" onclick="iniciarSugestaoDashboardUI()">${suggested?action:'Escolher treino'}${iconeUI('arrow')}</button>${suggested&&!continuing?'<button class="home-choice" onclick="irParaAba(\'treinar\')">Escolher outro treino</button>':''}</section>
+    <div class="home-week" aria-label="Resumo da semana"><div><strong>${semDias}</strong><span>treinos na semana</span></div><div><strong>${(semVol/1000).toFixed(1)} t</strong><span>volume na semana</span></div><div><strong>${streak}</strong><span>dias seguidos</span></div></div>
+    <div class="home-section-label">Atalhos do dia</div><div class="home-shortcuts"><button class="home-shortcut" onclick="irParaAba('nutricao');abrirRegistroNutricao(refeicaoSugeridaNutricao())">${iconeUI('plus')}<span><strong>Registrar alimento</strong><small>Direto para sua refeição</small></span></button><button class="home-shortcut" onclick="irParaAba('progresso');ativarSubTab('recovery')">${iconeUI('heart')}<span><strong>Recuperação</strong><small>Dados após sincronizar</small></span></button></div>`;
+  // Uma única ação principal evita duplicar o treino planejado e o sugerido.
+  document.getElementById('dashPlannedWorkout').hidden=true;
 
   // Mini line chart (last 14 days volume)
   const ultimas14=[];
@@ -5676,7 +5693,7 @@ GitHub Pages: ${remote?.version?`v${remote.version}${remote.build?' · '+remote.
 PWA: ${d.standalone?'instalado':'navegador'} | Registros: ${d.registros} | Treinos: ${d.treinos}`;
 }
 async function copiarDiagnostico(){let d=getDiagnostico();if(isNativeAndroid()){try{d={...d,nativeInfo:await window.TreinoNativeBridge.getNativeInfo(),health:await window.TreinoNativeBridge.getHealthStatus()};}catch(_){}}const txt=JSON.stringify(d,null,2);try{await navigator.clipboard.writeText(txt);toast('Diagnóstico copiado','success')}catch(e){prompt('Copie o diagnóstico:',txt)}}
-window.addEventListener('error',e=>registrarErroLocal(e.message,e.filename,e.lineno));window.addEventListener('unhandledrejection',e=>registrarErroLocal(String(e.reason||'Promise rejeitada')));
+window.addEventListener('error',e=>{registrarErroLocal(e.message,e.filename,e.lineno);console.error('Erro na interface:',e.message);});window.addEventListener('unhandledrejection',e=>{registrarErroLocal(String(e.reason||'Promise rejeitada'));console.error('Erro assíncrono na interface:',String(e.reason||'Promise rejeitada'));});
 function registrarErroLocal(msg,arquivo='',linha=''){try{const arr=JSON.parse(localStorage.getItem('_appErrors')||'[]');arr.push({at:new Date().toISOString(),msg:String(msg).slice(0,500),arquivo:String(arquivo).slice(-120),linha});localStorage.setItem('_appErrors',JSON.stringify(arr.slice(-20)))}catch(e){}}
 
 // ════════════════════════════════════════════════
@@ -5693,10 +5710,10 @@ function setModoTreinoAtivo(ativo,template=null){
   if(bar){bar.classList.toggle('visible',!!ativo);bar.onclick=e=>{if(e.target.closest('button'))return;if(ativo)irParaAba('treinar');};}
   if(ativo){const t=template||treinoAtivoTemplate,title=document.getElementById('workoutStickyTitle');if(title)title.textContent=t?.nome||'Treino em andamento';solicitarWakeLock();}
   else{const rest=document.getElementById('restInline');if(rest)rest.classList.remove('visible');_proximaSerieDescanso=null;_ultimaSerieConcluida=null;clearTimeout(_ultimaSerieUndoTimer);document.body.classList.remove('workout-overview');liberarWakeLock();}
-  document.body.classList.toggle('workout-mode',!!ativo);document.body.classList.toggle('academia-mode',!!ativo&&getAcademiaModeEnabled());atualizarCabecalhoAdaptavel();
+  document.body.classList.toggle('workout-mode',!!ativo&&_currentTab==='treinar');document.body.classList.toggle('academia-mode',!!ativo&&getAcademiaModeEnabled());atualizarCabecalhoAdaptavel();
   if(ativo)setTimeout(()=>aplicarModoAcademia(),0);else fecharQuickInput();
 }
-function iniciarTreinoPorId(id){ const t=getTreinosSalvos().find(x=>String(x.id)===String(id)); if(!t) return toast('Treino não encontrado','error'); irParaAba('treinar'); setTimeout(()=>{ const btn=[...document.querySelectorAll('.treino-card-btn')].find(b=>String(b.dataset.id)===String(id)); if(btn) selecionarTreino(t,btn); },80); }
+function iniciarTreinoPorId(id){ const t=getTreinosSalvos().find(x=>String(x.id)===String(id)); if(!t) return toast('Treino não encontrado','error'); irParaAba('treinar'); setTimeout(()=>{ const btn=[...document.querySelectorAll('.treino-card-btn')].find(b=>String(b.dataset.id)===String(id)); selecionarTreino(t,btn||null); },80); }
 function duplicarTreino(id){const treinos=getTreinosSalvos(),t=treinos.find(x=>String(x.id)===String(id));if(!t)return;const copia={...t,id:gerarId('treino'),nome:t.nome+' — cópia',exercicios:[...t.exercicios],seriesMap:t.seriesMap?{...t.seriesMap}:{},restMap:t.restMap?{...t.restMap}:{},incrementMap:t.incrementMap?{...t.incrementMap}:{},repRangeMap:t.repRangeMap?{...t.repRangeMap}:{}};treinos.push(copia);setTreinosSalvos(treinos);renderizarTreinoSelector();renderizarListaTreinosSalvos();toast('Treino duplicado','success');}
 function buscarExercicioBuilder(q){ const box=document.getElementById('builderSearchResults'); if(!box) return; q=(q||'').trim().toLowerCase(); if(q.length<2){box.classList.remove('open');box.innerHTML='';return;} const todos=obterExerciciosSalvos(), arr=[]; Object.entries(todos).forEach(([g,exs])=>exs.forEach(ex=>{if(ex.toLowerCase().includes(q))arr.push({g,ex})})); box.innerHTML=arr.slice(0,12).map(({g,ex})=>`<div class="builder-search-item" data-ex="${esc(ex)}"><strong>${esc(ex)}</strong><div style="font-size:.75em;color:var(--text-muted);">${esc(g)}</div></div>`).join('')||'<div class="builder-search-item">Nenhum exercício encontrado</div>'; box.classList.add('open'); box.querySelectorAll('[data-ex]').forEach(el=>el.onclick=()=>{const ex=el.dataset.ex;if(!exsDoBuilder.includes(ex))exsDoBuilder.push(ex);renderizarBuilderList();document.getElementById('builderSearch').value='';box.classList.remove('open');}); }
 // ════════════════════════════════════════════════
@@ -6433,9 +6450,9 @@ function barraNutricao(valor,meta){
   return '<div class="nutrition-progress'+(over?' over':'')+'"><span style="width:'+pct.toFixed(1)+'%"></span></div>';
 }
 function htmlMacroNutricao(nome,valor,meta){
-  return '<div class="nutrition-macro"><div class="nutrition-macro-name">'+nome+'</div><div class="nutrition-macro-value">'+formatarNutricao(valor,1)+' / '+formatarNutricao(meta,0)+' g</div>'+barraNutricao(valor,meta)+'</div>';
+  return '<div class="nutrition-macro"><div class="nutrition-macro-name">'+nome+'</div><div class="nutrition-macro-value">'+formatarNutricao(valor,1)+' g<small>meta '+formatarNutricao(meta,0)+' g</small></div>'+barraNutricao(valor,meta)+'</div>';
 }
-function htmlMicrosNutricao(tot,goals){const list=NUTRITION_MICROS.filter(m=>numeroNutricao(tot?.micros?.[m.key])>0||numeroNutricao(goals?.micros?.[m.key])>0);if(!list.length)return '<p class="nutrition-note" style="margin-top:10px">Micronutrientes aparecerão quando os alimentos tiverem esses dados.</p>';return '<details style="margin-top:12px"><summary class="nutrition-note" style="cursor:pointer">Micronutrientes do dia ('+list.length+')</summary><div class="nutrition-micro-grid" style="margin-top:9px">'+list.map(m=>{const value=numeroNutricao(tot.micros?.[m.key]),goal=numeroNutricao(goals?.micros?.[m.key]),meta=goal?' / '+formatarNutricao(goal,goal<10?2:0)+' '+m.unit:'';return '<div class="nutrition-micro-item"><strong>'+esc(m.label)+'</strong><span>'+formatarNutricao(value,value<10?2:0)+meta+(goal?' · '+formatarNutricao(value/goal*100,0)+'%':'')+'</span>'+(goal?barraNutricao(value,goal):'')+'</div>';}).join('')+'</div><p class="nutrition-note" style="margin-top:8px">Metas são manuais; valores dependem da composição cadastrada de cada alimento.</p></details>';}
+function htmlMicrosNutricao(tot,goals){const list=NUTRITION_MICROS.filter(m=>numeroNutricao(tot?.micros?.[m.key])>0||numeroNutricao(goals?.micros?.[m.key])>0);if(!list.length)return '';return '<details style="margin-top:12px"><summary class="nutrition-note" style="cursor:pointer">Micronutrientes do dia ('+list.length+')</summary><div class="nutrition-micro-grid" style="margin-top:9px">'+list.map(m=>{const value=numeroNutricao(tot.micros?.[m.key]),goal=numeroNutricao(goals?.micros?.[m.key]),meta=goal?' / '+formatarNutricao(goal,goal<10?2:0)+' '+m.unit:'';return '<div class="nutrition-micro-item"><strong>'+esc(m.label)+'</strong><span>'+formatarNutricao(value,value<10?2:0)+meta+(goal?' · '+formatarNutricao(value/goal*100,0)+'%':'')+'</span>'+(goal?barraNutricao(value,goal):'')+'</div>';}).join('')+'</div><p class="nutrition-note" style="margin-top:8px">Metas são manuais; valores dependem da composição cadastrada de cada alimento.</p></details>';}
 function renderizarResumoNutricao(entries){
   const el=document.getElementById('nutritionSummary');if(!el)return;
   const goals=getMetasNutricao(),tot=totaisNutricao(entries);
@@ -6459,12 +6476,18 @@ function renderizarAtalhosNutricao(){
 function renderizarRefeicoesNutricao(entries){
   const el=document.getElementById('nutritionMeals');if(!el)return;
   const yesterday=dataOffsetNutricao(_nutritionDate,-1),all=getRegistrosNutricao();
+  const date=_nutritionDate;
+  if(!_uiMealsOpen.has(date))_uiMealsOpen.set(date,new Set([date===hoje()?refeicaoSugeridaNutricao():(entries[0]?.mealType||'breakfast')]));
+  const counts=Object.fromEntries(NUTRITION_MEALS.map(meal=>[meal.id,entries.filter(e=>e.mealType===meal.id).length])),prior=_uiMealEntryCounts.get(date);
+  if(prior)NUTRITION_MEALS.forEach(meal=>{if(counts[meal.id]>prior[meal.id])_uiMealsOpen.get(date).add(meal.id);});
+  _uiMealEntryCounts.set(date,counts);
   el.innerHTML=NUTRITION_MEALS.map(meal=>{
     const list=entries.filter(e=>e.mealType===meal.id).sort((a,b)=>(a.time||'').localeCompare(b.time||'')),tot=totaisNutricao(list);
     const previous=all.filter(e=>e.date===yesterday&&e.mealType===meal.id).length;
-    const rows=list.length?list.map(e=>'<div class="nutrition-entry" onclick=\'abrirEdicaoRegistroNutricao('+jsArg(e.id)+')\'><div><div class="nutrition-entry-name">'+esc(e.name)+'</div><div class="nutrition-entry-sub">'+formatarNutricao(e.grams,1)+' g'+(e.time?' · '+esc(e.time):'')+' · P '+formatarNutricao(e.protein,1)+'g · C '+formatarNutricao(e.carbs,1)+'g · G '+formatarNutricao(e.fat,1)+'g</div></div><div class="nutrition-entry-kcal">'+formatarNutricao(e.kcal,0)+' kcal<small>Editar</small></div></div>').join(''):'<div class="nutrition-meal-empty">Nenhum alimento registrado.</div>';
-    return '<details class="nutrition-meal"'+(list.length?' open':'')+'><summary><span class="nutrition-meal-icon">'+meal.icon+'</span><span class="nutrition-meal-title">'+meal.label+'</span><span class="nutrition-meal-total"><strong>'+formatarNutricao(tot.kcal,0)+' kcal</strong>'+list.length+' '+(list.length===1?'item':'itens')+'</span></summary><div class="nutrition-meal-content">'+rows+'<div class="nutrition-meal-footer"><button class="btn btn-outline btn-sm" onclick=\'abrirRegistroNutricao('+jsArg(meal.id)+')\'>+ Adicionar</button><span class="nutrition-inline-actions">'+(previous?'<button class="btn btn-ghost btn-sm" onclick=\'copiarRefeicaoAnteriorNutricao('+jsArg(meal.id)+')\'>Copiar ontem</button>':'')+(list.length?'<button class="btn btn-ghost btn-sm" onclick=\'abrirSalvarRefeicaoProntaNutricao('+jsArg(meal.id)+')\'>Salvar pronta</button>':'')+'</span></div></div></details>';
+    const rows=list.length?list.map(e=>'<button type="button" class="nutrition-entry" onclick=\'abrirEdicaoRegistroNutricao('+jsArg(e.id)+')\'><span><span class="nutrition-entry-name">'+esc(e.name)+'</span><span class="nutrition-entry-sub" style="display:block">'+formatarNutricao(e.grams,1)+' g'+(e.time?' · '+esc(e.time):'')+'<br>P '+formatarNutricao(e.protein,1)+' g · C '+formatarNutricao(e.carbs,1)+' g · G '+formatarNutricao(e.fat,1)+' g</span></span><span class="nutrition-entry-kcal">'+formatarNutricao(e.kcal,0)+' kcal<small>Editar ›</small></span></button>').join(''):'<div class="nutrition-meal-empty">Ainda não há alimentos aqui. Registre o primeiro abaixo.</div>';
+    return '<details class="nutrition-meal" data-meal="'+meal.id+'"'+(_uiMealsOpen.get(date).has(meal.id)?' open':'')+'><summary><span class="nutrition-meal-icon" aria-hidden="true">'+meal.icon+'</span><span class="nutrition-meal-title">'+meal.label+'</span><span class="nutrition-meal-total"><strong>'+formatarNutricao(tot.kcal,0)+' kcal</strong>'+list.length+' '+(list.length===1?'item':'itens')+'</span><span class="nutrition-meal-chevron" aria-hidden="true">⌄</span></summary><div class="nutrition-meal-content">'+rows+'<div class="nutrition-meal-footer"><button class="btn btn-outline btn-sm" onclick=\'abrirRegistroNutricao('+jsArg(meal.id)+')\'>+ Adicionar alimento</button><span class="nutrition-inline-actions">'+(previous?'<button class="btn btn-ghost btn-sm" onclick=\'copiarRefeicaoAnteriorNutricao('+jsArg(meal.id)+')\'>Copiar ontem</button>':'')+(list.length?'<button class="btn btn-ghost btn-sm" onclick=\'abrirSalvarRefeicaoProntaNutricao('+jsArg(meal.id)+')\'>Salvar pronta</button>':'')+'</span></div></div></details>';
   }).join('');
+  el.querySelectorAll('details[data-meal]').forEach(details=>details.addEventListener('toggle',()=>{if(!details.isConnected||date!==_nutritionDate)return;const open=_uiMealsOpen.get(date);if(details.open)open.add(details.dataset.meal);else open.delete(details.dataset.meal);}));
 }
 function renderizarSemanaNutricao(){
   const el=document.getElementById('nutritionWeekly');if(!el)return;
@@ -6474,6 +6497,8 @@ function renderizarSemanaNutricao(){
 }
 function renderizarNutricao(){
   const input=document.getElementById('nutritionDate');if(input)input.value=_nutritionDate;
+  const dayContext=document.getElementById('nutritionDayContext');
+  if(dayContext){const today=_nutritionDate===hoje(),day=new Date(_nutritionDate+'T12:00:00');dayContext.innerHTML='<span>'+esc(today?'Hoje · '+day.toLocaleDateString('pt-BR',{weekday:'long'}):day.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'}))+'</span>'+(!today?'<button type="button" onclick="selecionarDataNutricao(hoje())">Voltar para hoje</button>':'');}
   const entries=getRegistrosNutricao().filter(e=>e.date===_nutritionDate);
   renderizarResumoNutricao(entries);renderizarAtalhosNutricao();renderizarRefeicoesNutricao(entries);renderizarSemanaNutricao();renderizarNutricaoDashboard();
 }
@@ -6639,6 +6664,69 @@ const _v122OldDashboard=renderizarDashboard;renderizarDashboard=function(){const
 const _v122OldSubTab=ativarSubTab;ativarSubTab=function(subId){const r=_v122OldSubTab.apply(this,arguments);if(subId==='recovery'){carregarRecoveryHealth(false);renderizarCargaRecenteRecovery();}if(subId==='agenda'){renderizarPlanoSemanal();renderizarAgendaMensal();}return r;};
 const _v122OldCopyPrev=copiarSerieAnterior;copiarSerieAnterior=function(btn,fromQuick=false){const row=fromQuick?_quickInputTarget?.closest('.serie-row'):btn.closest('.serie-row'),rows=row?[...row.closest('.ex-card-body')?.querySelectorAll('.serie-row')||[]]:[],idx=rows.indexOf(row),prev=idx>0?rows[idx-1]:null;const r=_v122OldCopyPrev.apply(this,arguments);if(prev&&row){const a=prev.querySelector('.ativo-rir')?.value,b=prev.querySelector('.ativo-rpe')?.value;if(a!==undefined&&row.querySelector('.ativo-rir'))row.querySelector('.ativo-rir').value=a;if(b!==undefined&&row.querySelector('.ativo-rpe'))row.querySelector('.ativo-rpe').value=b;salvarRascunho();}return r;};
 setTimeout(()=>{aplicarRuntimeAndroidUI();renderizarTreinoPlanejadoDashboard();renderizarNutricaoDashboard();},250);
+
+// v12.7: apresentação móvel, sem migração ou alteração dos registros existentes.
+const _uiMealsOpen=new Map();
+const _uiMealEntryCounts=new Map();
+function normalizarBuscaUI(value){return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();}
+function filtrarTreinosUI(){
+  const query=normalizarBuscaUI(document.getElementById('treinoBusca')?.value),buttons=[...document.querySelectorAll('#treinoSelector .treino-card-btn')];
+  buttons.forEach(btn=>{btn.hidden=!!query&&!btn.dataset.search.includes(query);});
+  const empty=document.getElementById('treinoBuscaVazia');if(empty)empty.hidden=!buttons.length||buttons.some(btn=>!btn.hidden);
+}
+function iconeUI(name){
+  const paths={home:'<path d="m3 10 9-7 9 7v10H3Z"/><path d="M9 20v-7h6v7"/>',train:'<path d="M7 5v14M3 8v8m14-11v14m4-11v8M7 12h10"/>',food:'<path d="M5 3v7m3-7v7m-6-7v7h6M5 10v11M18 3c-4 4-4 9 0 9h2V3h-2Zm2 9v9"/>',history:'<rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8m-8 4h8m-8 4h5"/>',settings:'<path d="M4 6h16M4 12h16M4 18h16"/><circle cx="8" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="18" r="2"/>',heart:'<path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6L12 21l8.8-8.8a5.4 5.4 0 0 0 0-7.6Z"/><path d="M5 12h4l2-4 2 8 2-4h4"/>',plus:'<path d="M12 5v14M5 12h14"/>',arrow:'<path d="M5 12h14m-6-6 6 6-6 6"/>'};
+  return '<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">'+(paths[name]||paths.plus)+'</svg>';
+}
+function iniciarSugestaoDashboardUI(){
+  // Voltar a uma sessão ativa nunca deve reconstruir ou zerar as séries.
+  if(treinoAtivoTemplate){irParaAba('treinar');return;}
+  const ts=getTreinosSalvos(),draft=getRascunhoValido();
+  if(draft){const t=ts.find(t=>String(t.id)===String(draft.templateId));if(t){iniciarTreinoPorId(t.id);return;}if(draft.templateSnapshot){irParaAba('treinar');selecionarTreino(draft.templateSnapshot,null);return;}}
+  const planned=getTreinoPlanejadoHoje(),last=obterUltimaSessao(getHist()),lastId=last?.[1]?.find(r=>r.templateId)?.templateId;
+  const t=planned||ts.find(t=>String(t.id)===String(lastId))||ts[0];
+  if(t)iniciarTreinoPorId(t.id);else irParaAba('treinar');
+}
+function abrirFerramentasTreinoUI(){document.getElementById('modalWorkoutToolsUI').classList.add('open');}
+function abrirDescansoUI(){document.getElementById('restInline').scrollIntoView({behavior:'smooth',block:'center'});}
+function fecharFerramentasFundoUI(event){if(event.target===event.currentTarget)fecharModal('modalWorkoutToolsUI');}
+function prepararAcessibilidadeTreinoUI(){
+  document.querySelectorAll('#exerciciosAtivos input.ativo-carga,#exerciciosAtivos input.ativo-reps').forEach(input=>{
+    input.setAttribute('aria-label',(input.classList.contains('ativo-carga')?'Carga em kg':'Repetições')+' · série '+input.dataset.serie+' · '+input.dataset.ex);
+  });
+}
+function inicializarInterfaceMovelUI(){
+  document.querySelectorAll('[data-ui-icon]').forEach(el=>{el.innerHTML=iconeUI(el.dataset.uiIcon);});
+  // O descanso participa do fluxo da tela; não cobre o botão de concluir série.
+  document.getElementById('workoutFocusNav').after(document.getElementById('restInline'));
+  // A rotina é a primeira informação da tela. O timer avulso fica em segundo plano.
+  const picker=document.querySelector('.workout-picker'),timer=document.getElementById('timerCardMobile');picker.after(timer);
+  document.getElementById('nutritionMeals').after(document.querySelector('.nutrition-more-tools'));
+  document.querySelectorAll('label').forEach((label,i)=>{const field=label.nextElementSibling;if(!label.htmlFor&&field?.matches('input,select,textarea')){if(!field.id)field.id='ui-field-'+i;label.htmlFor=field.id;}});
+  const returns=new Map();
+  function topModal(){return [...document.querySelectorAll('.modal-overlay.open')].sort((a,b)=>(Number(getComputedStyle(a).zIndex)||500)-(Number(getComputedStyle(b).zIndex)||500)).pop();}
+  document.querySelectorAll('.modal-overlay').forEach(overlay=>{
+    const panel=overlay.querySelector('.modal');if(!panel)return;
+    const title=panel.querySelector('.modal-title');overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');
+    if(title){if(!title.id)title.id=overlay.id+'-title-ui';overlay.setAttribute('aria-labelledby',title.id);}
+    const close=document.createElement('button');close.type='button';close.className='modal-close-ui';close.setAttribute('aria-label','Fechar janela');close.textContent='×';close.onclick=()=>fecharModal(overlay.id);panel.prepend(close);
+    new MutationObserver(()=>{
+      const open=overlay.classList.contains('open');document.body.classList.toggle('ui-modal-open',!!topModal());
+      if(open){returns.set(overlay,document.activeElement);requestAnimationFrame(()=>{if(topModal()===overlay)close.focus({preventScroll:true});});}
+      else{const target=returns.get(overlay);returns.delete(overlay);if(target?.isConnected&&target.getClientRects().length)target.focus({preventScroll:true});}
+    }).observe(overlay,{attributes:true,attributeFilter:['class']});
+  });
+  document.addEventListener('keydown',event=>{
+    const overlay=topModal();if(!overlay)return;
+    if(event.key==='Escape'){event.preventDefault();fecharModal(overlay.id);return;}
+    if(event.key!=='Tab')return;
+    const controls=[...overlay.querySelectorAll('button,input,select,textarea,a[href],[tabindex="0"]')].filter(el=>!el.disabled&&el.getClientRects().length),first=controls[0],last=controls.at(-1);
+    if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
+  });
+  new MutationObserver(prepararAcessibilidadeTreinoUI).observe(document.getElementById('exerciciosAtivos'),{childList:true,subtree:true});
+  prepararAcessibilidadeTreinoUI();
+}
+window.addEventListener('load',inicializarInterfaceMovelUI);
 
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){reconciliarEstadoNativo();reconciliarHealthPendentes(false);}});
 window.addEventListener('load',()=>setTimeout(inicializarNativeUI,350));

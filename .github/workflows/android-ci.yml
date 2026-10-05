@@ -31,6 +31,8 @@ jobs:
         run: npm run prepare:android
       - name: Validar fonte
         run: npm run validate
+      - name: Testar fluxos da interface móvel
+        run: npm run test:ui
       - name: Compilar Stable e Beta debug
         env:
           BUILD_TIME: ${{ github.event.head_commit.timestamp || 'ci' }}
