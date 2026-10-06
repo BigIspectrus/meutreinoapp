@@ -149,11 +149,15 @@ open class TreinoAppWidgetProvider : AppWidgetProvider() {
             val weeklyDone = max(0, widgetPrefs.getInt("weeklyDone", 0))
             val weeklyTarget = max(1, widgetPrefs.getInt("weeklyTarget", 4))
             val started = workoutPrefs.getLong(WorkoutForegroundService.KEY_STARTED, 0L)
-            val minutes = if (active && started > 0L) max(0L, (System.currentTimeMillis() - started) / 60_000L) else 0L
+            val paused = workoutPrefs.getBoolean(WorkoutForegroundService.KEY_PAUSED, false)
+            val now = System.currentTimeMillis()
+            val pausedMs = workoutPrefs.getLong(WorkoutForegroundService.KEY_PAUSED_TOTAL, 0L) +
+                if (paused) max(0L, now - workoutPrefs.getLong(WorkoutForegroundService.KEY_PAUSED_AT, now)) else 0L
+            val minutes = if (active && started > 0L) max(0L, (now - started - pausedMs) / 60_000L) else 0L
             val progress = if (active && total > 0) (done * 100 / total).coerceIn(0, 100)
                 else (weeklyDone * 100 / weeklyTarget).coerceIn(0, 100)
             views.setTextViewText(R.id.widgetTitle, if (combined && usableHeight < 280) "Combinado · amplie" else if (combined && usableHeight < 380) "Combinado · salvos" else settings.mode.title)
-            views.setTextViewText(R.id.widgetStatusChip, if (training && active) "EM TREINO" else "HOJE")
+            views.setTextViewText(R.id.widgetStatusChip, if (training && active) (if (paused) "PAUSADO" else "EM TREINO") else "HOJE")
             views.setTextViewText(R.id.widgetWorkout, name)
             views.setTextViewText(R.id.widgetSubtitle, if (active)
                 workoutPrefs.getString(WorkoutForegroundService.KEY_EXERCISE, "").orEmpty().ifBlank { "Sessão ativa" }

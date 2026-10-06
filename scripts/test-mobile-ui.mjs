@@ -23,6 +23,10 @@ draft=null;planned={id:'b'};run([['start','b']]);
 planned=null;last=['session',[{templateId:'b'}]];run([['start','b']]);
 last=null;run([['start','a']]);
 treinos=[];run([['tab','treinar']]);
+vm.runInContext(html.match(/function iniciarTreinoWidget\(\)\{[^\n]+\}/)[0],context);
+active={id:'active'};calls=[];context.iniciarTreinoWidget();assert.deepEqual(calls,[['tab','treinar']]);
+active=null;planned={id:'b'};calls=[];context.iniciarTreinoWidget();assert.deepEqual(calls,[['start','b']]);
+planned=null;
 
 let empty={hidden:true},query={value:'PERNA'},buttons=[{dataset:{search:'treino a peito'},hidden:false},{dataset:{search:'treino b pernas'},hidden:false}];
 context.document={getElementById:id=>id==='treinoBusca'?query:empty,querySelectorAll:()=>buttons};

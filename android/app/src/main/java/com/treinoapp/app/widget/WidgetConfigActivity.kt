@@ -15,6 +15,9 @@ import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import com.treinoapp.app.R
 
 /** A configuração pertence à instância do launcher, não aos registros do app. */
@@ -31,6 +34,7 @@ class WidgetConfigActivity : AppCompatActivity() {
         managing = savedInstanceState?.getBoolean("managing") ?: (widgetId == AppWidgetManager.INVALID_APPWIDGET_ID)
         window.statusBarColor = Color.parseColor("#0F1117")
         window.navigationBarColor = Color.parseColor("#0F1117")
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         if (widgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
             if (!validId(widgetId)) { finish(); return }
             selected = savedInstanceState?.let { WidgetOptions(WidgetMode.fromKey(it.getString("mode")), it.getBoolean("compact"), it.getBoolean("macros", true)) }
@@ -62,7 +66,13 @@ class WidgetConfigActivity : AppCompatActivity() {
             orientation = LinearLayout.VERTICAL; setPadding(dp(20), dp(24), dp(20), dp(24))
             setBackgroundColor(Color.parseColor("#0F1117"))
         }
-        setContentView(ScrollView(this).apply { isFillViewport = true; addView(content) })
+        val scroll = ScrollView(this).apply { isFillViewport = true; addView(content); setBackgroundColor(Color.parseColor("#0F1117")) }
+        ViewCompat.setOnApplyWindowInsetsListener(scroll) { _, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            content.setPadding(dp(20) + bars.left, dp(24) + bars.top, dp(20) + bars.right, dp(24) + bars.bottom)
+            insets
+        }
+        setContentView(scroll)
         label("TREINOAPP", 12, "#83AEFF")
         label(title, 26, "#FFFFFF")
         label(subtitle, 14, "#AEB8D8")

@@ -117,13 +117,32 @@ class WidgetModesTest {
             view.layout(0, 0, widthPx, heightPx)
             val action = listOf(R.id.widgetButton, R.id.widgetMealButton, R.id.widgetMovementButton).map { view.findViewById<View>(it) }.first { it.visibility == View.VISIBLE }
             val row = action.parent as View
-            println("$mode $height: heightPx=$heightPx action=${row.top}..${row.bottom}")
+            println("$mode $height: density=$density scaledDensity=${context.resources.displayMetrics.scaledDensity} fontScale=${context.resources.configuration.fontScale} heightPx=$heightPx action=${row.top}..${row.bottom}")
             if (row.bottom > heightPx) failures += "$mode $height: ação fora do widget (${row.bottom} > $heightPx)"
             for (id in listOf(R.id.widgetTrainingSection, R.id.widgetNutritionSection, R.id.widgetMovementSection)) {
                 val section = view.findViewById<View>(id)
                 if (section.visibility == View.VISIBLE) {
                     println("section $id: ${section.top}..${section.bottom}")
-                    if (section.bottom > row.top) failures += "$mode $height: conteúdo sobrepõe o atalho"
+                    if (section.bottom + (section.parent as View).top > row.top) failures += "$mode $height: conteúdo sobrepõe o atalho"
+                }
+            }
+            val content = view.findViewById<View>(R.id.widgetContent)
+            fun withinContent(node: View, section: View): Boolean {
+                var position = node.bottom; var parent = node.parent
+                while (parent is View && parent !== section) { position += parent.top; parent = parent.parent }
+                return node.height > 0 && position <= section.height
+            }
+            for ((sectionId, textIds) in listOf(
+                R.id.widgetNutritionSection to listOf(R.id.widgetNutritionKcal, R.id.widgetNutritionProtein),
+                R.id.widgetTrainingSection to listOf(R.id.widgetWorkout, R.id.widgetSubtitle, R.id.widgetStatLeftValue),
+                R.id.widgetMovementSection to listOf(R.id.widgetSteps, R.id.widgetMovementRead, R.id.widgetMovementWeek))) {
+                val section = view.findViewById<View>(sectionId)
+                if (section.visibility != View.VISIBLE) continue
+                for (textId in textIds) {
+                    val field = view.findViewById<View>(textId)
+                    var shown = field.visibility == View.VISIBLE; var parent = field.parent
+                    while (parent is View && parent !== content) { shown = shown && parent.visibility == View.VISIBLE; parent = parent.parent }
+                    if (shown && !withinContent(field, section)) failures += "$mode $height: texto cortado ($textId)"
                 }
             }
         }
@@ -170,6 +189,22 @@ class WidgetModesTest {
         assertEquals(WidgetOptions(WidgetMode.NUTRITION, true, false), WidgetConfiguration.load(context, 20))
         assertEquals(WidgetMode.COMBINED, WidgetConfiguration.load(context, 10).mode)
         assertEquals(400f, context.getSharedPreferences("treino_widget_state", Context.MODE_PRIVATE).getFloat("nutritionKcal", 0f), 0f)
+    }
+
+    @Test fun pausedWorkoutTimeAndOpeningItKeepTheSession() {
+        save()
+        val now = System.currentTimeMillis()
+        val prefs = context.getSharedPreferences(WorkoutForegroundService.PREFS, Context.MODE_PRIVATE)
+        prefs.edit().putBoolean(WorkoutForegroundService.KEY_ACTIVE, true).putString(WorkoutForegroundService.KEY_NAME, "Treino B")
+            .putLong(WorkoutForegroundService.KEY_STARTED, now - 20 * 60_000L)
+            .putBoolean(WorkoutForegroundService.KEY_PAUSED, true).putLong(WorkoutForegroundService.KEY_PAUSED_AT, now - 5 * 60_000L)
+            .putLong(WorkoutForegroundService.KEY_PAUSED_TOTAL, 5 * 60_000L).commit()
+        val view = build(WidgetMode.WORKOUT)
+        assertEquals("PAUSADO", text(view, R.id.widgetStatusChip)); assertEquals("10m", text(view, R.id.widgetStatRightValue))
+        assertTrue(view.findViewById<View>(R.id.widgetButton).performClick())
+        val intent = shadowOf(RuntimeEnvironment.getApplication()).nextStartedActivity
+        assertEquals("treinar", intent.getStringExtra("openTab")); assertFalse(intent.getBooleanExtra("startNextWorkout", false))
+        assertTrue(prefs.getBoolean(WorkoutForegroundService.KEY_ACTIVE, false)); assertTrue(prefs.getBoolean(WorkoutForegroundService.KEY_PAUSED, false))
     }
 
     @Test fun invalidConfigurationCannotCreateOrOverwriteAWidget() {
