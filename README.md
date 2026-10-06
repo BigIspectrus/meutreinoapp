@@ -1,4 +1,4 @@
-# TreinoApp v12.8.6 Beta — Peso, metas de movimento e distância dos cardios
+# TreinoApp v12.8.7 Beta — Widgets separados e configuráveis
 
 TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capacitor. A variante Beta pode coexistir com a Stable.
 
@@ -6,10 +6,26 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 
 - Stable: `com.treinoapp.app`
 - Beta: `com.treinoapp.beta`
-- Versão: `12.8.6`
-- versionCode: `120806`
+- Versão: `12.8.7`
+- versionCode: `120807`
 - Android: compile/target API 36, minSdk 26
 - Room: schema 7, somente migrações explícitas
+
+## Widgets v12.8.7 — tópico 10 de 14
+
+- quatro entradas no seletor do launcher: Alimentação, Treino, Movimento e Combinado; o provider antigo é preservado como Combinado;
+- modo, compactação e macros persistidos por ID do widget; múltiplas instâncias são independentes. Configuração em ⋮ ou Configurações → App → Widgets da tela inicial;
+- configuração nativa opcional na inclusão, reconfigurável; resultado CANCELADO até salvar, ID/provider verificados, cancelamento mantém opções anteriores;
+- atalhos para iniciar/retomar treino, adicionar refeição de hoje e abrir Cardio e passos; PendingIntents distintos por ID e ação;
+- RemoteViews responsivos no Android 12+, fallback por tamanho nas versões anteriores, detalhes reduzidos em áreas pequenas e com fontes maiores;
+- movimento espelha passos do dia, minutos/sessões da semana e as metas manuais já definidas. Mostra dados salvos e horários reais de consulta; ausência não vira zero, e datas/semana/fuso anteriores não são reutilizados como período atual;
+- widgets atualizados após leitura Health, alteração de metas, registro de alimentação e mudanças da sessão. O refresh do launcher lê alimentação de Room; movimento mostra o espelho salvo pelo app. A periodicidade do launcher pode ser adiada pelo Android;
+- sem nova permissão Health, leitura contínua ou alteração do banco/dados alimentares. Nenhum registro em tempo real do Galaxy Watch é presumido;
+- remoção apaga apenas configurações da instância; restauração do launcher migra opções dos IDs antigos para os novos. Backup JSON não transfere a posição dos widgets entre aparelhos;
+- testes Android de modos, tamanho, isolamento, atalhos, datas, ausência/zero, permissão e restauração; teste web do espelho e roteiro físico em `TESTE_v12.8.7_BETA.md`;
+- parar antes do tópico 11 (água), conforme plano autorizado.
+
+Referências oficiais: [configuração de widgets](https://developer.android.com/develop/ui/views/appwidgets/configuration), [layouts responsivos e tamanhos](https://developer.android.com/develop/ui/views/appwidgets/layouts).
 
 ## Peso e movimento v12.8.6 — tópicos 7, 8 e 9 de 14
 

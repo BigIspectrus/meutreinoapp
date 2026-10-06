@@ -30,6 +30,7 @@ window.TreinoNativeBridge = {
   acknowledgeSetStart: data => call('acknowledgeSetStart', data || {}),
   openNotificationSettings: () => call('openNotificationSettings'),
   updateWidgetState: data => call('updateWidgetState', data),
+  openWidgetSettings: () => call('openWidgetSettings'),
   saveTextFile: data => call('saveTextFile', data || {}),
   saveBase64File: data => call('saveBase64File', data || {}),
   shareTextFile: data => call('shareTextFile', data || {}),

@@ -1,4 +1,11 @@
 <resources>
-    <string name="widget_description">Treino, kcal e macros do dia, com atalho para adicionar refeição</string>
+    <string name="widget_description">Treino, alimentação e movimento com três atalhos e configuração individual</string>
+    <string name="widget_combined_label">TreinoApp · Combinado</string>
+    <string name="widget_nutrition_label">TreinoApp · Alimentação</string>
+    <string name="widget_workout_label">TreinoApp · Treino</string>
+    <string name="widget_movement_label">TreinoApp · Movimento</string>
+    <string name="widget_nutrition_description">Kcal e macros do dia, com atalho para adicionar uma refeição</string>
+    <string name="widget_workout_description">Próximo treino ou sessão em andamento, com atalho para treinar</string>
+    <string name="widget_movement_description">Passos do dia, cardio da semana e metas com os últimos dados salvos</string>
     <string name="health_permissions_description">O TreinoApp usa o Health Connect para associar sessões registradas no Galaxy Watch/Samsung Health, consultar frequência cardíaca, calorias e peso, e gravar sessões do TreinoApp quando não houver uma sessão equivalente.</string>
 </resources>

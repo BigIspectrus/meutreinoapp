@@ -41,7 +41,7 @@ function salvarMetasMovimento(){
     g[key]=value===''?null:Number(value);
   }
   try{localStorage.setItem(d.goalsKey,JSON.stringify({...g,updatedAt:Date.now()}));}catch(error){console.warn('Metas de movimento não salvas',error);return toast('Não foi possível salvar. Suas metas anteriores foram mantidas.','error');}
-  fecharModal('modalMovementGoals');renderizarMetasMovimento();toast('Metas manuais de movimento salvas','success');
+  fecharModal('modalMovementGoals');renderizarMetasMovimento();atualizarWidgetNativo();toast('Metas manuais de movimento salvas','success');
 }
 function renderizarMetasMovimento(){
   const el=document.getElementById('activityMovementGoals');if(!el)return;const g=getMetasMovimento(),active=Object.values(g).some(v=>v!=null),p=window.TreinoMovementData.progress(getAtividadeHealth(),hoje());
@@ -51,4 +51,14 @@ function renderizarMetasMovimento(){
   if(g.cardioMinutesWeekly!=null)cards+=card(p.minutes,g.cardioMinutesWeekly,'Cardio na semana (min)',q,!p.complete);
   if(g.cardioSessionsWeekly!=null)cards+=card(p.sessions,g.cardioSessionsWeekly,'Sessões na semana',q,!p.complete);
   el.innerHTML='<div class="movement-goals-head"><div><strong>Suas metas de movimento</strong><span>'+p.start.split('-').reverse().join('/')+' – '+p.end.split('-').reverse().join('/')+'</span></div><button type="button" class="btn btn-outline btn-sm" onclick="abrirMetasMovimento()">'+(active?'Editar metas':'Definir metas')+'</button></div>'+(active?'<div class="movement-goals-grid">'+cards+'</div>':'<p class="activity-note">Escolha suas metas de passos/dia, minutos de cardio e sessões por semana. Nenhum valor é definido automaticamente.</p>')+'<p class="activity-note">Semana de segunda a domingo · todas as modalidades, independentemente do filtro. Dados parciais/salvos são identificados; não há acompanhamento em tempo real. Suas metas alimentares não mudam.</p>';
+}
+
+function resumoMovimentoWidget(){
+  const date=hoje(),data=getAtividadeHealth(),p=TreinoMovementData.progress(data,date),goals=getMetasMovimento();
+  const stepQuality=TreinoActivityData.quality(p.day?[p.day]:[],'steps');
+  const cardioQuality=TreinoActivityData.quality([...p.summary.daily.filter(d=>d.cardioKnown),...p.summary.sessions],'sessions');
+  return {date,zoneId:data.zoneId||Intl.DateTimeFormat().resolvedOptions().timeZone,weekStart:p.start,weekEnd:p.end,
+    steps:p.steps,minutes:p.minutes,sessions:p.sessions,stepsGoal:goals.stepsDaily,minutesGoal:goals.cardioMinutesWeekly,sessionsGoal:goals.cardioSessionsWeekly,
+    stepsReadAt:stepQuality.lastReadAt,cardioReadAt:cardioQuality.firstReadAt,partial:!p.complete,
+    stepsState:data.readStatus?.steps?.state||'unavailable',cardioState:data.readStatus?.sessions?.state||'unavailable'};
 }

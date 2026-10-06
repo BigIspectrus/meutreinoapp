@@ -90,8 +90,13 @@
             android:exported="false"
             android:foregroundServiceType="health" />
 
+        <activity android:name=".widget.WidgetConfigActivity" android:exported="true">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" /></intent-filter>
+        </activity>
+
         <receiver
             android:name=".widget.TreinoAppWidgetProvider"
+            android:label="@string/widget_combined_label"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -99,6 +104,18 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/treinoapp_widget_info" />
+        </receiver>
+        <receiver android:name=".widget.TreinoNutritionWidgetProvider" android:label="@string/widget_nutrition_label" android:exported="true">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/treinoapp_nutrition_widget_info" />
+        </receiver>
+        <receiver android:name=".widget.TreinoWorkoutWidgetProvider" android:label="@string/widget_workout_label" android:exported="true">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/treinoapp_workout_widget_info" />
+        </receiver>
+        <receiver android:name=".widget.TreinoMovementWidgetProvider" android:label="@string/widget_movement_label" android:exported="true">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/treinoapp_movement_widget_info" />
         </receiver>
     </application>
 </manifest>

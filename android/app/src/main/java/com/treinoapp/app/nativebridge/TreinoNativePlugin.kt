@@ -272,8 +272,17 @@ class TreinoNativePlugin : Plugin() {
             (call.getDouble("carbs", 0.0) ?: 0.0).coerceAtLeast(0.0).toFloat(),
             (call.getDouble("fat", 0.0) ?: 0.0).coerceAtLeast(0.0).toFloat(),
             (call.getDouble("goalKcal", 0.0) ?: 0.0).coerceAtLeast(0.0).toFloat(),
+            call.getObject("movement"),
         )
         call.resolve()
+    }
+
+    @PluginMethod
+    fun openWidgetSettings(call: PluginCall) {
+        activity.runOnUiThread {
+            activity.startActivity(Intent(activity, com.treinoapp.app.widget.WidgetConfigActivity::class.java))
+            call.resolve()
+        }
     }
 
 

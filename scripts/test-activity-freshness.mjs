@@ -2,13 +2,13 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 const script=readFileSync(new URL('../web/activity.js',import.meta.url),'utf8');
-const elements=new Map(),storage=new Map();let request;
+const elements=new Map(),storage=new Map();let request,widgetUpdates=0;
 const el=id=>{if(!elements.has(id))elements.set(id,{textContent:'',innerHTML:'',value:'all',disabled:false,hidden:false,classList:{contains:()=>false}});return elements.get(id);};
 const context=vm.createContext({console,Date,Map,Set,window:{addEventListener(){},TreinoNativeBridge:{getActivitySnapshot:async()=>request()}},
   document:{addEventListener(){},getElementById:el,querySelectorAll:()=>[]},
   localStorage:{getItem:key=>storage.get(key)||null,setItem:(key,value)=>storage.set(key,value)},
   parseJSONSeguro:(raw,fallback)=>{try{return JSON.parse(raw);}catch{return fallback;}},
-  hoje:()=> '2026-10-05',isNativeAndroid:()=>true,toast:()=>{},esc:s=>String(s),
+  hoje:()=> '2026-10-05',isNativeAndroid:()=>true,toast:()=>{},esc:s=>String(s),atualizarWidgetNativo:()=>{widgetUpdates++;},
 });
 context.window.TreinoActivityData=undefined;
 vm.runInContext(script,context);context.TreinoActivityData=context.window.TreinoActivityData;context.TreinoActivityPreferences=context.window.TreinoActivityPreferences;
@@ -92,6 +92,7 @@ try {await context.sincronizarAtividadesHealth(true);} finally {console.warn=old
 assert.equal(vm.runInContext('_activityBusy',context),null);assert.equal(el('activitySyncButton').disabled,false);
 context.window.TreinoNativeBridge.getActivitySnapshot=asynchronousBridge;
 request=()=>snapshot(next);await context.sincronizarAtividadesHealth(true);
+assert.equal(widgetUpdates,3,'Os widgets recebem dados salvos após sucesso, falha síncrona e assíncrona');
 stored=JSON.parse(storage.get('healthActivityCacheV128'));assert.equal(stored.daily[0].readInfo.steps.state,'fresh');assert.equal(stored.daily[0].readInfo.steps.readAt,next);
 const immutable=storage.get('healthActivityCacheV128');context.renderizarAtividades();context.definirPeriodoAtividade(7);assert.equal(storage.get('healthActivityCacheV128'),immutable,'Navegar/filtrar não muda horários');
 assert.ok(el('activityReadStatus').innerHTML.includes('Última consulta completa'));

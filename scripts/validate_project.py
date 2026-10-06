@@ -231,6 +231,18 @@ widget_layout=read('android/app/src/main/res/layout/widget_treinoapp.xml')
 for token in ['widgetNutritionKcal','widgetNutritionProtein','widgetNutritionCarbs','widgetNutritionFat','widgetMealButton']:
     ok(token in widget_layout, 'Elemento alimentação/widget ausente: '+token)
 
+# Widgets configuráveis / v12.8.7
+for token in ['TreinoNutritionWidgetProvider','TreinoWorkoutWidgetProvider','TreinoMovementWidgetProvider','WidgetConfigActivity']:
+    ok(token in manifest, 'Componente de widget configurável ausente: '+token)
+widget_dashboard=read('android/app/src/main/res/layout/widget_dashboard.xml')
+for token in ['widgetConfigure','widgetTrainingSection','widgetNutritionSection','widgetMovementSection','widgetSteps','widgetMovementRead','widgetMovementButton']:
+    ok(token in widget_dashboard, 'Elemento widget configurável ausente: '+token)
+for kind in ['', '_nutrition', '_workout', '_movement']:
+    info=read('android/app/src/main/res/xml/treinoapp'+kind+'_widget_info.xml')
+    ok('WidgetConfigActivity' in info and 'reconfigurable|configuration_optional' in info, 'Configuração de widget ausente: '+kind)
+ok('openWidgetSettings' in plugin and 'openWidgetSettings' in read('src/native-bridge.js'), 'Gerenciador nativo de widgets ausente')
+ok('resumoMovimentoWidget' in read('web/movement.js') and 'movement:resumoMovimentoWidget()' in html, 'Espelho de movimento do widget ausente')
+
 if errors:
     print('VALIDAÇÃO FALHOU')
     for e in errors: print(' -',e)

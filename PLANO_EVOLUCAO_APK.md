@@ -25,6 +25,8 @@ Autorização após v12.8.5: realizar os três próximos tópicos, 7, 8 e 9, na 
 13. Backup externo automático para pasta escolhida e exportação para outro aparelho, além dos snapshots internos.
 14. Painel inicial personalizável: seleção e ordem dos cartões, mantendo detalhes secundários fora da tela principal.
 
+Autorização após a v12.8.6: implementar o tópico 10 na v12.8.7, gerar APK e parar antes do tópico 11 (água). A autorização não confirma os testes físicos anteriores.
+
 ## Regras de entrega
 
 - Foco no APK Android/Beta e preservação dos dados, assinatura e pacote existentes.

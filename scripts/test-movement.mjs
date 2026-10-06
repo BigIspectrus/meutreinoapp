@@ -7,7 +7,7 @@ const el=id=>{if(!elements.has(id))elements.set(id,{value:'',innerHTML:'',textCo
 let fail=false;
 const ctx=vm.createContext({window:{addEventListener(){}},document:{addEventListener(){},getElementById:el,querySelectorAll:()=>[]},console:{warn(){}},Date,Map,Set,
   localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>{if(fail)throw new Error('quota');storage.set(k,String(v));}},
-  parseJSONSeguro:(s,f)=>{try{return JSON.parse(s);}catch{return f;}},hoje:()=> '2026-10-06',esc:s=>String(s),toast:s=>events.push(s),fecharModal:()=>events.push('close'),
+  parseJSONSeguro:(s,f)=>{try{return JSON.parse(s);}catch{return f;}},hoje:()=> '2026-10-06',esc:s=>String(s),toast:s=>events.push(s),fecharModal:()=>events.push('close'),atualizarWidgetNativo:()=>events.push('widget'),
 });
 vm.runInContext(activity,ctx);ctx.TreinoActivityData=ctx.window.TreinoActivityData;vm.runInContext(movement,ctx);
 const d=ctx.window.TreinoMovementData,before=JSON.stringify([...storage]);

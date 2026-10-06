@@ -232,7 +232,7 @@ async function sincronizarAtividadesHealth(force=false){
       if(!fresh.available)_activityError='Health Connect indisponível neste aparelho. Os últimos dados salvos continuam visíveis.';
       if(force&&fresh.available)toast(fresh.errors?.length?'Atualização parcial: alguns dados não puderam ser lidos.':'Cardio e passos atualizados.',fresh.errors?.length?'warn':'success');
     } catch(e){console.warn('Atividade Health',e);localStorage.setItem(ACTIVITY_CACHE_KEY,JSON.stringify(TreinoActivityData.failure(cache)));_activityError='Não foi possível atualizar. Os últimos dados salvos foram mantidos; tente novamente.';if(force)toast(_activityError,'warn');}
-    finally {_activityBusy=null;renderizarAtividades();renderizarEvolucaoRotina();renderizarAtividadeDashboard();}
+    finally {_activityBusy=null;renderizarAtividades();renderizarEvolucaoRotina();renderizarAtividadeDashboard();atualizarWidgetNativo();}
   })();
   renderizarAtividades();return _activityBusy;
 }

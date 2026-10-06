@@ -10,8 +10,8 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <title>TreinoApp v12</title>
-  <meta name="treinoapp-version" content="12.8.6">
-  <meta name="treinoapp-build" content="2026.10.06.7">
+  <meta name="treinoapp-version" content="12.8.7">
+  <meta name="treinoapp-build" content="2026.10.06.8">
   <script defer src="./vendor/chart.umd.js"></script>
   <script defer src="./vendor/jspdf.umd.min.js"></script>
   <script defer src="./vendor/qrcode.min.js"></script>
@@ -2087,6 +2087,13 @@
     <button class="btn btn-ghost" onclick="abrirModalAnilhas()">Calculadora de anilhas</button>
   </div>
 
+  <div class="card" id="nativeWidgetsCard" data-settings-group="app" hidden>
+    <div class="card-title">Widgets da tela inicial</div>
+    <p style="font-size:.83em;color:var(--text-muted);line-height:1.55">Alimentação, treino, movimento ou tudo junto. Configure cada widget separadamente, escolha se quer macros e redimensione para ver mais detalhes.</p>
+    <button class="btn btn-outline" onclick="gerenciarWidgetsNativos()">Adicionar ou configurar widgets</button>
+    <p style="font-size:.75em;color:var(--text-muted);margin-top:8px;line-height:1.5">Também disponíveis ao tocar e segurar a tela inicial → Widgets → TreinoApp. Toque em ⋮ no widget para editar. Movimento mostra as últimas leituras salvas; para atualizar, abra Cardio e passos.</p>
+  </div>
+
   <div class="card" id="appInfoCard" data-settings-group="app">
     <div class="card-title">Aplicativo e dados</div>
     <div class="config-item"><div><div class="config-label">Versão instalada</div><div class="config-sub" id="appVersionInfo">v11.0.0</div></div><button class="btn btn-outline btn-sm" style="width:auto;" onclick="verificarAtualizacaoManual()">Verificar atualização</button></div>
@@ -2135,14 +2142,14 @@
 
 <script src="./data/common-foods.js"></script>
 <script>
-const APP_VERSION = '12.8.6';
-const APP_BUILD = '2026.10.06.7';
+const APP_VERSION = '12.8.7';
+const APP_BUILD = '2026.10.06.8';
 const DATA_SCHEMA_VERSION = 18;
 const GITHUB_REPO='BigIspectrus/meutreinoapp';
 const GITHUB_PAGES_BASE='https://bigispectrus.github.io/meutreinoapp';
 let _latestAndroidReleaseUrl='';
 let _nativeChannel='web';
-const APP_CACHE_VERSION = 'treinoapp-v12.8.6-202610067';
+const APP_CACHE_VERSION = 'treinoapp-v12.8.7-202610068';
 
 const SET_TYPES={workset:'Work set',warmup:'Aquecimento',topset:'Top set',backoff:'Back-off',dropset:'Drop set',cluster:'Cluster set',fst7:'FST-7',restpause:'Rest-pause',myoreps:'Myo-reps',amrap:'AMRAP'};
 function normalizarSetType(v){return SET_TYPES[v]?v:'workset';}
@@ -6079,6 +6086,7 @@ async function inicializarNativeUI(){
   try{const regs=await navigator.serviceWorker?.getRegistrations?.();if(regs)await Promise.all(regs.map(r=>r.unregister().catch(()=>{})));swReg=null;}catch(_){ }
   window.TreinoNativeBridge.onWorkoutFinished=nativeWorkoutFinishedImpl;
   const card=document.getElementById('nativeIntegrationCard');if(card)card.style.display='block';
+  const widgetsCard=document.getElementById('nativeWidgetsCard');if(widgetsCard)widgetsCard.hidden=false;
   const installCard=document.querySelector('#btnInstallPWA')?.closest('.card');if(installCard)installCard.style.display='none';
   const a=document.getElementById('selHealthAuto'),w=document.getElementById('selHealthWrite'),hr=document.getElementById('healthHrMax'),nutritionHealth=document.getElementById('selNutritionHealthWrite');if(a)a.value=getHealthAuto()?'1':'0';if(w)w.value=getHealthWrite()?'1':'0';if(hr)hr.value=getHealthHrMax()||'';if(nutritionHealth)nutritionHealth.value=getNutritionHealthEnabled()?'1':'0';atualizarNutritionHealthStatus();
   try{const info=await window.TreinoNativeBridge.getNativeInfo();_nativeChannel=info.channel||'stable';const badge=document.getElementById('nativeChannelBadge'),txt=document.getElementById('nativeStatusText');if(badge)badge.textContent=String(_nativeChannel).toUpperCase();if(txt)txt.innerHTML=`<strong>Android ${esc(info.versionName||APP_VERSION)}</strong> · código ${info.versionCode||'?'} · ${esc(_nativeChannel)}<br>Pacote: ${esc(info.packageName||'')}<br>Commit: ${esc(String(info.commit||'local').slice(0,10))} · build: ${esc(info.buildTime||'local')}<br>Notificação persistente, timer nativo, widget, Health Connect e banco Android disponíveis.`;}catch(e){}
@@ -6182,7 +6190,8 @@ async function sincronizarBancoNativo(showToast=true){if(!isNativeAndroid())retu
 function resumoNativoAtual(){if(!treinoAtivoTemplate)return null;const rows=linhasValidasTreino(),done=rows.filter(r=>r.querySelector('.serie-check')?.classList.contains('checked')),active=getExerciseCards().find(c=>c.classList.contains('focus-active'))||getExerciseCards().find(c=>!c.classList.contains('skipped'));const nr=active?[...active.querySelectorAll('.serie-row')].findIndex(r=>!r.querySelector('.serie-check')?.classList.contains('checked'))+1:0;return{sessionId:window._treinoSessionId,name:treinoAtivoTemplate.nome||'Treino',startedAt:window._treinoStartedAt,totalSets:rows.length,completedSets:done.length,currentExercise:active?.dataset.ex||'',currentSet:Math.max(1,nr),paused:!!window._treinoPaused};}
 let _nativeUpdateTimer=null;function agendarUpdateNativo(){if(!isNativeAndroid())return;clearTimeout(_nativeUpdateTimer);_nativeUpdateTimer=setTimeout(()=>{const s=resumoNativoAtual();if(s)window.TreinoNativeBridge.updateWorkout(s).catch(()=>{});atualizarWidgetNativo();},120);}
 function resumoAlimentacaoWidget(){const date=hoje(),tot=totaisNutricao(getRegistrosNutricao().filter(e=>e.date===date));return {nutritionDate:date,kcal:tot.kcal,protein:tot.protein,carbs:tot.carbs,fat:tot.fat,goalKcal:getMetasNutricao()?.kcal||0};}
-async function atualizarWidgetNativo(){if(!isNativeAndroid())return;try{const hist=getHist(),streak=calcularStreakAtual(hist),d=gerarDesafio(hist),next=treinoAtivoTemplate?.nome||getTreinoPlanejadoHoje()?.nome||getTreinosSalvos()[0]?.nome||'Treino';await window.TreinoNativeBridge.updateWidgetState({nextWorkout:next,weeklyDone:d.tipo==='frequencia'?d.prog:new Set(hist.filter(r=>{const x=new Date();x.setDate(x.getDate()-6);return r.data>=localDate(x)}).map(r=>r.data)).size,weeklyTarget:d.tipo==='frequencia'?d.alvo:4,streak,active:resumoNativoAtual(),...resumoAlimentacaoWidget()});}catch(e){}}
+async function atualizarWidgetNativo(){if(!isNativeAndroid())return;try{const hist=getHist(),streak=calcularStreakAtual(hist),d=gerarDesafio(hist),next=treinoAtivoTemplate?.nome||getTreinoPlanejadoHoje()?.nome||getTreinosSalvos()[0]?.nome||'Treino';await window.TreinoNativeBridge.updateWidgetState({nextWorkout:next,weeklyDone:d.tipo==='frequencia'?d.prog:new Set(hist.filter(r=>{const x=new Date();x.setDate(x.getDate()-6);return r.data>=localDate(x)}).map(r=>r.data)).size,weeklyTarget:d.tipo==='frequencia'?d.alvo:4,streak,active:resumoNativoAtual(),...resumoAlimentacaoWidget(),movement:resumoMovimentoWidget()});}catch(e){console.warn('Atualização dos widgets',e)}}
+async function gerenciarWidgetsNativos(){if(!isNativeAndroid())return;try{await atualizarWidgetNativo();await window.TreinoNativeBridge.openWidgetSettings();}catch(e){console.warn(e);toast('Não foi possível abrir os widgets. Adicione pela tela inicial → Widgets → TreinoApp.','warn');}}
 function localizarSeriePendenteNativa(st){const rows=linhasValidasTreino(),ordinal=Number(st?.pendingSetOrdinal),matches=row=>{const d=dadosSerieNativa(row);return d.exercise===String(st?.pendingSetExercise||'')&&d.setNumber===Number(st?.pendingSetNumber);};if(Number.isInteger(ordinal)&&ordinal>=0&&rows[ordinal]&&matches(rows[ordinal]))return rows[ordinal];return rows.find(r=>matches(r)&&!r.querySelector('.serie-check.checked'))||rows.find(matches)||null;}
 let _nativeReconciling=false;
 async function reconciliarEstadoNativo(){if(!isNativeAndroid()||_nativeReconciling)return;_nativeReconciling=true;try{const st=await window.TreinoNativeBridge.getWorkoutState();if(treinoAtivoTemplate&&typeof st?.paused==='boolean'&&st.paused!==!!window._treinoPaused){if(st.paused){window._treinoPaused=true;window._treinoPauseStartedAt=window._treinoPauseStartedAt||Date.now();}else{if(window._treinoPaused&&window._treinoPauseStartedAt)window._treinoTotalPausedMs=(Number(window._treinoTotalPausedMs)||0)+Math.max(0,Date.now()-Number(window._treinoPauseStartedAt));window._treinoPaused=false;window._treinoPauseStartedAt=null;}atualizarEstadoPausaUI();salvarRascunho();}if(treinoAtivoTemplate&&Number(st?.pendingSetStartedAt)>0&&String(st?.pendingSetSession||'')===String(window._treinoSessionId||'')){const row=localizarSeriePendenteNativa(st);if(row){const applied=aplicarInicioSeriePrecisao(row,Number(st.pendingSetStartedAt),'watch');await window.TreinoNativeBridge.acknowledgeSetStart({requestId:st.pendingSetRequestId||'',exercise:st.pendingSetExercise||'',setNumber:Number(st.pendingSetNumber)||0,ordinal:Number(st.pendingSetOrdinal)});if(applied){const d=dadosSerieNativa(row);toast(`Série iniciada pelo relógio · ${d.exercise} ${d.setNumber}`,'success');}}}if(st?.restEndAt&&Number(st.restEndAt)>Date.now()){_timerEndTime=Number(st.restEndAt);_timerFired=false;const restante=Math.max(0,Math.ceil((_timerEndTime-Date.now())/1000));timerRestante=restante;atualizarTimerUI(restante);}else if(st?.restEndAt&&Number(st.restEndAt)<=Date.now()&&timerRestante>0){_v12OriginalStopTimer.call(window);}}catch(e){}finally{_nativeReconciling=false;}}
