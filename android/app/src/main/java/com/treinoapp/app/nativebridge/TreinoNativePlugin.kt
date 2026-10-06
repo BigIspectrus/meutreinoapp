@@ -403,6 +403,11 @@ class TreinoNativePlugin : Plugin() {
                     put("readActiveCalories", r.readActiveCalories); put("readCalories", r.readCalories)
                     put("historyGranted", r.historyGranted); put("sessionsComplete", r.sessionsComplete)
                     put("duplicatesRemoved", r.duplicatesRemoved); put("errors", JSArray(r.errors))
+                    put("readStatus", JSObject().apply {
+                        r.readStatus.forEach { (key, status) -> put(key, JSObject().apply {
+                            put("checkedAt", status.checkedAt); put("readAt", status.readAt); put("state", status.state)
+                        }) }
+                    })
                     put("daily", JSArray().apply {
                         r.daily.forEach { d -> put(JSObject().apply {
                             put("date", d.date); put("steps", d.steps)
@@ -415,6 +420,8 @@ class TreinoNativePlugin : Plugin() {
                             put("kind", s.kind); put("title", s.title); put("date", s.date)
                             put("startMs", s.startMs); put("endMs", s.endMs); put("minutes", s.minutes)
                             put("kcal", s.kcal); put("calorieKind", s.calorieKind)
+                            put("sessionReadAt", s.sessionReadAt); put("kcalReadAt", s.kcalReadAt)
+                            put("kcalCheckedAt", s.kcalCheckedAt); put("kcalReadState", s.kcalReadState)
                         }) }
                     })
                 })

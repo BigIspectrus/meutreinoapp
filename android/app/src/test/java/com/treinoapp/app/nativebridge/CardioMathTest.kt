@@ -24,4 +24,19 @@ class CardioMathTest {
         assertEquals(30.0, row("a").minutes, 0.001)
         assertEquals(0, CardioMath.deduplicate(listOf(row("a").copy(endMs = 1L))).size)
     }
+
+    @Test fun deduplicationPreservesReadTimesAndCalorieStatus() {
+        val original = row("samsung").copy(sessionReadAt = 5000L, kcalReadAt = 5500L,
+            kcalCheckedAt = 5500L, kcalReadState = "ok")
+        val result = CardioMath.deduplicate(listOf(row("fit", "fit", 1_015_000L), original)).single()
+        assertEquals(5000L, result.sessionReadAt); assertEquals(5500L, result.kcalReadAt)
+        assertEquals("ok", result.kcalReadState)
+    }
+
+    @Test fun failedReadHasCheckTimeButNoSuccessfulReadTime() {
+        val failed = ActivityReadStatus(6000L, null, "error")
+        assertEquals(6000L, failed.checkedAt); assertEquals(null, failed.readAt)
+        val success = ActivityReadStatus(7000L, 7000L, "ok")
+        assertEquals(success.checkedAt, success.readAt)
+    }
 }

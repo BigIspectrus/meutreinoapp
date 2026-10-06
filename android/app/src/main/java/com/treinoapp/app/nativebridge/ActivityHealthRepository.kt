@@ -26,6 +26,13 @@ data class ActivityDay(
     val totalKcal: Double? = null,
 )
 
+/** Horário da consulta pelo app, não da medição nem da sincronização do relógio. */
+data class ActivityReadStatus(
+    val checkedAt: Long = System.currentTimeMillis(),
+    val readAt: Long? = null,
+    val state: String,
+)
+
 data class ActivitySnapshot(
     val available: Boolean,
     val generatedAt: Long = System.currentTimeMillis(),
@@ -42,6 +49,7 @@ data class ActivitySnapshot(
     val daily: List<ActivityDay> = emptyList(),
     val sessions: List<CardioSession> = emptyList(),
     val errors: List<String> = emptyList(),
+    val readStatus: Map<String, ActivityReadStatus> = emptyMap(),
 )
 
 class ActivityHealthRepository(private val context: Context) {
@@ -62,7 +70,10 @@ class ActivityHealthRepository(private val context: Context) {
 
     suspend fun snapshot(days: Int): ActivitySnapshot {
         val helper = HealthConnectRepository(context)
-        if (!helper.isAvailable()) return ActivitySnapshot(available = false)
+        if (!helper.isAvailable()) return ActivitySnapshot(available = false, readStatus =
+            listOf("steps", "activeKcal", "totalKcal", "sessions", "sessionKcal").associateWith {
+                ActivityReadStatus(state = "unavailable")
+            })
         val hc = HealthConnectClient.getOrCreate(context)
         val granted = helper.grantedPermissions()
         val history = HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY in granted
@@ -84,6 +95,11 @@ class ActivityHealthRepository(private val context: Context) {
         val steps = mutableMapOf<String, Long?>()
         val active = mutableMapOf<String, Double?>()
         val total = mutableMapOf<String, Double?>()
+        val reads = mutableMapOf<String, ActivityReadStatus>()
+        fun mark(key: String, state: String) {
+            val time = System.currentTimeMillis()
+            reads[key] = ActivityReadStatus(time, if (state == "ok") time else null, state)
+        }
 
         // Aggregate (sem filtro de origem) respeita a prioridade do Health Connect
         // e evita somar duas vezes passos do telefone e do relógio.
@@ -93,10 +109,14 @@ class ActivityHealthRepository(private val context: Context) {
                 timeRangeFilter = TimeRangeFilter.between(localStart, localEnd),
                 timeRangeSlicer = Period.ofDays(1),
             )).forEach { steps[it.startTime.toLocalDate().toString()] = it.result[StepsRecord.COUNT_TOTAL] }
+            mark("steps", "ok")
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             errors += "steps"
-        }
+            mark("steps", "error")
+        } else mark("steps", "denied")
+        if (!readActive) mark("activeKcal", "denied")
+        if (!readTotal) mark("totalKcal", "denied")
         if (readActive || readTotal) try {
             val metrics = buildSet {
                 if (readActive) add(ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL)
@@ -111,9 +131,13 @@ class ActivityHealthRepository(private val context: Context) {
                 if (readActive) active[date] = bucket.result[ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL]?.inKilocalories
                 if (readTotal) total[date] = bucket.result[TotalCaloriesBurnedRecord.ENERGY_TOTAL]?.inKilocalories
             }
+            if (readActive) mark("activeKcal", "ok")
+            if (readTotal) mark("totalKcal", "ok")
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             errors += "calories"
+            if (readActive) mark("activeKcal", "error")
+            if (readTotal) mark("totalKcal", "error")
         }
 
         val records = mutableListOf<ExerciseSessionRecord>()
@@ -129,10 +153,13 @@ class ActivityHealthRepository(private val context: Context) {
                 token = page.pageToken?.takeIf { it.isNotBlank() }
             } while (token != null)
             sessionsComplete = true
+            mark("sessions", "ok")
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             errors += "sessions"
-        }
+            mark("sessions", if (records.isNotEmpty()) "partial" else "error")
+        } else mark("sessions", "denied")
+        val sessionsObservedAt = System.currentTimeMillis()
         val own = setOf(context.packageName, "com.treinoapp.app", "com.treinoapp.beta")
         val cardio = records.mapNotNull { record ->
             val kind = cardioKind(record.exerciseType) ?: return@mapNotNull null
@@ -143,12 +170,17 @@ class ActivityHealthRepository(private val context: Context) {
                 title = record.title?.toString().orEmpty(),
                 date = record.startTime.atZone(zone).toLocalDate().toString(),
                 startMs = record.startTime.toEpochMilli(), endMs = record.endTime.toEpochMilli(),
+                sessionReadAt = sessionsObservedAt,
             )
         }
         val unique = CardioMath.deduplicate(cardio)
+        var energySucceeded = 0
+        var energyFailed = 0
         val sessions = unique.map { row ->
             var kcal: Double? = null
             var calorieKind: String? = null
+            var kcalReadAt: Long? = null
+            var kcalState = if (readActive || readTotal) "error" else "denied"
             if (readActive || readTotal) try {
                 val metrics = buildSet {
                     if (readActive) add(ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL)
@@ -165,12 +197,24 @@ class ActivityHealthRepository(private val context: Context) {
                     kcal = result[TotalCaloriesBurnedRecord.ENERGY_TOTAL]?.inKilocalories
                     if (kcal != null) calorieKind = "total"
                 }
+                kcalReadAt = System.currentTimeMillis()
+                kcalState = "ok"
+                energySucceeded++
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 if ("sessionCalories" !in errors) errors += "sessionCalories"
+                energyFailed++
             }
-            row.copy(kcal = kcal?.takeIf { it.isFinite() && it >= 0 }, calorieKind = calorieKind)
+            row.copy(kcal = kcal?.takeIf { it.isFinite() && it >= 0 }, calorieKind = calorieKind,
+                kcalReadAt = kcalReadAt, kcalCheckedAt = System.currentTimeMillis(), kcalReadState = kcalState)
         }
+        mark("sessionKcal", when {
+            !readExercise || (!readActive && !readTotal) -> "denied"
+            energyFailed > 0 -> if (energySucceeded > 0) "partial" else "error"
+            !sessionsComplete -> reads["sessions"]?.state ?: "error"
+            unique.isEmpty() -> "no_data"
+            else -> "ok"
+        })
         val daily = (0 until safeDays).map { offset ->
             val date = first.plusDays(offset.toLong()).toString()
             ActivityDay(date, steps[date], active[date], total[date])
@@ -180,6 +224,7 @@ class ActivityHealthRepository(private val context: Context) {
             readSteps = readSteps, readExercise = readExercise, readActiveCalories = readActive,
             readCalories = readTotal, historyGranted = history, sessionsComplete = sessionsComplete,
             duplicatesRemoved = cardio.size - unique.size, daily = daily, sessions = sessions, errors = errors,
+            readStatus = reads,
         )
     }
 }

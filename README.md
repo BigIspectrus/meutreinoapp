@@ -1,4 +1,4 @@
-# TreinoApp v12.8.1 Beta — Correção de RIR/RPE nas análises
+# TreinoApp v12.8.2 Beta — Atualização individual dos dados de atividade
 
 TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capacitor. A variante Beta pode coexistir com a Stable.
 
@@ -6,10 +6,23 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 
 - Stable: `com.treinoapp.app`
 - Beta: `com.treinoapp.beta`
-- Versão: `12.8.1`
-- versionCode: `120801`
+- Versão: `12.8.2`
+- versionCode: `120802`
 - Android: compile/target API 36, minSdk 26
 - Room: schema 7, somente migrações explícitas
+
+## Atualização individual v12.8.2 — tópico 2 de 14
+
+- passos, kcal ativas, kcal totais, sessões de cardio e kcal de cada sessão recebem horário/status próprios de consulta;
+- horário indica a leitura pelo app, não a medição nem a sincronização do relógio;
+- preservação de valores e horários anteriores em falha, indisponibilidade ou permissão negada, com identificação visível de dados salvos;
+- falha de kcal de uma sessão não marca as outras como antigas; intervalo alterado não reutiliza kcal do intervalo anterior;
+- consultas parciais, dados fora da janela, zero real e resposta vazia válida são diferenciados;
+- dados legados sem horário individual confiável permanecem assim até nova consulta, sem carimbar o horário atual;
+- avisos nos cartões, início, lista e gráficos, com painel recolhido de detalhes por leitura;
+- metadados permanecem no cache existente, incluído nos backups; sem mudança de schema Room ou permissões;
+- testes em `scripts/test-activity-freshness.mjs` e roteiro `TESTE_v12.8.2_BETA.md`;
+- tópico 3 (lembrar filtros e preferências) ainda não implementado; aguarda autorização explícita.
 
 ## Correção de esforço v12.8.1 — tópico 1 de 14
 
@@ -19,7 +32,7 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 - nenhuma mudança em schema, permissões, metas manuais, pacote, assinatura ou recursos de cardio/widget;
 - testes reais dos handlers em `scripts/test-effort.mjs`, incluindo preservação dos registros, strings numéricas e registros antigos incompletos;
 - roteiro físico: `TESTE_v12.8.1_BETA.md`. Lista completa e ordem das próximas etapas: `PLANO_EVOLUCAO_APK.md`;
-- somente o tópico 1 foi implementado; o próximo depende de autorização explícita do usuário.
+- primeira entrega da sequência aprovada pelo usuário; demais tópicos seguem o protocolo em `PLANO_EVOLUCAO_APK.md`.
 
 ## Cardio, passos e widget v12.8
 

@@ -206,6 +206,10 @@ for token in ['READ_STEPS','READ_ACTIVE_CALORIES_BURNED','READ_HEALTH_DATA_HISTO
 for token in ['getActivitySnapshot','nutritionDate','goalKcal']:
     ok(token in plugin, 'Bridge atividade/widget ausente: '+token)
 ok('healthActivityCacheV128:localStorage.getItem' in html, 'Cache de atividade fora do backup')
+ok('readStatus' in plugin and 'kcalReadAt' in plugin, 'Horários individuais não serializados no bridge')
+for token in ['quality','readTrackingVersion','lastAttemptAt','currentInfo','savedInfo','failure']:
+    ok(token in activity, 'Rastreio de atualização ausente: '+token)
+ok('activityReadStatus' in html and 'Atualização de cada dado' in html, 'Painel de leituras individuais ausente')
 widget_layout=read('android/app/src/main/res/layout/widget_treinoapp.xml')
 for token in ['widgetNutritionKcal','widgetNutritionProtein','widgetNutritionCarbs','widgetNutritionFat','widgetMealButton']:
     ok(token in widget_layout, 'Elemento alimentação/widget ausente: '+token)

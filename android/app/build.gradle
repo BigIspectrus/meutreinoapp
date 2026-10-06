@@ -15,8 +15,8 @@ android {
         applicationId 'com.treinoapp.app'
         minSdk 26
         targetSdk 36
-        versionCode 120801
-        versionName '12.8.1'
+        versionCode 120802
+        versionName '12.8.2'
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
         vectorDrawables { useSupportLibrary true }
         buildConfigField 'String', 'GIT_SHA', '"' + gitSha + '"'

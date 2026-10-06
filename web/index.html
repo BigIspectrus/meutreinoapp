@@ -10,8 +10,8 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <title>TreinoApp v12</title>
-  <meta name="treinoapp-version" content="12.8.1">
-  <meta name="treinoapp-build" content="2026.10.06.2">
+  <meta name="treinoapp-version" content="12.8.2">
+  <meta name="treinoapp-build" content="2026.10.06.3">
   <script defer src="./vendor/chart.umd.js"></script>
   <script defer src="./vendor/jspdf.umd.min.js"></script>
   <script defer src="./vendor/qrcode.min.js"></script>
@@ -1051,12 +1051,13 @@
 <!-- MODAL NOVIDADES -->
 <div class="modal-overlay" id="modalNovidades">
   <div class="modal" style="max-width:500px;">
-    <div class="modal-title">TreinoApp v12.8.1 Beta</div>
+    <div class="modal-title">TreinoApp v12.8.2 Beta</div>
     <div style="font-size:.88em;line-height:1.6;color:var(--text-muted);">
       <p style="color:var(--text);font-weight:700;margin-bottom:8px;">Principais novidades desta versão</p>
-      <p>Correção das análises de RIR/RPE: campos não preenchidos não entram mais nas médias como zero. O zero registrado de verdade continua válido.</p>
-      <p style="margin-top:8px;">Sugestões de progressão, histórico por exercício, resumo pós-treino e relatório mensal usam a mesma regra de ausência de dados.</p>
-      <p style="margin-top:8px;">Nenhum registro antigo foi regravado. Metas manuais, cardio, passos, widget e integrações continuam preservados.</p>
+      <p>Horários individuais de leitura para passos, kcal ativas, kcal totais, cardios e kcal de cada atividade.</p>
+      <p style="margin-top:8px;">Se uma consulta falhar, dados anteriores continuam identificados como salvos, com seu horário antigo. Confira detalhes em “Atualização de cada dado”.</p>
+      <p style="margin-top:8px;">Horários são da leitura pelo TreinoApp, não da sincronização do relógio. Dados antigos sem horário registrado não recebem uma data inventada.</p>
+      <p style="margin-top:8px;">Correção de RIR/RPE da v12.8.1, metas manuais e histórico preservados. O próximo tópico depende do seu OK.</p>
     </div>
     <div class="modal-footer"><button class="btn btn-primary" onclick="fecharNovidades()">Entendi</button></div>
   </div>
@@ -1702,12 +1703,17 @@
         <option value="cycling">Bicicleta</option><option value="stationary">Bicicleta ergométrica</option>
       </select>
       <div id="activityStats" class="activity-stats"></div>
-      <p id="activityEnergy" class="activity-note"></p>
+      <div id="activityEnergy" class="activity-energy"></div>
+      <p class="activity-note">O gasto diário não é somado às kcal dos cardios nem altera suas metas alimentares.</p>
       <div class="activity-connect">
         <button type="button" id="activitySyncButton" class="btn btn-primary" onclick="sincronizarAtividadesHealth(true)">Atualizar Health</button>
         <button type="button" class="btn btn-outline" onclick="conectarHealthConnect()">Revisar permissões</button>
       </div>
       <p id="activityStatus" class="activity-note" role="status" aria-live="polite"></p>
+      <details class="activity-disclosure"><summary>Atualização de cada dado</summary>
+        <p>Os horários indicam a leitura pelo TreinoApp, não a medição nem a sincronização do relógio. “Salvo” indica informação anterior mantida sem uma nova leitura confirmada. Dados antigos sem horário individual permanecem identificados assim até nova consulta.</p>
+        <div id="activityReadStatus"></div>
+      </details>
       <details class="activity-disclosure"><summary>Como ler estes números</summary>
         <p>Os passos usam a agregação do Health Connect, que considera a prioridade das fontes. A média usa apenas dias completos com dados; hoje aparece separado.</p>
         <p>Kcal dos cardios são estimativas da mesma fonte e do intervalo da atividade. Preferimos calorias ativas; quando só há calorias totais naquele intervalo, isso é indicado. Sessões sem kcal não entram na soma; confira a cobertura.</p>
@@ -2111,14 +2117,14 @@
 
 <script src="./data/common-foods.js"></script>
 <script>
-const APP_VERSION = '12.8.1';
-const APP_BUILD = '2026.10.06.2';
+const APP_VERSION = '12.8.2';
+const APP_BUILD = '2026.10.06.3';
 const DATA_SCHEMA_VERSION = 18;
 const GITHUB_REPO='BigIspectrus/meutreinoapp';
 const GITHUB_PAGES_BASE='https://bigispectrus.github.io/meutreinoapp';
 let _latestAndroidReleaseUrl='';
 let _nativeChannel='web';
-const APP_CACHE_VERSION = 'treinoapp-v12.8.1-202610062';
+const APP_CACHE_VERSION = 'treinoapp-v12.8.2-202610063';
 
 const SET_TYPES={workset:'Work set',warmup:'Aquecimento',topset:'Top set',backoff:'Back-off',dropset:'Drop set',cluster:'Cluster set',fst7:'FST-7',restpause:'Rest-pause',myoreps:'Myo-reps',amrap:'AMRAP'};
 function normalizarSetType(v){return SET_TYPES[v]?v:'workset';}

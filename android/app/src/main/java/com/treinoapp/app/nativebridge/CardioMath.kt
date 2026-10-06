@@ -15,6 +15,10 @@ data class CardioSession(
     val endMs: Long,
     val kcal: Double? = null,
     val calorieKind: String? = null,
+    val sessionReadAt: Long? = null,
+    val kcalReadAt: Long? = null,
+    val kcalCheckedAt: Long? = null,
+    val kcalReadState: String = "unknown",
 ) {
     val minutes: Double get() = (endMs - startMs).coerceAtLeast(0L) / 60_000.0
 }
