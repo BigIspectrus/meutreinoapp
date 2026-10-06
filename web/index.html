@@ -10,8 +10,8 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <title>TreinoApp v12</title>
-  <meta name="treinoapp-version" content="12.8.2">
-  <meta name="treinoapp-build" content="2026.10.06.3">
+  <meta name="treinoapp-version" content="12.8.3">
+  <meta name="treinoapp-build" content="2026.10.06.4">
   <script defer src="./vendor/chart.umd.js"></script>
   <script defer src="./vendor/jspdf.umd.min.js"></script>
   <script defer src="./vendor/qrcode.min.js"></script>
@@ -1051,13 +1051,13 @@
 <!-- MODAL NOVIDADES -->
 <div class="modal-overlay" id="modalNovidades">
   <div class="modal" style="max-width:500px;">
-    <div class="modal-title">TreinoApp v12.8.2 Beta</div>
+    <div class="modal-title">TreinoApp v12.8.3 Beta</div>
     <div style="font-size:.88em;line-height:1.6;color:var(--text-muted);">
       <p style="color:var(--text);font-weight:700;margin-bottom:8px;">Principais novidades desta versão</p>
-      <p>Horários individuais de leitura para passos, kcal ativas, kcal totais, cardios e kcal de cada atividade.</p>
-      <p style="margin-top:8px;">Se uma consulta falhar, dados anteriores continuam identificados como salvos, com seu horário antigo. Confira detalhes em “Atualização de cada dado”.</p>
-      <p style="margin-top:8px;">Horários são da leitura pelo TreinoApp, não da sincronização do relógio. Dados antigos sem horário registrado não recebem uma data inventada.</p>
-      <p style="margin-top:8px;">Correção de RIR/RPE da v12.8.1, metas manuais e histórico preservados. O próximo tópico depende do seu OK.</p>
+      <p>O app lembra modalidade, período e gráficos escolhidos ao reabrir, inclusive exercício e grupo na evolução.</p>
+      <p style="margin-top:8px;">Preferências incluídas no backup, sem alterar metas, registros ou horários de leitura do Health Connect.</p>
+      <p style="margin-top:8px;">Validação automatizada ampliada para widget, virada do dia, banco nativo e restauração. O teste físico no seu Android continua necessário.</p>
+      <p style="margin-top:8px;">Esta entrega cobre o tópico 3 e a parte automatizada do tópico 4. Refeições em lote (tópico 5) aguardam nova autorização.</p>
     </div>
     <div class="modal-footer"><button class="btn btn-primary" onclick="fecharNovidades()">Entendi</button></div>
   </div>
@@ -1631,7 +1631,7 @@
   <section class="card routine-card">
     <div class="card-title">Sua rotina em gráficos</div>
     <label for="routineMetric">Acompanhar</label>
-    <select id="routineMetric" onchange="renderizarEvolucaoRotina()">
+    <select id="routineMetric" onchange="alterarGraficoRotina()">
       <option value="weight">Peso corporal</option><option value="steps">Passos por dia</option>
       <option value="cardioMinutes">Tempo de cardio</option><option value="cardioKcal">Kcal dos cardios</option>
       <option value="kcal">Kcal consumidas</option><option value="macros">Proteína, carboidratos e gorduras</option>
@@ -1652,7 +1652,7 @@
     <div class="row">
       <div class="form-group col">
         <label>Visualizar</label>
-        <select id="tipoGrafico" onchange="atualizarGrafico()">
+        <select id="tipoGrafico" onchange="alterarGraficoTreino()">
           <option value="carga">Carga Máxima</option>
           <option value="volume">Volume Total</option>
           <option value="rm_estimado">1RM Estimado</option>
@@ -1662,13 +1662,13 @@
       </div>
       <div class="form-group col" id="containerGraficoExercicio">
         <label>Exercício</label>
-        <select id="selectGraficoExercicio" onchange="atualizarGrafico()"></select>
+        <select id="selectGraficoExercicio" onchange="alterarGraficoTreino()"></select>
       </div>
     </div>
     <!-- Seletor de grupo — visível só no modo Tabela -->
     <div class="form-group" id="containerGrupoTabela" style="display:none;">
       <label>Ou ver por Grupo Muscular</label>
-      <select id="selectGrupoTabela" onchange="atualizarGrafico()">
+      <select id="selectGrupoTabela" onchange="alterarGraficoTreino()">
         <option value="">— Selecionar grupo —</option>
         <option value="Peito">💪 Peito</option>
         <option value="Costas">🔙 Costas</option>
@@ -1697,7 +1697,7 @@
         <button type="button" data-activity-days="90" onclick="definirPeriodoAtividade(90)">90 dias</button>
       </div></div>
       <label for="activityKind">Modalidade</label>
-      <select id="activityKind" onchange="renderizarAtividades()">
+      <select id="activityKind" onchange="alterarModalidadeAtividade()">
         <option value="all">Todos os cardios</option><option value="walking">Caminhada</option>
         <option value="running">Corrida</option><option value="treadmill">Corrida na esteira</option>
         <option value="cycling">Bicicleta</option><option value="stationary">Bicicleta ergométrica</option>
@@ -1724,7 +1724,7 @@
     <section class="card">
       <div class="card-title">Seu movimento ao longo dos dias</div>
       <label for="activityChartMetric">Visualizar</label>
-      <select id="activityChartMetric" onchange="desenharGraficoAtividade()">
+      <select id="activityChartMetric" onchange="alterarGraficoAtividade()">
         <option value="steps">Passos</option><option value="cardioMinutes">Minutos de cardio</option>
         <option value="cardioCount">Quantidade de cardios</option><option value="cardioKcal">Kcal dos cardios</option>
       </select>
@@ -2117,14 +2117,14 @@
 
 <script src="./data/common-foods.js"></script>
 <script>
-const APP_VERSION = '12.8.2';
-const APP_BUILD = '2026.10.06.3';
+const APP_VERSION = '12.8.3';
+const APP_BUILD = '2026.10.06.4';
 const DATA_SCHEMA_VERSION = 18;
 const GITHUB_REPO='BigIspectrus/meutreinoapp';
 const GITHUB_PAGES_BASE='https://bigispectrus.github.io/meutreinoapp';
 let _latestAndroidReleaseUrl='';
 let _nativeChannel='web';
-const APP_CACHE_VERSION = 'treinoapp-v12.8.2-202610063';
+const APP_CACHE_VERSION = 'treinoapp-v12.8.3-202610064';
 
 const SET_TYPES={workset:'Work set',warmup:'Aquecimento',topset:'Top set',backoff:'Back-off',dropset:'Drop set',cluster:'Cluster set',fst7:'FST-7',restpause:'Rest-pause',myoreps:'Myo-reps',amrap:'AMRAP'};
 function normalizarSetType(v){return SET_TYPES[v]?v:'workset';}
@@ -3787,6 +3787,7 @@ function importarBackup(event) {
       if(d.weeklyPlanV12) localStorage.setItem('weeklyPlanV12',d.weeklyPlanV12);
       if(d.healthRecoveryCacheV12) localStorage.setItem('healthRecoveryCacheV12',d.healthRecoveryCacheV12);
       if(d.healthActivityCacheV128) localStorage.setItem('healthActivityCacheV128',d.healthActivityCacheV128);
+      if(d.activityPreferencesV1283) localStorage.setItem('activityPreferencesV1283',d.activityPreferencesV1283);
       if(d.nutritionGoalsV125) localStorage.setItem('nutritionGoalsV125',d.nutritionGoalsV125);
       if(d.nutritionFoodsV125) localStorage.setItem('nutritionFoodsV125',d.nutritionFoodsV125);
       if(d.nutritionEntriesV125) localStorage.setItem('nutritionEntriesV125',d.nutritionEntriesV125);
@@ -3800,7 +3801,7 @@ function importarBackup(event) {
   };
   reader.readAsText(file);
 }
-function resetarDados() { const keys=['historicoTreinoV3','pesoCorporal','exerciciosCustomizadosV3','treinosTemplates','temaPreferido','userProfile','treinoMetas','conquistasDesbloqueadas','perfilPublico','treinoScores','timerSom','restVibration','restNotificationSound','backupConfig','descansoPadrao','effortMode','settingsCategory','_rascunhoTreino','_onboardingV9','_onboardingV10','_onboardingV11','_lastSeenVersion','_lastSnapshotDay','_restTimerEndAt','wakeLockEnabled','academiaModeEnabled','plateBarWeight','platePreset','healthLinksV12','healthPendingV12','healthHrMax','healthAutoSync','healthWriteEnabled','weeklyPlanV12','healthRecoveryCacheV12','healthActivityCacheV128','nutritionGoalsV125','nutritionFoodsV125','nutritionEntriesV125','nutritionRecipesV1251','nutritionMealTemplatesV1251','nutritionCatalogCacheV1251','nutritionCatalogCacheV1252','nutritionUsdaKeyV1251','nutritionHealthEnabledV1252','nutritionHealthSyncV1252','_nativeNutritionSyncV125','_nativeNutritionSyncV1251','_nativeNutritionSyncV1252','_appErrors']; keys.forEach(k=>localStorage.removeItem(k)); invalidarCache(); toast('Dados do TreinoApp apagados. Recarregando...','info'); setTimeout(()=>location.reload(),1000); }
+function resetarDados() { const keys=['historicoTreinoV3','pesoCorporal','exerciciosCustomizadosV3','treinosTemplates','temaPreferido','userProfile','treinoMetas','conquistasDesbloqueadas','perfilPublico','treinoScores','timerSom','restVibration','restNotificationSound','backupConfig','descansoPadrao','effortMode','settingsCategory','_rascunhoTreino','_onboardingV9','_onboardingV10','_onboardingV11','_lastSeenVersion','_lastSnapshotDay','_restTimerEndAt','wakeLockEnabled','academiaModeEnabled','plateBarWeight','platePreset','healthLinksV12','healthPendingV12','healthHrMax','healthAutoSync','healthWriteEnabled','weeklyPlanV12','healthRecoveryCacheV12','healthActivityCacheV128','activityPreferencesV1283','nutritionGoalsV125','nutritionFoodsV125','nutritionEntriesV125','nutritionRecipesV1251','nutritionMealTemplatesV1251','nutritionCatalogCacheV1251','nutritionCatalogCacheV1252','nutritionUsdaKeyV1251','nutritionHealthEnabledV1252','nutritionHealthSyncV1252','_nativeNutritionSyncV125','_nativeNutritionSyncV1251','_nativeNutritionSyncV1252','_appErrors']; keys.forEach(k=>localStorage.removeItem(k)); invalidarCache(); toast('Dados do TreinoApp apagados. Recarregando...','info'); setTimeout(()=>location.reload(),1000); }
 
 
 // ════════════════════════════════════════════════
@@ -5036,7 +5037,7 @@ function verificarBackupAuto() {
   }
 }
 
-function gerarObjetoBackup(){return {app:'TreinoApp',appVersion:APP_VERSION,build:APP_BUILD,schemaVersion:DATA_SCHEMA_VERSION,exportedAt:new Date().toISOString(),pesoCorporal:localStorage.getItem('pesoCorporal'),historicoTreinoV3:localStorage.getItem('historicoTreinoV3'),exerciciosCustomizadosV3:localStorage.getItem('exerciciosCustomizadosV3'),treinosTemplates:localStorage.getItem('treinosTemplates'),temaPreferido:localStorage.getItem('temaPreferido'),userProfile:localStorage.getItem('userProfile'),treinoMetas:localStorage.getItem('treinoMetas'),conquistasDesbloqueadas:localStorage.getItem('conquistasDesbloqueadas'),perfilPublico:localStorage.getItem('perfilPublico'),treinoScores:localStorage.getItem('treinoScores'),timerSom:localStorage.getItem('timerSom'),restVibration:localStorage.getItem('restVibration'),restNotificationSound:localStorage.getItem('restNotificationSound'),backupConfig:localStorage.getItem('backupConfig'),descansoPadrao:localStorage.getItem('descansoPadrao'),effortMode:localStorage.getItem('effortMode'),wakeLockEnabled:localStorage.getItem('wakeLockEnabled'),academiaModeEnabled:localStorage.getItem('academiaModeEnabled'),plateBarWeight:localStorage.getItem('plateBarWeight'),platePreset:localStorage.getItem('platePreset'),healthLinksV12:localStorage.getItem('healthLinksV12'),healthHrMax:localStorage.getItem('healthHrMax'),healthAutoSync:localStorage.getItem('healthAutoSync'),healthWriteEnabled:localStorage.getItem('healthWriteEnabled'),weeklyPlanV12:localStorage.getItem('weeklyPlanV12'),healthRecoveryCacheV12:localStorage.getItem('healthRecoveryCacheV12'),healthActivityCacheV128:localStorage.getItem('healthActivityCacheV128'),nutritionGoalsV125:localStorage.getItem('nutritionGoalsV125'),nutritionFoodsV125:localStorage.getItem('nutritionFoodsV125'),nutritionEntriesV125:localStorage.getItem('nutritionEntriesV125'),nutritionRecipesV1251:localStorage.getItem('nutritionRecipesV1251'),nutritionMealTemplatesV1251:localStorage.getItem('nutritionMealTemplatesV1251'),nutritionHealthEnabledV1252:localStorage.getItem('nutritionHealthEnabledV1252')};}
+function gerarObjetoBackup(){return {app:'TreinoApp',appVersion:APP_VERSION,build:APP_BUILD,schemaVersion:DATA_SCHEMA_VERSION,exportedAt:new Date().toISOString(),pesoCorporal:localStorage.getItem('pesoCorporal'),historicoTreinoV3:localStorage.getItem('historicoTreinoV3'),exerciciosCustomizadosV3:localStorage.getItem('exerciciosCustomizadosV3'),treinosTemplates:localStorage.getItem('treinosTemplates'),temaPreferido:localStorage.getItem('temaPreferido'),userProfile:localStorage.getItem('userProfile'),treinoMetas:localStorage.getItem('treinoMetas'),conquistasDesbloqueadas:localStorage.getItem('conquistasDesbloqueadas'),perfilPublico:localStorage.getItem('perfilPublico'),treinoScores:localStorage.getItem('treinoScores'),timerSom:localStorage.getItem('timerSom'),restVibration:localStorage.getItem('restVibration'),restNotificationSound:localStorage.getItem('restNotificationSound'),backupConfig:localStorage.getItem('backupConfig'),descansoPadrao:localStorage.getItem('descansoPadrao'),effortMode:localStorage.getItem('effortMode'),wakeLockEnabled:localStorage.getItem('wakeLockEnabled'),academiaModeEnabled:localStorage.getItem('academiaModeEnabled'),plateBarWeight:localStorage.getItem('plateBarWeight'),platePreset:localStorage.getItem('platePreset'),healthLinksV12:localStorage.getItem('healthLinksV12'),healthHrMax:localStorage.getItem('healthHrMax'),healthAutoSync:localStorage.getItem('healthAutoSync'),healthWriteEnabled:localStorage.getItem('healthWriteEnabled'),weeklyPlanV12:localStorage.getItem('weeklyPlanV12'),healthRecoveryCacheV12:localStorage.getItem('healthRecoveryCacheV12'),healthActivityCacheV128:localStorage.getItem('healthActivityCacheV128'),activityPreferencesV1283:localStorage.getItem('activityPreferencesV1283'),nutritionGoalsV125:localStorage.getItem('nutritionGoalsV125'),nutritionFoodsV125:localStorage.getItem('nutritionFoodsV125'),nutritionEntriesV125:localStorage.getItem('nutritionEntriesV125'),nutritionRecipesV1251:localStorage.getItem('nutritionRecipesV1251'),nutritionMealTemplatesV1251:localStorage.getItem('nutritionMealTemplatesV1251'),nutritionHealthEnabledV1252:localStorage.getItem('nutritionHealthEnabledV1252')};}
 async function compartilharBackup(){
   const dados=gerarObjetoBackup(),conteudo=JSON.stringify(dados),nome=`treinoapp_backup_v${APP_VERSION}_${hoje()}.json`;
   if(isNativeAndroid()&&window.TreinoNativeBridge?.shareTextFile){
@@ -5983,7 +5984,7 @@ function salvarSnapshotDiario(){const d=hoje();if(localStorage.getItem('_lastSna
 async function listarSnapshotsSeguro(){try{const db=await openSafeDB();const arr=await new Promise((res,rej)=>{const r=db.transaction('snapshots').objectStore('snapshots').getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error);});db.close();return arr.sort((a,b)=>b.createdAt-a.createdAt);}catch(e){return[];}}
 async function excluirSnapshotSeguro(id){try{const db=await openSafeDB();await new Promise((res,rej)=>{const tx=db.transaction('snapshots','readwrite');tx.objectStore('snapshots').delete(id);tx.oncomplete=res;tx.onerror=()=>rej(tx.error);});db.close();}catch(e){}}
 async function abrirSnapshots(){const el=document.getElementById('snapshotList');document.getElementById('modalSnapshots').classList.add('open');if(!el)return;el.innerHTML='<div style="color:var(--text-muted);font-size:.82em;">Carregando...</div>';const arr=await listarSnapshotsSeguro();if(!arr.length){el.innerHTML='<div class="empty-state" style="padding:20px 0;"><p>Nenhum snapshot interno ainda.</p></div>';return;}el.innerHTML=arr.map(x=>`<div class="snapshot-item"><div><strong>${new Date(x.createdAt).toLocaleString('pt-BR')}</strong><div class="snapshot-meta">${esc(x.motivo||'snapshot')} · v${esc(x.version||'?')}</div></div><div style="display:flex;gap:5px;"><button class="btn btn-outline btn-sm" style="width:auto;" onclick="restaurarSnapshotSeguro('${x.id}')">Restaurar</button><button class="btn btn-danger btn-sm btn-icon" onclick="excluirSnapshotSeguro('${x.id}').then(abrirSnapshots)">×</button></div></div>`).join('');}
-async function restaurarSnapshotSeguro(id){const arr=await listarSnapshotsSeguro(),snap=arr.find(x=>x.id===id);if(!snap)return toast('Snapshot não encontrado','error');if(!confirm('Restaurar este snapshot? Os dados atuais serão substituídos.'))return;await salvarSnapshotSeguro('antes_restauracao');const d=snap.data||{},keys=['pesoCorporal','historicoTreinoV3','exerciciosCustomizadosV3','treinosTemplates','temaPreferido','userProfile','treinoMetas','conquistasDesbloqueadas','perfilPublico','treinoScores','timerSom','restVibration','restNotificationSound','backupConfig','descansoPadrao','effortMode','wakeLockEnabled','academiaModeEnabled','plateBarWeight','platePreset','healthLinksV12','healthHrMax','healthAutoSync','healthWriteEnabled','weeklyPlanV12','healthRecoveryCacheV12','healthActivityCacheV128','nutritionGoalsV125','nutritionFoodsV125','nutritionEntriesV125','nutritionRecipesV1251','nutritionMealTemplatesV1251','nutritionHealthEnabledV1252'];keys.forEach(k=>{if(d[k]!==undefined&&d[k]!==null)localStorage.setItem(k,String(d[k]));});invalidarCache();toast('Snapshot restaurado. Recarregando...','success');setTimeout(()=>location.reload(),900);}
+async function restaurarSnapshotSeguro(id){const arr=await listarSnapshotsSeguro(),snap=arr.find(x=>x.id===id);if(!snap)return toast('Snapshot não encontrado','error');if(!confirm('Restaurar este snapshot? Os dados atuais serão substituídos.'))return;await salvarSnapshotSeguro('antes_restauracao');const d=snap.data||{},keys=['pesoCorporal','historicoTreinoV3','exerciciosCustomizadosV3','treinosTemplates','temaPreferido','userProfile','treinoMetas','conquistasDesbloqueadas','perfilPublico','treinoScores','timerSom','restVibration','restNotificationSound','backupConfig','descansoPadrao','effortMode','wakeLockEnabled','academiaModeEnabled','plateBarWeight','platePreset','healthLinksV12','healthHrMax','healthAutoSync','healthWriteEnabled','weeklyPlanV12','healthRecoveryCacheV12','healthActivityCacheV128','activityPreferencesV1283','nutritionGoalsV125','nutritionFoodsV125','nutritionEntriesV125','nutritionRecipesV1251','nutritionMealTemplatesV1251','nutritionHealthEnabledV1252'];keys.forEach(k=>{if(d[k]!==undefined&&d[k]!==null)localStorage.setItem(k,String(d[k]));});invalidarCache();toast('Snapshot restaurado. Recarregando...','success');setTimeout(()=>location.reload(),900);}
 
 // ════════════════════════════════════════════════
 // V11 — BUILD/DEPLOY E REPARO DO APP

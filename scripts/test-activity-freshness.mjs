@@ -11,7 +11,7 @@ const context=vm.createContext({console,Date,Map,Set,window:{addEventListener(){
   hoje:()=> '2026-10-05',isNativeAndroid:()=>true,toast:()=>{},esc:s=>String(s),
 });
 context.window.TreinoActivityData=undefined;
-vm.runInContext(script,context);context.TreinoActivityData=context.window.TreinoActivityData;
+vm.runInContext(script,context);context.TreinoActivityData=context.window.TreinoActivityData;context.TreinoActivityPreferences=context.window.TreinoActivityPreferences;
 const d=context.TreinoActivityData,day='2026-10-05',t=1791223200000,keys=d.metrics;
 const readStatus=(at,overrides={})=>Object.fromEntries(keys.map(key=>[key,{state:'ok',readAt:at,checkedAt:at,...overrides[key]}]));
 const cardio=(id='a',extra={})=>({id,kind:'walking',sourcePackage:'samsung',source:'Samsung Health',date:day,title:'Teste',startMs:t-1800000,endMs:t,

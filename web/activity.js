@@ -149,13 +149,56 @@ window.TreinoActivityData = (() => {
   return {kinds,value,time,metrics,dates,info,normalize,merge,failure,quality,summarize,trends};
 })();
 
+window.TreinoActivityPreferences=(()=>{
+  const defaults={days:30,kind:'all',activityMetric:'steps',routineMetric:'weight',exerciseMetric:'carga',exercise:'',exerciseGroup:''};
+  const choices={kind:['all',...Object.keys(window.TreinoActivityData.kinds)],activityMetric:['steps','cardioMinutes','cardioCount','cardioKcal'],
+    routineMetric:['weight','steps','cardioMinutes','cardioKcal','kcal','macros'],exerciseMetric:['carga','volume','rm_estimado','tabela','peso'],exerciseGroup:['','Peito','Costas','Pernas','Ombros','Braços','Outros']};
+  function normalize(raw){
+    const v=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{},out={...defaults};
+    out.days=[7,30,90].includes(Number(v.days))?Number(v.days):30;
+    for(const key of Object.keys(choices))if(choices[key].includes(v[key]))out[key]=v[key];
+    if(typeof v.exercise==='string'&&v.exercise.length<=160)out.exercise=v.exercise;
+    return out;
+  }
+  function parse(raw){try{return normalize(JSON.parse(raw));}catch{return normalize(null);}}
+  return {defaults,normalize,parse};
+})();
 const ACTIVITY_CACHE_KEY='healthActivityCacheV128';
+const ACTIVITY_PREFERENCES_KEY='activityPreferencesV1283';
 let _activityDays=30,_activityAllRows=false,_activityBusy=null,_activityError='',_activityChart=null,_routineChart=null;
+function getPreferenciasAtividade(){return TreinoActivityPreferences.parse(localStorage.getItem(ACTIVITY_PREFERENCES_KEY));}
+function carregarPreferenciasAtividade(){
+  const prefs=getPreferenciasAtividade();_activityDays=prefs.days;
+  const fields={kind:'activityKind',activityMetric:'activityChartMetric',routineMetric:'routineMetric',exerciseMetric:'tipoGrafico',exercise:'selectGraficoExercicio',exerciseGroup:'selectGrupoTabela'};
+  for(const [key,id] of Object.entries(fields)){
+    const field=document.getElementById(id);if(!field)continue;
+    if(key==='exercise'&&!prefs.exercise)continue;
+    if([...field.options].some(option=>option.value===prefs[key]))field.value=prefs[key];
+  }
+  // Apenas leitura de preferências. Não iniciar treino nem alterar dados/horários.
+  return prefs;
+}
+function salvarPreferenciasAtividade(){
+  const previous=getPreferenciasAtividade(),field=id=>document.getElementById(id)?.value,
+    prefs=TreinoActivityPreferences.normalize({...previous,days:_activityDays,kind:field('activityKind')??previous.kind,
+      activityMetric:field('activityChartMetric')??previous.activityMetric,routineMetric:field('routineMetric')??previous.routineMetric,
+      exerciseMetric:field('tipoGrafico')??previous.exerciseMetric,exercise:field('selectGraficoExercicio')??previous.exercise,
+      exerciseGroup:field('tipoGrafico')==='tabela'?(field('selectGrupoTabela')??previous.exerciseGroup):previous.exerciseGroup});
+  localStorage.setItem(ACTIVITY_PREFERENCES_KEY,JSON.stringify(prefs));return prefs;
+}
+function alterarModalidadeAtividade(){_activityAllRows=false;salvarPreferenciasAtividade();renderizarAtividades();renderizarEvolucaoRotina();}
+function alterarGraficoAtividade(){salvarPreferenciasAtividade();desenharGraficoAtividade();}
+function alterarGraficoRotina(){salvarPreferenciasAtividade();renderizarEvolucaoRotina();}
+function alterarGraficoTreino(){
+  const prefs=getPreferenciasAtividade(),type=document.getElementById('tipoGrafico')?.value,group=document.getElementById('selectGrupoTabela');
+  if(type==='tabela'&&prefs.exerciseMetric!=='tabela'&&group)group.value=prefs.exerciseGroup;
+  salvarPreferenciasAtividade();atualizarGrafico();
+}
 function getAtividadeHealth(){return TreinoActivityData.normalize(parseJSONSeguro(localStorage.getItem(ACTIVITY_CACHE_KEY)||'{}',{},ACTIVITY_CACHE_KEY));}
 function periodoAtividade(){return TreinoActivityData.dates(hoje(),_activityDays);}
 function formatarAtividade(v,suffix='',decimals=0){return v==null?'—':Number(v).toLocaleString('pt-BR',{maximumFractionDigits:decimals})+suffix;}
 function resumoAtividadeAtual(){return TreinoActivityData.summarize(getAtividadeHealth(),periodoAtividade(),hoje(),document.getElementById('activityKind')?.value||'all');}
-function definirPeriodoAtividade(days){_activityDays=[7,30,90].includes(Number(days))?Number(days):30;_activityAllRows=false;renderizarAtividades();renderizarEvolucaoRotina();}
+function definirPeriodoAtividade(days){_activityDays=[7,30,90].includes(Number(days))?Number(days):30;_activityAllRows=false;salvarPreferenciasAtividade();renderizarAtividades();renderizarEvolucaoRotina();}
 function abrirCardioPassos(){irParaAba('progresso');ativarSubTab('atividade');}
 function abrirRefeicaoWidget(){
   // Um atalho do launcher sempre registra HOJE, não o dia antigo aberto no diário.
@@ -302,5 +345,5 @@ function renderizarAtividadeDashboard(){
   const today=data.daily.find(d=>d.date===hoje()),q=TreinoActivityData.quality(today?[today]:[],'steps');
   el.innerHTML='<div><span class="eyebrow">Movimento do dia</span><strong>'+formatarAtividade(s.todaySteps)+' <small>passos hoje</small></strong><span>'+(s.knownDays||s.cardioCount?s.cardioCount+' cardios nos últimos 7 dias · '+formatarAtividade(s.minutes,' min'):'Conecte o Health para acompanhar seus cardios')+'</span>'+htmlQualidadeAtividade(q)+'</div><span class="activity-dashboard-arrow" aria-hidden="true">↗</span>';
 }
-window.addEventListener('load',()=>{renderizarAtividadeDashboard();if(isNativeAndroid())setTimeout(()=>sincronizarAtividadesHealth(false),2200);});
+window.addEventListener('load',()=>{carregarPreferenciasAtividade();renderizarAtividadeDashboard();if(isNativeAndroid())setTimeout(()=>sincronizarAtividadesHealth(false),2200);});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){renderizarAtividadeDashboard();if(isNativeAndroid()){sincronizarAtividadesHealth(false);atualizarWidgetNativo();}}});

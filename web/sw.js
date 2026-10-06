@@ -1,5 +1,5 @@
-const APP_VERSION = '12.8.2';
-const BUILD = '2026.10.06.3';
+const APP_VERSION = '12.8.3';
+const BUILD = '2026.10.06.4';
 const CACHE_PREFIX = 'treinoapp-';
 const CACHE_NAME = `${CACHE_PREFIX}v${APP_VERSION}-${BUILD}`;
 const APP_SHELL = ['./', './index.html', './mobile-ui.css', './activity.css', './activity.js', './manifest.json', './VERSION', './BUILD.json', './icon-192.png', './icon-512.png', './data/taco-v4.json', './data/common-foods.js'];

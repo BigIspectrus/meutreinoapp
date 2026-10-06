@@ -210,6 +210,8 @@ ok('readStatus' in plugin and 'kcalReadAt' in plugin, 'Horários individuais nã
 for token in ['quality','readTrackingVersion','lastAttemptAt','currentInfo','savedInfo','failure']:
     ok(token in activity, 'Rastreio de atualização ausente: '+token)
 ok('activityReadStatus' in html and 'Atualização de cada dado' in html, 'Painel de leituras individuais ausente')
+ok('activityPreferencesV1283:localStorage.getItem' in html and 'carregarPreferenciasAtividade' in activity, 'Preferências não persistidas/incluídas no backup')
+ok("testImplementation 'org.robolectric:robolectric:4.17'" in gradle, 'Infraestrutura de testes Android críticos ausente')
 widget_layout=read('android/app/src/main/res/layout/widget_treinoapp.xml')
 for token in ['widgetNutritionKcal','widgetNutritionProtein','widgetNutritionCarbs','widgetNutritionFat','widgetMealButton']:
     ok(token in widget_layout, 'Elemento alimentação/widget ausente: '+token)

@@ -2,6 +2,8 @@
 
 Pedido do usuário: realizar TODOS os itens abaixo, nesta ordem, concluindo e entregando um tópico por vez. Ao terminar cada tópico, parar e pedir autorização explícita para o próximo. Não antecipar implementação de outros tópicos.
 
+Autorização adicional recebida: realizar os tópicos 3 e 4 na mesma continuidade. Parar antes do tópico 5. A validação física do tópico 4 depende do usuário; testes em ambiente simulado não devem ser apresentados como testes feitos no Galaxy/launcher real.
+
 1. Corrigir RIR/RPE ausente convertido em zero nas análises, preservando zero real e o histórico.
 2. Mostrar atualização de cada dado separadamente, inclusive dados anteriores mantidos do cache.
 3. Lembrar filtros e preferências de modalidade, período e gráfico ao reabrir.

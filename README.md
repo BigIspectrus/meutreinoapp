@@ -1,4 +1,4 @@
-# TreinoApp v12.8.2 Beta — Atualização individual dos dados de atividade
+# TreinoApp v12.8.3 Beta — Preferências persistentes e validação crítica
 
 TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capacitor. A variante Beta pode coexistir com a Stable.
 
@@ -6,10 +6,23 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 
 - Stable: `com.treinoapp.app`
 - Beta: `com.treinoapp.beta`
-- Versão: `12.8.2`
-- versionCode: `120802`
+- Versão: `12.8.3`
+- versionCode: `120803`
 - Android: compile/target API 36, minSdk 26
 - Room: schema 7, somente migrações explícitas
+
+## Preferências e testes v12.8.3 — tópicos 3 e 4 de 14
+
+- seleção de modalidade, período 7/30/90, gráficos de atividade/rotina e gráfico/exercício/grupo de evolução persistida ao reabrir;
+- valores validados, recuperação segura de preferência inválida e fallback quando um exercício já não existe;
+- chave `activityPreferencesV1283` incluída em exportação, importação, snapshots e reset, sem modificar metas, treinos ou horários de leitura;
+- testes Node de preferências e restauração dos handlers reais;
+- testes Android em ambiente Robolectric 4.17 (dependência somente de teste), incluindo RemoteViews/SharedPreferences, refeições de ontem, atalho sem reset do treino, Room e reabertura do banco;
+- resultados Android publicados no GitHub Actions separadamente do APK;
+- testagem física de instalação, launcher, restrições de bateria e Samsung Health/Galaxy Watch ainda depende do usuário. Ambiente simulado não representa teste realizado no aparelho real;
+- roteiro `TESTE_v12.8.3_BETA.md`; parar antes do tópico 5, conforme autorização e plano.
+
+Referência da infraestrutura de teste: [Robolectric](https://robolectric.org/getting-started/).
 
 ## Atualização individual v12.8.2 — tópico 2 de 14
 
@@ -22,7 +35,7 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 - avisos nos cartões, início, lista e gráficos, com painel recolhido de detalhes por leitura;
 - metadados permanecem no cache existente, incluído nos backups; sem mudança de schema Room ou permissões;
 - testes em `scripts/test-activity-freshness.mjs` e roteiro `TESTE_v12.8.2_BETA.md`;
-- tópico 3 (lembrar filtros e preferências) ainda não implementado; aguarda autorização explícita.
+- etapa entregue antes da implementação das preferências, preservada nesta versão.
 
 ## Correção de esforço v12.8.1 — tópico 1 de 14
 

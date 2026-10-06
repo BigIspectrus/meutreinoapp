@@ -50,6 +50,15 @@ jobs:
         run: |
           gradle testBetaDebugUnitTest --max-workers=1 --stacktrace
           gradle assembleBetaRelease bundleBetaRelease --max-workers=1 --stacktrace
+      - name: Publicar resultados dos testes Android
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TreinoApp-Testes-Android-${{ github.sha }}
+          path: |
+            android/app/build/reports/tests/testBetaDebugUnitTest/**
+            android/app/build/test-results/testBetaDebugUnitTest/**
+          if-no-files-found: ignore
       - uses: actions/upload-artifact@v4
         with:
           name: TreinoApp-Beta-${{ github.sha }}
