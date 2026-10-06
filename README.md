@@ -22,7 +22,7 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 - widgets atualizados após leitura Health, alteração de metas, registro de alimentação e mudanças da sessão. O refresh do launcher lê alimentação de Room; movimento mostra o espelho salvo pelo app. A periodicidade do launcher pode ser adiada pelo Android;
 - sem nova permissão Health, leitura contínua ou alteração do banco/dados alimentares. Nenhum registro em tempo real do Galaxy Watch é presumido;
 - remoção apaga apenas configurações da instância; restauração do launcher migra opções dos IDs antigos para os novos. Backup JSON não transfere a posição dos widgets entre aparelhos;
-- testes Android de modos, tamanho, isolamento, atalhos, datas, ausência/zero, permissão e restauração; teste web do espelho e roteiro físico em `TESTE_v12.8.7_BETA.md`;
+- testes Android de modos, tamanho, isolamento, atalhos, datas, ausência/zero, permissão e restauração; medição de layout com gráficos nativos do Robolectric e previews PNG publicados junto aos testes; teste web do espelho e roteiro físico em `TESTE_v12.8.7_BETA.md`;
 - parar antes do tópico 11 (água), conforme plano autorizado.
 
 Referências oficiais: [configuração de widgets](https://developer.android.com/develop/ui/views/appwidgets/configuration), [layouts responsivos e tamanhos](https://developer.android.com/develop/ui/views/appwidgets/layouts).

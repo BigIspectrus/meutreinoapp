@@ -57,6 +57,7 @@ jobs:
           name: TreinoApp-Testes-Android-${{ github.sha }}
           path: |
             android/app/build/reports/tests/testBetaDebugUnitTest/**
+            android/app/build/reports/widget-previews/**
             android/app/build/test-results/testBetaDebugUnitTest/**
           if-no-files-found: ignore
       - uses: actions/upload-artifact@v4

@@ -4,6 +4,8 @@ import android.app.Activity
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.view.View
 import android.widget.TextView
 import com.treinoapp.app.R
@@ -22,6 +24,8 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
+import java.io.File
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
@@ -104,7 +108,7 @@ class WidgetModesTest {
         assertTrue(text(view, R.id.widgetMovementWeek).startsWith("0 min · 0 sessões"))
     }
 
-    @Test fun minimumSizesKeepContentAboveTheShortcutRow() {
+    @Test @GraphicsMode(GraphicsMode.Mode.NATIVE) fun minimumSizesKeepContentAboveTheShortcutRow() {
         save()
         val density = context.resources.displayMetrics.density
         val cases = listOf(WidgetMode.NUTRITION to 180, WidgetMode.WORKOUT to 180, WidgetMode.MOVEMENT to 180,
@@ -143,8 +147,16 @@ class WidgetModesTest {
                     var shown = field.visibility == View.VISIBLE; var parent = field.parent
                     while (parent is View && parent !== content) { shown = shown && parent.visibility == View.VISIBLE; parent = parent.parent }
                     if (shown && !withinContent(field, section)) failures += "$mode $height: texto cortado ($textId)"
+                    if (shown && field is TextView && field.layout != null && field.layout.height > field.height - field.compoundPaddingTop - field.compoundPaddingBottom)
+                        failures += "$mode $height: linhas cortadas ($textId)"
                 }
             }
+            val bitmap = Bitmap.createBitmap(widthPx, heightPx, Bitmap.Config.ARGB_8888)
+            view.draw(Canvas(bitmap))
+            val target = File("build/reports/widget-previews/${mode.key}-$height.png")
+            target.parentFile.mkdirs()
+            target.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+            bitmap.recycle()
         }
         assertTrue(failures.joinToString("; "), failures.isEmpty())
     }
