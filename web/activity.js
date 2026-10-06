@@ -343,9 +343,10 @@ function desenharGraficoAtividade(){
   const rows=dadosRotinaAtividade(),key=document.getElementById('activityChartMetric')?.value||'steps',
     config={steps:['Passos','#75aaff','passos'],cardioMinutes:['Minutos de cardio','#65d8b0','minutos'],cardioCount:['Cardios','#c6a3ff','sessões'],cardioKcal:['Kcal dos cardios','#f1bc6b','kcal'],cardioDistance:['Distância dos cardios','#65d8b0','km']},c=config[key]||config.steps;
   const any=rows.some(d=>d[key]!=null);document.getElementById('activityChartEmpty').hidden=any;
+  document.getElementById('activityChartEmpty').textContent=key==='cardioDistance'?'Sem distância com cobertura suficiente para este gráfico. Registros parciais continuam na lista.':'Sem dados para este gráfico no período.';
   document.getElementById('activityChartWrap').hidden=!any;
   const s=resumoAtividadeAtual(),q=TreinoActivityData.quality(key==='cardioDistance'?s.sessions.filter(x=>x.distanceComplete):key==='cardioKcal'?s.sessions.filter(x=>x.kcal!=null):key==='steps'?s.daily.filter(x=>x.steps!=null):[...s.daily.filter(x=>x.cardioKnown),...s.sessions],key==='steps'?'steps':key==='cardioKcal'?'sessionKcal':key==='cardioDistance'?'sessionDistance':'sessions');
-  document.getElementById('activityChartUnit').textContent=c[2]+' por dia · lacunas = sem dados. '+textoQualidadeAtividade(q);
+  document.getElementById('activityChartUnit').textContent=c[2]+' por dia · '+(key==='cardioDistance'?'somente sessões com cobertura suficiente':'lacunas = sem dados')+'. '+textoQualidadeAtividade(q);
   if(any)_activityChart=construirGraficoRotina('activityChart',rows,[{key,label:c[0],color:c[1]}],'bar');
 }
 function renderizarEvolucaoRotina(){
