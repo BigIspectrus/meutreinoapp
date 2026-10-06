@@ -1649,7 +1649,7 @@
     <p id="routineSummary" class="activity-note"></p>
     <div id="routineChartWrap" class="activity-chart-wrap"><canvas id="routineChart" role="img" aria-label="Evolução da rotina no período selecionado"></canvas></div>
     <div id="routineChartEmpty" class="activity-empty"><strong>Ainda sem registros neste período</strong><p>Registre seu peso ou alimentação, ou sincronize passos e cardio pelo Health Connect.</p></div>
-    <p class="activity-note">Lacunas indicam dias sem dados. Médias excluem hoje, que ainda está em andamento; alimentação reflete o que foi registrado, não necessariamente o dia inteiro.</p>
+    <p class="activity-note">Lacunas indicam dias sem dados. Médias de passos/cardio excluem hoje, que está em andamento. Médias alimentares usam apenas dias concluídos por você, incluindo hoje se concluído.</p>
     <button type="button" class="btn btn-outline btn-sm" onclick="abrirCardioPassos()">Ver cardio e passos →</button>
   </section>
   <div class="card">
@@ -6593,7 +6593,7 @@ function renderizarSemanaNutricao(){
   const el=document.getElementById('nutritionWeekly');if(!el)return;
   const dates=Array.from({length:7},(_,i)=>dataOffsetNutricao(_nutritionDate,i-6)).filter(date=>date<=hoje()),s=resumirDiasNutricao(dates),n=s.completeDays.length;
   const avg=(key,decimals=0)=>n?formatarNutricao(s.tot[key]/n,decimals):'—';
-  el.innerHTML='<details class="card nutrition-weekly-details"><summary>📅 Últimos 7 dias · '+n+' completos · '+s.partialDays.length+' parciais</summary><div class="nutrition-weekly-content"><div class="nutrition-week-grid"><div class="nutrition-week-stat"><strong>'+n+'/'+dates.length+'</strong><span>dias completos</span></div><div class="nutrition-week-stat"><strong>'+s.partialDays.length+'</strong><span>parciais / não confirmados</span></div><div class="nutrition-week-stat"><strong>'+avg('kcal')+'</strong><span>kcal / dia completo</span></div><div class="nutrition-week-stat"><strong>'+avg('protein',1)+'</strong><span>proteína média (g)</span></div><div class="nutrition-week-stat"><strong>'+avg('carbs',1)+'</strong><span>carbo médio (g)</span></div></div><p class="nutrition-note" style="margin-top:10px;">Médias somente de dias que você concluiu. Parciais e dias sem registros não contam como zero; datas futuras ficam fora.</p>'+htmlDiasEstadoNutricao(s.rows)+'</div></details>';
+el.innerHTML='<details class="card nutrition-weekly-details"><summary>📅 Últimos 7 dias · '+n+' '+(n===1?'completo':'completos')+' · '+s.partialDays.length+' '+(s.partialDays.length===1?'parcial':'parciais')</summary><div class="nutrition-weekly-content"><div class="nutrition-week-grid"><div class="nutrition-week-stat"><strong>'+n+'/'+dates.length+'</strong><span>dias completos</span></div><div class="nutrition-week-stat"><strong>'+s.partialDays.length+'</strong><span>parciais / não confirmados</span></div><div class="nutrition-week-stat"><strong>'+avg('kcal')+'</strong><span>kcal / dia completo</span></div><div class="nutrition-week-stat"><strong>'+avg('protein',1)+'</strong><span>proteína média (g)</span></div><div class="nutrition-week-stat"><strong>'+avg('carbs',1)+'</strong><span>carbo médio (g)</span></div></div><p class="nutrition-note" style="margin-top:10px;">Médias somente de dias que você concluiu. Parciais e dias sem registros não contam como zero; datas futuras ficam fora.</p>'+htmlDiasEstadoNutricao(s.rows)+'</div></details>';
 }
 function renderizarNutricao(){
   const input=document.getElementById('nutritionDate');if(input)input.value=_nutritionDate;
@@ -6810,7 +6810,7 @@ function htmlRelatorioMensalNutricao(data){
     stat(average('kcal',0,' kcal'),'média por dia completo')+stat(average('protein',1,' g'),'proteína média · completos')+
     stat(d.kcalAdherence==null?'—':formatarNutricao(d.kcalAdherence)+'%','dias completos dentro de ±10% das kcal')+
     stat(d.proteinAdherence==null?'—':formatarNutricao(d.proteinAdherence)+'%','dias completos com ≥90% da proteína')+'</div>'+
-    '<p class="nutrition-note">'+c.partialDays.length+' dia(s) parcial(is): '+formatarNutricao(c.partialTot.kcal)+' kcal registradas, não consumo total estimado. Excluídos das médias e comparações; não contam como zero.</p>'+htmlDiasEstadoNutricao(c.rows)+
+    '<p class="nutrition-note">'+c.partialDays.length+' '+(c.partialDays.length===1?'dia parcial':'dias parciais')+': '+formatarNutricao(c.partialTot.kcal)+' kcal registradas, não consumo total estimado. Excluídos das médias e comparações; não contam como zero.</p>'+htmlDiasEstadoNutricao(c.rows)+
     '<div class="card" style="margin-top:10px"><div class="card-title">Treino e esforço · todos os treinos do mês</div><div class="nutrition-report-grid">'+stat(d.sessions.length,'sessões de treino')+stat(formatarNutricao(d.volume)+' kg','volume registrado')+stat(d.avgRir==null?'—':formatarNutricao(d.avgRir,1),'RIR médio')+'</div><div class="nutrition-insight">'+trainingCompare+'</div></div>'+
     '<div class="card" style="margin-top:10px"><div class="card-title">Peso e recuperação</div><div class="nutrition-report-grid">'+
     stat(weightDelta==null?'—':(weightDelta>=0?'+':'')+weightDelta.toLocaleString('pt-BR',{maximumFractionDigits:2})+' kg','variação no mês · '+d.monthWeights.length+' medida(s)')+

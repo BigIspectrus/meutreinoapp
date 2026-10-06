@@ -51,7 +51,7 @@ for(const name of ['numeroNutricao','arredondarNutricao','formatarNutricao','nor
   let report=e.ctx.dadosRelatorioMensalNutricao('2026-10');assert.equal(report.days.length,2);assert.equal(report.tot.kcal/report.div,2050);assert.equal(report.tot.protein/report.div,145);
   assert.equal(report.microCoverage[0].value,500);assert.equal(report.kcalAdherence,100);assert.equal(report.proteinAdherence,100);
   assert.equal(report.trainingAvg.kcal,2000);assert.equal(report.restAvg.kcal,2100);assert.equal(report.coverage.partialDays.length,3);
-  e.ctx.renderizarSemanaNutricao();assert.ok(e.element('nutritionWeekly').innerHTML.includes('2 completos · 1 parciais'));
+  e.ctx.renderizarSemanaNutricao();assert.ok(e.element('nutritionWeekly').innerHTML.includes('2 completos · 1 parcial'));
   const second=environment(e.storage);assert.equal(second.ctx.estadoDiaNutricao('2026-10-01').state,'complete','Reabrir app preserva conclusão');
   assert.equal(e.storage.get(entryKey),beforeEntries);assert.equal(e.storage.get('nutritionGoalsV125'),goals);
   e.ctx.concluirDiaNutricao('2026-10-05');assert.equal(e.ctx.estadoDiaNutricao('2026-10-05').state,'complete','Zero explícito com alimento não é ausência');
