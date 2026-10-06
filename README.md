@@ -1,4 +1,4 @@
-# TreinoApp v12.8.0 Beta — Cardio, passos e alimentação no widget
+# TreinoApp v12.8.1 Beta — Correção de RIR/RPE nas análises
 
 TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capacitor. A variante Beta pode coexistir com a Stable.
 
@@ -6,10 +6,20 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 
 - Stable: `com.treinoapp.app`
 - Beta: `com.treinoapp.beta`
-- Versão: `12.8.0`
-- versionCode: `120800`
+- Versão: `12.8.1`
+- versionCode: `120801`
 - Android: compile/target API 36, minSdk 26
 - Room: schema 7, somente migrações explícitas
+
+## Correção de esforço v12.8.1 — tópico 1 de 14
+
+- RIR/RPE ausente (`null`, campo não definido, vazio ou só espaços) não entra nas médias como zero; zero real continua válido;
+- regra comum aplicada à progressão, histórico por exercício, resumo pós-treino, fadiga, cobertura de esforço e relatório mensal;
+- payloads de sincronização nativa preservam a distinção entre ausência e zero, sem regravar o histórico web;
+- nenhuma mudança em schema, permissões, metas manuais, pacote, assinatura ou recursos de cardio/widget;
+- testes reais dos handlers em `scripts/test-effort.mjs`, incluindo preservação dos registros, strings numéricas e registros antigos incompletos;
+- roteiro físico: `TESTE_v12.8.1_BETA.md`. Lista completa e ordem das próximas etapas: `PLANO_EVOLUCAO_APK.md`;
+- somente o tópico 1 foi implementado; o próximo depende de autorização explícita do usuário.
 
 ## Cardio, passos e widget v12.8
 
