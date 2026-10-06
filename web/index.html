@@ -10,8 +10,8 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <title>TreinoApp v12</title>
-  <meta name="treinoapp-version" content="12.8.3">
-  <meta name="treinoapp-build" content="2026.10.06.4">
+  <meta name="treinoapp-version" content="12.8.4">
+  <meta name="treinoapp-build" content="2026.10.06.5">
   <script defer src="./vendor/chart.umd.js"></script>
   <script defer src="./vendor/jspdf.umd.min.js"></script>
   <script defer src="./vendor/qrcode.min.js"></script>
@@ -1051,13 +1051,13 @@
 <!-- MODAL NOVIDADES -->
 <div class="modal-overlay" id="modalNovidades">
   <div class="modal" style="max-width:500px;">
-    <div class="modal-title">TreinoApp v12.8.3 Beta</div>
+    <div class="modal-title">TreinoApp v12.8.4 Beta</div>
     <div style="font-size:.88em;line-height:1.6;color:var(--text-muted);">
       <p style="color:var(--text);font-weight:700;margin-bottom:8px;">Principais novidades desta versão</p>
-      <p>O app lembra modalidade, período e gráficos escolhidos ao reabrir, inclusive exercício e grupo na evolução.</p>
-      <p style="margin-top:8px;">Preferências incluídas no backup, sem alterar metas, registros ou horários de leitura do Health Connect.</p>
-      <p style="margin-top:8px;">Validação automatizada ampliada para widget, virada do dia, banco nativo e restauração. O teste físico no seu Android continua necessário.</p>
-      <p style="margin-top:8px;">Esta entrega cobre o tópico 3 e a parte automatizada do tópico 4. Refeições em lote (tópico 5) aguardam nova autorização.</p>
+      <p>Monte sua refeição com vários alimentos e confira kcal e macros antes de salvar tudo junto.</p>
+      <p style="margin-top:8px;">Toque em um item da lista para ajustar a quantidade ou remova o que não vai consumir. Gramas, medidas caseiras, mL e receitas continuam disponíveis.</p>
+      <p style="margin-top:8px;">Nenhum item do rascunho entra no diário antes de confirmar. Ao cancelar uma montagem, o app pergunta antes de descartá-la.</p>
+      <p style="margin-top:8px;">Metas manuais e histórico preservados. Esta entrega cobre o tópico 5; os próximos aguardam sua autorização. Testes físicos do Android continuam necessários.</p>
     </div>
     <div class="modal-footer"><button class="btn btn-primary" onclick="fecharNovidades()">Entendi</button></div>
   </div>
@@ -1183,17 +1183,21 @@
 
 <div class="modal-overlay" id="modalNutritionAdd">
   <div class="modal" style="max-width:520px;">
-    <div class="modal-title">➕ Registrar alimento</div>
+    <div class="modal-title">Montar refeição</div>
     <div class="row"><div class="form-group col"><label>Refeição</label><select id="nutritionAddMeal"><option value="breakfast">Café da manhã</option><option value="lunch">Almoço</option><option value="dinner">Jantar</option><option value="snack">Lanches</option></select></div><div class="form-group col"><label>Horário</label><input type="time" id="nutritionAddTime"></div></div>
-    <input type="search" id="nutritionFoodSearch" placeholder="Ex: pão de queijo, leite, banana..." aria-label="Buscar alimento" oninput="renderizarBuscaAlimentosNutricao()">
+    <section id="nutritionMealDraft" class="meal-draft" aria-live="polite"></section>
+    <div id="nutritionSelectedFood"></div>
+    <div class="row" id="nutritionAmountFields" style="display:none"><div class="form-group col"><label>Quantidade</label><input type="number" id="nutritionAddAmount" min="0.1" step="0.1" inputmode="decimal" oninput="atualizarPreviaRegistroNutricao()"></div><div class="form-group col"><label>Unidade</label><select id="nutritionAddUnit" onchange="atualizarPreviaRegistroNutricao()"><option value="grams">gramas</option><option value="portion">porção</option></select></div></div>
+    <button type="button" id="nutritionPickNext" class="btn btn-outline btn-sm" onclick="escolherOutroAlimentoMontagemNutricao()" hidden>+ Escolher outro alimento</button>
+    <div id="nutritionMealSearch">
+    <input type="search" id="nutritionFoodSearch" placeholder="Ex: arroz, feijão, frango..." aria-label="Buscar alimento" oninput="renderizarBuscaAlimentosNutricao()">
     <div class="nutrition-filter-chips" id="nutritionFoodFilters"><button type="button" class="active" data-scope="recent" onclick="selecionarFiltroAlimentoNutricao('recent')">Recentes</button><button type="button" data-scope="favorites" onclick="selecionarFiltroAlimentoNutricao('favorites')">Favoritos</button><button type="button" data-scope="recipes" onclick="selecionarFiltroAlimentoNutricao('recipes')">Receitas</button><button type="button" data-scope="all" onclick="selecionarFiltroAlimentoNutricao('all')">Todos</button></div>
     <button type="button" class="btn btn-ghost btn-sm" style="width:auto" data-scope="common" onclick="selecionarFiltroAlimentoNutricao('common')">Alimentos comuns · offline</button>
     <p class="nutrition-note" id="nutritionFoodResultsNote" aria-live="polite"></p>
     <div class="nutrition-food-results" id="nutritionFoodResults"></div>
     <button class="btn btn-outline btn-sm" style="width:auto" onclick="abrirModalAlimentoNutricao()">+ Cadastrar novo alimento</button>
-    <div id="nutritionSelectedFood"></div>
-    <div class="row" id="nutritionAmountFields" style="display:none"><div class="form-group col"><label>Quantidade</label><input type="number" id="nutritionAddAmount" min="0.1" step="0.1" inputmode="decimal" oninput="atualizarPreviaRegistroNutricao()"></div><div class="form-group col"><label>Unidade</label><select id="nutritionAddUnit" onchange="atualizarPreviaRegistroNutricao()"><option value="grams">gramas</option><option value="portion">porção</option></select></div></div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="fecharModal('modalNutritionAdd')">Cancelar</button><button class="btn btn-primary" id="nutritionAddSave" onclick="salvarRegistroNutricao()" disabled>Adicionar</button></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="fecharModal('modalNutritionAdd')">Cancelar</button><button class="btn btn-primary" id="nutritionAddSave" onclick="salvarRegistroNutricao()" disabled>Salvar refeição</button></div>
   </div>
 </div>
 
@@ -2117,14 +2121,14 @@
 
 <script src="./data/common-foods.js"></script>
 <script>
-const APP_VERSION = '12.8.3';
-const APP_BUILD = '2026.10.06.4';
+const APP_VERSION = '12.8.4';
+const APP_BUILD = '2026.10.06.5';
 const DATA_SCHEMA_VERSION = 18;
 const GITHUB_REPO='BigIspectrus/meutreinoapp';
 const GITHUB_PAGES_BASE='https://bigispectrus.github.io/meutreinoapp';
 let _latestAndroidReleaseUrl='';
 let _nativeChannel='web';
-const APP_CACHE_VERSION = 'treinoapp-v12.8.3-202610064';
+const APP_CACHE_VERSION = 'treinoapp-v12.8.4-202610065';
 
 const SET_TYPES={workset:'Work set',warmup:'Aquecimento',topset:'Top set',backoff:'Back-off',dropset:'Drop set',cluster:'Cluster set',fst7:'FST-7',restpause:'Rest-pause',myoreps:'Myo-reps',amrap:'AMRAP'};
 function normalizarSetType(v){return SET_TYPES[v]?v:'workset';}
@@ -2455,7 +2459,7 @@ function confirmarAcao(titulo, msg, cb) {
   ok.onclick = () => { fecharModal('modalConfirm'); cb(); };
   document.getElementById('modalConfirm').classList.add('open');
 }
-function fecharModal(id) { document.getElementById(id).classList.remove('open'); }
+function fecharModal(id) { if(id==='modalNutritionAdd'&&window.TreinoMealBuilder?.active()&&!cancelarMontagemRefeicaoNutricao())return;document.getElementById(id).classList.remove('open'); }
 
 // ════════════════════════════════════════════════
 // NOTIFICAÇÕES + SERVICE WORKER TIMER
@@ -6640,7 +6644,7 @@ function salvarAlimentoNutricao(){
   const mainMeasure=portion?{id:'portion',name:document.getElementById('nutritionFoodServingName').value.trim()||'porção',grams:servingGrams}:null,measures=[...(mainMeasure?[mainMeasure]:[]),..._nutritionMeasureDraft].filter((m,i,a)=>a.findIndex(x=>x.name.toLocaleLowerCase('pt-BR')===m.name.toLocaleLowerCase('pt-BR'))===i);
   const imported=_nutritionFoodImportDraft;
   const food={id,name,brand:document.getElementById('nutritionFoodBrand').value.trim(),basis,servingName:portion?(document.getElementById('nutritionFoodServingName').value.trim()||'porção'):'100 g',servingGrams,kcal100:value('nutritionFoodKcal'),protein100:value('nutritionFoodProtein'),carbs100:value('nutritionFoodCarbs'),fat100:value('nutritionFoodFat'),fiber100:value('nutritionFoodFiber'),sodium100:value('nutritionFoodSodium'),micros100:lerCamposMicrosNutricao('nutritionFoodMicro-',factor),favorite:document.getElementById('nutritionFoodFavorite').checked,source:old?.source||imported?.source||'manual',sourceId:old?.sourceId||imported?.sourceId||'',barcode:old?.barcode||imported?.barcode||'',measures,createdAt:old?.createdAt||now,updatedAt:now,lastUsedAt:old?.lastUsedAt||0};
-  const idx=foods.findIndex(f=>f.id===id);if(idx>=0)foods[idx]=food;else foods.push(food);salvarAlimentosNutricaoLocal(foods);_nutritionSelectedFoodId=id;fecharModal('modalNutritionFood');renderizarGerenciadorAlimentosNutricao();dadosNutricaoAlterados(old?'Alimento atualizado':'Alimento cadastrado');if(document.getElementById('modalNutritionAdd').classList.contains('open'))selecionarAlimentoNutricao(id);else renderizarBuscaAlimentosNutricao();
+  const idx=foods.findIndex(f=>f.id===id);if(idx>=0)foods[idx]=food;else foods.push(food);salvarAlimentosNutricaoLocal(foods);if(window.TreinoMealBuilder?.active())window.TreinoMealBuilder.refreshFood(food);_nutritionSelectedFoodId=id;fecharModal('modalNutritionFood');renderizarGerenciadorAlimentosNutricao();dadosNutricaoAlterados(old?'Alimento atualizado':'Alimento cadastrado');if(document.getElementById('modalNutritionAdd').classList.contains('open'))selecionarAlimentoNutricao(id);else renderizarBuscaAlimentosNutricao();
 }
 function selecionarFiltroAlimentoNutricao(scope){
   _nutritionFoodScope=['recent','favorites','recipes','common','all'].includes(scope)?scope:'all';document.querySelectorAll('#modalNutritionAdd [data-scope]').forEach(b=>b.classList.toggle('active',b.dataset.scope===_nutritionFoodScope));renderizarBuscaAlimentosNutricao();
@@ -6665,25 +6669,32 @@ function renderizarBuscaAlimentosNutricao(){
   el.innerHTML=foods.length?foods.map(f=>htmlLinhaAlimentoNutricao(f)).join(''):'<div class="empty-state" style="padding:18px"><div class="ei">🍎</div><p>'+(search?'Não encontramos esse alimento. Tente o catálogo completo ou cadastre pelo rótulo.':_nutritionFoodScope==='recent'?'Seus alimentos usados aparecerão aqui. Busque pelo nome ou abra “Alimentos comuns”.':'Nenhum alimento nesta lista.')+'</p></div>';
 }
 function abrirRegistroNutricao(meal='snack'){
+  if(window.TreinoMealBuilder&&!iniciarMontagemRefeicaoNutricao(_nutritionDate))return;
   _nutritionSelectedFoodId=null;document.getElementById('nutritionAddMeal').value=NUTRITION_MEALS.some(m=>m.id===meal)?meal:'snack';document.getElementById('nutritionAddTime').value=horarioNutricao();document.getElementById('nutritionFoodSearch').value='';document.getElementById('nutritionSelectedFood').innerHTML='';document.getElementById('nutritionAmountFields').style.display='none';document.getElementById('nutritionAddSave').disabled=true;selecionarFiltroAlimentoNutricao('recent');document.getElementById('modalNutritionAdd').classList.add('open');
+  if(window.TreinoMealBuilder)renderizarMontagemRefeicaoNutricao();
 }
 function selecionarAlimentoNutricao(id){
-  const f=getItensCatalogoPessoalNutricao().find(x=>x.id===id);if(!f)return;
+  const existing=window.TreinoMealBuilder?.active()?window.TreinoMealBuilder.findFood(id):null;
+  const f=existing?.food||getItensCatalogoPessoalNutricao().find(x=>x.id===id);if(!f)return;
   _nutritionSelectedFoodId=id;const measures=(f.measures||[]).filter(m=>m.grams>0),unit=document.getElementById('nutritionAddUnit'),liquid=referenciaComumNutricao(f)?.liquidGramsPerMl>0;
   unit.innerHTML='<option value="grams">gramas</option>'+(liquid?'<option value="ml">mililitros (mL, aprox.)</option>':'')+measures.map((m,i)=>'<option value="measure:'+i+'">'+esc(m.name)+' ('+formatarNutricao(m.grams,1)+' g)</option>').join('');
   const query=normalizarBuscaNutricao(document.getElementById('nutritionFoodSearch')?.value),match=measures.findIndex(m=>['pequeno','grande'].some(word=>query.includes(word)&&normalizarBuscaNutricao(m.name).includes(word)));
   unit.value=liquid?'ml':measures.length?'measure:'+Math.max(0,match):'grams';document.getElementById('nutritionAddAmount').value=liquid?200:measures.length?1:100;
+  if(existing){unit.value=existing.unit;document.getElementById('nutritionAddAmount').value=existing.amount;window.TreinoMealBuilder.select(existing.key);}
+  else if(window.TreinoMealBuilder?.active())window.TreinoMealBuilder.add(f,document.getElementById('nutritionAddAmount').value,unit.value,quantidadeSelecionadaNutricao(f));
   document.getElementById('nutritionAmountFields').style.display='flex';document.getElementById('nutritionAddSave').disabled=false;renderizarBuscaAlimentosNutricao();atualizarPreviaRegistroNutricao();
 }
 function calcularPorGramasNutricao(f,grams){const factor=numeroNutricao(grams)/100;return {kcal:arredondarNutricao(f.kcal100*factor),protein:arredondarNutricao(f.protein100*factor),carbs:arredondarNutricao(f.carbs100*factor),fat:arredondarNutricao(f.fat100*factor),fiber:arredondarNutricao(f.fiber100*factor),sodium:arredondarNutricao(f.sodium100*factor),micros:Object.fromEntries(NUTRITION_MICROS.map(m=>[m.key,arredondarNutricao(numeroNutricao(f.micros100?.[m.key])*factor)]).filter(([,v])=>v>0))};}
 function quantidadeSelecionadaNutricao(f){const amount=numeroNutricao(document.getElementById('nutritionAddAmount').value),unit=document.getElementById('nutritionAddUnit').value;if(unit.startsWith('measure:'))return amount*numeroNutricao((f.measures||[])[Number(unit.split(':')[1])]?.grams);if(unit==='ml')return amount*numeroNutricao(referenciaComumNutricao(f)?.liquidGramsPerMl);return amount;}
 function atualizarPreviaRegistroNutricao(){
-  const f=getItensCatalogoPessoalNutricao().find(x=>x.id===_nutritionSelectedFoodId),el=document.getElementById('nutritionSelectedFood');if(!f||!el)return;
+  const f=(window.TreinoMealBuilder?.active()?alimentoSelecionadoMontagemNutricao():null)||getItensCatalogoPessoalNutricao().find(x=>x.id===_nutritionSelectedFoodId),el=document.getElementById('nutritionSelectedFood');if(!f||!el)return;
   const grams=quantidadeSelecionadaNutricao(f),v=calcularPorGramasNutricao(f,grams),base=referenciaComumNutricao(f),unit=document.getElementById('nutritionAddUnit').value;
+  if(window.TreinoMealBuilder?.active()){window.TreinoMealBuilder.update(document.getElementById('nutritionAddAmount').value,unit,grams);renderizarMontagemRefeicaoNutricao();}
   const note=[base?.note,unit!=='grams'&&base?window.TreinoCommonFoods.portionNote:'',f.source==='taco'&&['taco:457','taco:458'].includes(f.sourceId||f.id)&&f.kcal100===0&&f.protein100===0&&f.carbs100===0&&f.fat100===0?'Calorias e macros não informados. Confira o rótulo ou atualize pelo catálogo antes de registrar.':''].filter(Boolean).join(' ');
   el.innerHTML='<div class="nutrition-selected"><strong>'+esc(f.name)+'</strong><div class="nutrition-note">'+formatarNutricao(grams,1)+' g · '+formatarNutricao(v.kcal,0)+' kcal · P '+formatarNutricao(v.protein,1)+'g · C '+formatarNutricao(v.carbs,1)+'g · G '+formatarNutricao(v.fat,1)+'g</div>'+(base?'<div class="nutrition-note" style="margin-top:8px">Fonte: <a href="'+esc(base.sourceUrl)+'" target="_blank" rel="noopener noreferrer" style="color:var(--primary)">'+esc(fonteAlimentoNutricao(base.source)+' · '+base.sourceId)+'</a></div>':'')+(note?'<details style="margin-top:8px"><summary class="nutrition-note" style="cursor:pointer">Sobre a porção e os valores</summary><p class="nutrition-note" style="margin-top:6px">'+esc(note)+'</p></details>':'')+(f.source!=='recipe'?'<button type="button" class="btn btn-ghost btn-sm" style="width:auto" onclick=\'abrirModalAlimentoNutricao('+jsArg(f.id)+')\'>Revisar alimento e medidas</button>':'')+'</div>';
 }
 function salvarRegistroNutricao(){
+  if(window.TreinoMealBuilder?.active())return salvarMontagemRefeicaoNutricao();
   const foods=getAlimentosNutricao(),f=getItensCatalogoPessoalNutricao().find(x=>x.id===_nutritionSelectedFoodId);if(!f)return toast('Escolha um alimento.','warn');const grams=quantidadeSelecionadaNutricao(f);if(grams<=0)return toast('Informe uma quantidade maior que zero.','warn');
   const now=Date.now(),v=calcularPorGramasNutricao(f,grams),entry={id:gerarId('meal'),date:_nutritionDate,time:document.getElementById('nutritionAddTime').value||horarioNutricao(),mealType:document.getElementById('nutritionAddMeal').value,foodId:f.id,name:f.name,grams:arredondarNutricao(grams),...v,createdAt:now,updatedAt:now};
   const entries=getRegistrosNutricao();entries.push(entry);salvarRegistrosNutricaoLocal(entries);
@@ -6845,5 +6856,6 @@ setInterval(()=>{if(isNativeAndroid()&&treinoAtivoTemplate&&!document.hidden)rec
 
 </script>
 <script src="./activity.js"></script>
+<script src="./meal-builder.js"></script>
 </body>
 </html>

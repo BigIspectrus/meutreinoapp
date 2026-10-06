@@ -1,4 +1,4 @@
-# TreinoApp v12.8.3 Beta — Preferências persistentes e validação crítica
+# TreinoApp v12.8.4 Beta — Montagem de refeição
 
 TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capacitor. A variante Beta pode coexistir com a Stable.
 
@@ -6,10 +6,21 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 
 - Stable: `com.treinoapp.app`
 - Beta: `com.treinoapp.beta`
-- Versão: `12.8.3`
-- versionCode: `120803`
+- Versão: `12.8.4`
+- versionCode: `120804`
 - Android: compile/target API 36, minSdk 26
 - Room: schema 7, somente migrações explícitas
+
+## Montagem de refeição v12.8.4 — tópico 5 de 14
+
+- escolher vários alimentos numa lista temporária, ajustar/remover cada item e acompanhar kcal/P/C/G antes de confirmar;
+- um único salvamento do lote no diário, mantendo o formato existente de um registro por alimento e os fluxos de Room, Health Connect e widget;
+- g, mL aproximados, medidas caseiras e receitas preservados; reescolher um alimento já incluído foca o item em vez de duplicá-lo;
+- confirmação antes de descartar; falha ao salvar mantém toda a montagem para tentar novamente; duplo toque não repete o registro;
+- rascunho apenas em memória: não é um registro permanente e não sobrevive ao encerramento/recarregamento do aplicativo;
+- metas manuais, pacote, assinatura, permissões e schema Room inalterados;
+- testes dos handlers reais em `scripts/test-meal-builder.mjs` e roteiro `TESTE_v12.8.4_BETA.md`;
+- parar antes do tópico 6 (dia alimentar completo/parcial), que depende de nova autorização. A validação física do tópico 4 continua pendente.
 
 ## Preferências e testes v12.8.3 — tópicos 3 e 4 de 14
 

@@ -4,6 +4,8 @@ Pedido do usuário: realizar TODOS os itens abaixo, nesta ordem, concluindo e en
 
 Autorização adicional recebida: realizar os tópicos 3 e 4 na mesma continuidade. Parar antes do tópico 5. A validação física do tópico 4 depende do usuário; testes em ambiente simulado não devem ser apresentados como testes feitos no Galaxy/launcher real.
 
+Autorização posterior recebida: continuar para o próximo tópico, implementando o tópico 5 na v12.8.4. Entregar e parar antes do tópico 6. A autorização não equivale a resultado dos testes físicos pendentes do tópico 4.
+
 1. Corrigir RIR/RPE ausente convertido em zero nas análises, preservando zero real e o histórico.
 2. Mostrar atualização de cada dado separadamente, inclusive dados anteriores mantidos do cache.
 3. Lembrar filtros e preferências de modalidade, período e gráfico ao reabrir.
