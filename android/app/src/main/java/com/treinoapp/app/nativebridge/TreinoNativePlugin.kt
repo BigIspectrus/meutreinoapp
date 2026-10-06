@@ -19,6 +19,8 @@ import androidx.health.connect.client.permission.HealthPermission.Companion.PERM
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
+import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
+import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.RestingHeartRateRecord
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
@@ -263,6 +265,12 @@ class TreinoNativePlugin : Plugin() {
             call.getInt("weeklyDone", 0) ?: 0,
             call.getInt("weeklyTarget", 4) ?: 4,
             call.getInt("streak", 0) ?: 0,
+            call.getString("nutritionDate", "") ?: "",
+            (call.getDouble("kcal", 0.0) ?: 0.0).coerceAtLeast(0.0).toFloat(),
+            (call.getDouble("protein", 0.0) ?: 0.0).coerceAtLeast(0.0).toFloat(),
+            (call.getDouble("carbs", 0.0) ?: 0.0).coerceAtLeast(0.0).toFloat(),
+            (call.getDouble("fat", 0.0) ?: 0.0).coerceAtLeast(0.0).toFloat(),
+            (call.getDouble("goalKcal", 0.0) ?: 0.0).coerceAtLeast(0.0).toFloat(),
         )
         call.resolve()
     }
@@ -368,6 +376,9 @@ class TreinoNativePlugin : Plugin() {
                     put("writeExercise", granted.contains(HealthPermission.getWritePermission(ExerciseSessionRecord::class)))
                     put("readHeartRate", granted.contains(HealthPermission.getReadPermission(HeartRateRecord::class)))
                     put("readCalories", granted.contains(HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class)))
+                    put("readSteps", granted.contains(HealthPermission.getReadPermission(StepsRecord::class)))
+                    put("readActiveCalories", granted.contains(HealthPermission.getReadPermission(ActiveCaloriesBurnedRecord::class)))
+                    put("historyGranted", HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY in granted)
                     put("readSleep", granted.contains(HealthPermission.getReadPermission(SleepSessionRecord::class)))
                     put("readRestingHeartRate", granted.contains(HealthPermission.getReadPermission(RestingHeartRateRecord::class)))
                     put("readHrv", granted.contains(HealthPermission.getReadPermission(HeartRateVariabilityRmssdRecord::class)))
@@ -376,6 +387,38 @@ class TreinoNativePlugin : Plugin() {
                     put("writeNutrition", granted.contains(HealthPermission.getWritePermission(NutritionRecord::class)))
                 })
             } catch (e: Exception) { reject(call, "Falha ao consultar Health Connect", e) }
+        }
+    }
+
+    @PluginMethod
+    fun getActivitySnapshot(call: PluginCall) {
+        val days = call.getInt("days", 90) ?: 90
+        scope.launch {
+            try {
+                val r = ActivityHealthRepository(context).snapshot(days)
+                resolve(call, JSObject().apply {
+                    put("available", r.available); put("generatedAt", r.generatedAt); put("zoneId", r.zoneId)
+                    put("rangeStart", r.rangeStart); put("rangeEnd", r.rangeEnd)
+                    put("readSteps", r.readSteps); put("readExercise", r.readExercise)
+                    put("readActiveCalories", r.readActiveCalories); put("readCalories", r.readCalories)
+                    put("historyGranted", r.historyGranted); put("sessionsComplete", r.sessionsComplete)
+                    put("duplicatesRemoved", r.duplicatesRemoved); put("errors", JSArray(r.errors))
+                    put("daily", JSArray().apply {
+                        r.daily.forEach { d -> put(JSObject().apply {
+                            put("date", d.date); put("steps", d.steps)
+                            put("activeKcal", d.activeKcal); put("totalKcal", d.totalKcal)
+                        }) }
+                    })
+                    put("sessions", JSArray().apply {
+                        r.sessions.forEach { s -> put(JSObject().apply {
+                            put("id", s.id); put("sourcePackage", s.sourcePackage); put("source", s.source)
+                            put("kind", s.kind); put("title", s.title); put("date", s.date)
+                            put("startMs", s.startMs); put("endMs", s.endMs); put("minutes", s.minutes)
+                            put("kcal", s.kcal); put("calorieKind", s.calorieKind)
+                        }) }
+                    })
+                })
+            } catch (e: Exception) { reject(call, "Falha ao ler cardio e passos do Health Connect", e) }
         }
     }
 
@@ -805,6 +848,7 @@ class TreinoNativePlugin : Plugin() {
                     )
                 }
                 db.workoutDao().replaceAllNutrition(goal, foods, entries, recipes, mealTemplates)
+                TreinoAppWidgetProvider.refreshNutrition(context)
                 resolve(call, JSObject().apply {
                     put("synced", true)
                     put("foods", foods.size)

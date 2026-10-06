@@ -95,6 +95,7 @@
         android:progressBackgroundTint="#26314F" />
 
     <LinearLayout
+        android:id="@+id/widgetTrainingStats"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
@@ -153,15 +154,63 @@
         </LinearLayout>
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/widgetButton"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="11dp"
+        android:layout_marginTop="10dp"
+        android:padding="10dp"
+        android:background="@drawable/widget_stat_background"
+        android:orientation="vertical">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="ALIMENTAÇÃO · HOJE"
+            android:textColor="#AEB8D8"
+            android:textSize="10sp" />
+        <TextView
+            android:id="@+id/widgetNutritionKcal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:text="0 kcal consumidas"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:maxLines="1"
+            android:ellipsize="end" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:orientation="horizontal">
+            <TextView android:id="@+id/widgetNutritionProtein" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="P 0 g" android:textSize="11sp" android:textColor="#8AB4FF" />
+            <TextView android:id="@+id/widgetNutritionCarbs" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="C 0 g" android:textSize="11sp" android:textColor="#F7C94F" />
+            <TextView android:id="@+id/widgetNutritionFat" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="G 0 g" android:textSize="11sp" android:textColor="#F7A875" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/widgetMealButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         android:gravity="center"
         android:paddingTop="10dp"
         android:paddingBottom="10dp"
         android:background="@drawable/widget_button_background"
+        android:text="+ ADICIONAR REFEIÇÃO"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF" />
+
+    <TextView
+        android:id="@+id/widgetButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:gravity="center"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
         android:text="INICIAR TREINO"
         android:textStyle="bold"
         android:textSize="12sp"

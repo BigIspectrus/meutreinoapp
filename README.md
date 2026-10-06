@@ -1,4 +1,4 @@
-# TreinoApp v12.7.1 Beta — Alimentos do dia a dia
+# TreinoApp v12.8.0 Beta — Cardio, passos e alimentação no widget
 
 TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capacitor. A variante Beta pode coexistir com a Stable.
 
@@ -6,10 +6,26 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 
 - Stable: `com.treinoapp.app`
 - Beta: `com.treinoapp.beta`
-- Versão: `12.7.1`
-- versionCode: `120701`
+- Versão: `12.8.0`
+- versionCode: `120800`
 - Android: compile/target API 36, minSdk 26
 - Room: schema 7, somente migrações explícitas
+
+## Cardio, passos e widget v12.8
+
+- área Cardio & passos no Início e em Evolução & Health: caminhada, corrida, esteira, bicicleta e bicicleta ergométrica do Health Connect;
+- passos de hoje e média de dias completos com dados, sem confundir dado ausente com zero;
+- sessões paginadas, sincronização incremental sem duplicação, origem visível, filtros de modalidade/período e lista completa;
+- calorias ativas da origem/intervalo da sessão preferidas; gasto total do intervalo identificado quando usado como alternativa, sem somar ao gasto diário nem modificar metas de alimentação;
+- gráficos de peso, passos, tempo/kcal de cardio, kcal consumidas e macros com 7/30/90 dias, lacunas para dias sem registros e preservação dos gráficos originais;
+- acesso a passos/calorias ativas e histórico antigo opcionais; sem histórico, leitura nova limitada a 28 dias, mantendo o cache já lido e incluído em backups;
+- widget com kcal/metas manuais e P/C/G consumidos HOJE, botão de refeição independente e acesso ao treino; atalho abre registro de hoje sem reiniciar sessão ativa;
+- atualização do widget ao editar alimentação e pelo launcher aproximadamente a cada 30 minutos; adaptação ao tamanho e leitura do espelho Room com app fechado;
+- sem alteração de schema Room, assinatura ou identidade do aplicativo. Health Connect depende dos dados disponibilizados pelo Samsung Health, após sincronização, não em tempo real.
+
+Validação: `npm run validate`, `npm run test:ui`, `:app:testBetaDebugUnitTest` e roteiro `TESTE_v12.8.0_BETA.md`. A instalação, permissões, dados reais e widget no Galaxy precisam de teste físico.
+
+Referências: [agregação Health Connect](https://developer.android.com/health-and-fitness/health-connect/aggregate-data), [leitura e paginação](https://developer.android.com/health-and-fitness/health-connect/read-data).
 
 ## Interface móvel v12.7
 

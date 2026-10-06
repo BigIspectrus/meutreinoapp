@@ -17,6 +17,8 @@ import androidx.health.connect.client.records.MealType
 import androidx.health.connect.client.records.NutritionRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
+import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
+import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.WeightRecord
 import androidx.health.connect.client.records.metadata.DataOrigin
 import androidx.health.connect.client.records.metadata.Device
@@ -42,6 +44,8 @@ class HealthConnectRepository(private val context: Context) {
     private val optionalPermissions: Set<String> = setOf(
         HealthPermission.getReadPermission(HeartRateRecord::class),
         HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class),
+        HealthPermission.getReadPermission(ActiveCaloriesBurnedRecord::class),
+        HealthPermission.getReadPermission(StepsRecord::class),
         HealthPermission.getWritePermission(ExerciseSessionRecord::class),
         HealthPermission.getReadPermission(WeightRecord::class),
         HealthPermission.getWritePermission(WeightRecord::class),
@@ -66,9 +70,16 @@ class HealthConnectRepository(private val context: Context) {
             HealthConnectFeatures.FEATURE_STATUS_AVAILABLE
     }.getOrDefault(false)
 
-    fun requestablePermissions(): Set<String> = if (backgroundReadAvailable()) {
-        (requiredPermissions + optionalPermissions) + PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND
-    } else requiredPermissions + optionalPermissions
+    fun historyReadAvailable(): Boolean = isAvailable() && runCatching {
+        client().features.getFeatureStatus(HealthConnectFeatures.FEATURE_READ_HEALTH_DATA_HISTORY) ==
+            HealthConnectFeatures.FEATURE_STATUS_AVAILABLE
+    }.getOrDefault(false)
+
+    fun requestablePermissions(): Set<String> = buildSet {
+        addAll(requiredPermissions + optionalPermissions)
+        if (backgroundReadAvailable()) add(PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND)
+        if (historyReadAvailable()) add(HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY)
+    }
 
     suspend fun grantedPermissions(): Set<String> =
         if (isAvailable()) client().permissionController.getGrantedPermissions() else emptySet()

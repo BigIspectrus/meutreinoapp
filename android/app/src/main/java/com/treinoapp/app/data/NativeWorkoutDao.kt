@@ -99,6 +99,12 @@ interface NativeWorkoutDao {
     @Query("DELETE FROM nutrition_goals")
     suspend fun clearNutritionGoals()
 
+    @Query("SELECT * FROM nutrition_goals WHERE id = 'default' LIMIT 1")
+    suspend fun nutritionGoal(): NutritionGoalEntity?
+
+    @Query("SELECT * FROM nutrition_entries WHERE date = :date")
+    suspend fun nutritionEntriesForDate(date: String): List<NutritionEntryEntity>
+
     @Query("DELETE FROM nutrition_foods")
     suspend fun clearNutritionFoods()
 

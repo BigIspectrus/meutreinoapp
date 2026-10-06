@@ -72,6 +72,10 @@ if scripts:
 # Handler inline: apenas funções nomeadas simples; métodos/expressões complexos ficam fora.
 handlers=set(re.findall(r'\bon(?:click|change|input|submit)=["\']\s*([A-Za-z_$][\w$]*)\s*\(',html))
 functions=set(re.findall(r'\bfunction\s+([A-Za-z_$][\w$]*)\s*\(',html)) | set(re.findall(r'\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?\(',html))
+activity=read('web/activity.js')
+functions |= set(re.findall(r'\bfunction\s+([A-Za-z_$][\w$]*)\s*\(',activity))
+activity_check=subprocess.run(['node','--check',str(ROOT/'web/activity.js')],capture_output=True,text=True)
+ok(activity_check.returncode==0,'JavaScript de atividade inválido: '+activity_check.stderr)
 missing=sorted(h for h in handlers if h not in functions and h not in {'prompt','confirm','alert'})
 ok(not missing,'Handlers sem função declarada: '+', '.join(missing[:30]))
 
@@ -193,6 +197,18 @@ for token in ['iniciarSugestaoDashboardUI','filtrarTreinosUI','workoutRestChipUI
     ok(token in html, f'Recurso de interface móvel ausente: {token}')
 if mobilecss.exists():
     ok('prefers-reduced-motion' in mobilecss.read_text(encoding='utf-8'), 'Movimento reduzido não suportado')
+
+# Atividade e widget / v12.8
+for asset in ['activity.js','activity.css']:
+    ok((ROOT/'web'/asset).exists() and './'+asset in html and './'+asset in sw, 'Asset atividade/offline ausente: '+asset)
+for token in ['READ_STEPS','READ_ACTIVE_CALORIES_BURNED','READ_HEALTH_DATA_HISTORY']:
+    ok(token in manifest, 'Permissão opcional de atividade ausente: '+token)
+for token in ['getActivitySnapshot','nutritionDate','goalKcal']:
+    ok(token in plugin, 'Bridge atividade/widget ausente: '+token)
+ok('healthActivityCacheV128:localStorage.getItem' in html, 'Cache de atividade fora do backup')
+widget_layout=read('android/app/src/main/res/layout/widget_treinoapp.xml')
+for token in ['widgetNutritionKcal','widgetNutritionProtein','widgetNutritionCarbs','widgetNutritionFat','widgetMealButton']:
+    ok(token in widget_layout, 'Elemento alimentação/widget ausente: '+token)
 
 if errors:
     print('VALIDAÇÃO FALHOU')

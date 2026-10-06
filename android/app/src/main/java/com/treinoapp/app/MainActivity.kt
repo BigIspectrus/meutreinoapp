@@ -112,9 +112,12 @@ class MainActivity : BridgeActivity() {
     private fun routeIntent(intent: Intent?) {
         val tab = intent?.getStringExtra("openTab") ?: return
         val startNext = intent.getBooleanExtra("startNextWorkout", false)
+        val addMeal = intent.getBooleanExtra("addMeal", false)
         bridge?.webView?.postDelayed({
-            val safe = if (tab in setOf("dashboard", "treinar", "historico", "progresso", "config")) tab else "treinar"
-            val js = if (startNext) {
+            val safe = if (tab in setOf("dashboard", "treinar", "nutricao", "historico", "progresso", "config")) tab else "treinar"
+            val js = if (addMeal && safe == "nutricao") {
+                "(function openMeal(attempt){if(window.abrirRefeicaoWidget){window.abrirRefeicaoWidget();}else if(attempt<40){setTimeout(()=>openMeal(attempt+1),250);}})(0);"
+            } else if (startNext) {
                 "window.irParaAba && window.irParaAba('treinar'); setTimeout(()=>window.iniciarTreinoWidget && window.iniciarTreinoWidget(),250);"
             } else {
                 "window.irParaAba && window.irParaAba('$safe');"

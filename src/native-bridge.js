@@ -37,6 +37,7 @@ window.TreinoNativeBridge = {
   shareImage: data => call('shareImage', data || {}),
   getHealthStatus: () => call('getHealthStatus'),
   getRecoverySnapshot: data => call('getRecoverySnapshot', data || {}),
+  getActivitySnapshot: data => call('getActivitySnapshot', data || {}),
   requestHealthPermissions: () => call('requestHealthPermissions'),
   requestNutritionPermissions: () => call('requestNutritionPermissions'),
   getHealthSyncResults: () => call('getHealthSyncResults'),
