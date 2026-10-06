@@ -1,4 +1,4 @@
-# TreinoApp v12.8.4 Beta — Montagem de refeição
+# TreinoApp v12.8.5 Beta — Dias alimentares completos e parciais
 
 TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capacitor. A variante Beta pode coexistir com a Stable.
 
@@ -6,10 +6,24 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 
 - Stable: `com.treinoapp.app`
 - Beta: `com.treinoapp.beta`
-- Versão: `12.8.4`
-- versionCode: `120804`
+- Versão: `12.8.5`
+- versionCode: `120805`
 - Android: compile/target API 36, minSdk 26
 - Room: schema 7, somente migrações explícitas
+
+## Conclusão alimentar v12.8.5 — tópico 6 de 14
+
+- botão Concluir dia com confirmação explícita; Reabrir dia e reabertura automática quando o conteúdo dos alimentos muda;
+- dias sem alimentos, datas futuras e registros antigos não são considerados completos nem consumo zero;
+- médias semanais, aderência às metas manuais atuais, micros, comparação com treino e associações alimentares mensais usam somente dias completos;
+- relação entre kcal de sete dias e peso exige sete dias consecutivos completos, inclusive quando a janela atravessa o mês;
+- dias parciais permanecem no diário, listas e gráficos (pontos vazados e identificação no tooltip), mas ficam fora da média alimentar;
+- treinos/RIR, peso e leituras Health continuam no relatório independentemente da conclusão alimentar;
+- metadados compactos em `nutritionDayStatusV1285`, incluídos em backup, snapshots e reset; restaurar alimentação de backup antigo limpa conclusões incompatíveis;
+- falha ao atualizar metadados não desfaz uma refeição já gravada; comparação com a composição detecta alteração mesmo nesse caso;
+- sem migração de alimentos, alteração de metas, pacote, assinatura, permissões ou schema Room. Metadados de conclusão ficam no armazenamento privado do WebView e nos backups do app;
+- testes dos handlers reais em `scripts/test-nutrition-days.mjs`; roteiro físico `TESTE_v12.8.5_BETA.md`;
+- parar antes do tópico 7 (tendência de peso e comparação semanal). Testes físicos pendentes do tópico 4 continuam necessários.
 
 ## Montagem de refeição v12.8.4 — tópico 5 de 14
 

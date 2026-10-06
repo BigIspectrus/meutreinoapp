@@ -26,7 +26,7 @@ const ctx=vm.createContext({console,Date,Number,Set,Map,setTimeout:()=>{},
     syncNativeDatabase:async payload=>nativeCalls.push(['database',payload]),
     saveWorkoutMirror:async payload=>nativeCalls.push(['mirror',payload]),
   }},localStorage:{getItem:()=>null,setItem:()=>{storageWrites++;}},isNativeAndroid:()=>true,DATA_SCHEMA_VERSION:18,
-  getMetasNutricao:()=>({kcal:2000,protein:100}),getRegistrosNutricao:()=>[],getPeso:()=>({}),
+  getMetasNutricao:()=>({kcal:2000,protein:100}),getRegistrosNutricao:()=>[],getPeso:()=>({}),hoje:()=> '2026-10-06',
   NUTRITION_MICROS:[],parseJSONSeguro:(s,f)=>{try{return JSON.parse(s);}catch{return f;}},
   totaisNutricao:()=>({kcal:0,protein:0,carbs:0,fat:0,micros:{}}),numeroNutricao:n=>Number(n)||0,
   correlacaoNutricao:()=>({n:0}),valorRecoveryNutricao:()=>NaN,dataOffsetNutricao:d=>d,
@@ -34,6 +34,7 @@ const ctx=vm.createContext({console,Date,Number,Set,Map,setTimeout:()=>{},
 for(const name of ['numeroOpcionalAnalise','mediaV1241','mediaNutricao','effortInt','effortFloat','calcE1rm',
   'calcularRecuperacaoSeries','fadigaIntraSessaoV1241','metricasSessaoV1241','calcularSugestaoProgressaoExercicio','abrirInsightsExercicio',
   'atualizarResumoPosTreinoHealth','dadosRelatorioMensalNutricao','sincronizarBancoNativo'])vm.runInContext(source(name),ctx);
+vm.runInContext(readFileSync(new URL('../web/nutrition-days.js',import.meta.url),'utf8'),ctx);
 // Incluir também a proteção real de progressão adicionada na v12.4.1.
 const wrapperStart=html.indexOf('const _v1240CalcularSugestaoProgressao='),wrapperEnd=html.indexOf('function injetarAnaliseSessaoV1241(',wrapperStart);
 vm.runInContext(html.slice(wrapperStart,wrapperEnd),ctx);

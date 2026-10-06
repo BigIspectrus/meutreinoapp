@@ -1,8 +1,8 @@
-const APP_VERSION = '12.8.4';
-const BUILD = '2026.10.06.5';
+const APP_VERSION = '12.8.5';
+const BUILD = '2026.10.06.6';
 const CACHE_PREFIX = 'treinoapp-';
 const CACHE_NAME = `${CACHE_PREFIX}v${APP_VERSION}-${BUILD}`;
-const APP_SHELL = ['./', './index.html', './mobile-ui.css', './activity.css', './activity.js', './meal-builder.js', './manifest.json', './VERSION', './BUILD.json', './icon-192.png', './icon-512.png', './data/taco-v4.json', './data/common-foods.js'];
+const APP_SHELL = ['./', './index.html', './mobile-ui.css', './activity.css', './activity.js', './meal-builder.js', './nutrition-days.js', './manifest.json', './VERSION', './BUILD.json', './icon-192.png', './icon-512.png', './data/taco-v4.json', './data/common-foods.js'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));

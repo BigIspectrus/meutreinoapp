@@ -8,6 +8,7 @@ const original=new Map([
   ['historicoTreinoV3',JSON.stringify([{id:'set',date:'2026-10-05',exercicio:'Supino',rir:0,rpe:null}])],
   ['pesoCorporal','{"2026-10-05":80}'],['nutritionGoalsV125','{"kcal":2222,"protein":150}'],
   ['nutritionEntriesV125','[{"id":"meal","date":"2026-10-05","kcal":400}]'],
+  ['nutritionDayStatusV1285','{"2026-10-05":{"completed":false,"updatedAt":1}}'],
   ['healthActivityCacheV128','{"daily":[{"date":"2026-10-05","steps":2000,"readInfo":{"steps":{"readAt":1791223200000,"state":"cached"}}}]}'],
   ['activityPreferencesV1283',JSON.stringify(prefs)],['temaPreferido','dark'],
 ]);
@@ -19,6 +20,7 @@ const context=vm.createContext({console,Date,APP_VERSION:'12.8.3',APP_BUILD:'tes
   listarSnapshotsSeguro:async()=>[{id:'sample',data:backupForSnapshot}],salvarSnapshotSeguro:async reason=>events.push(reason),
 });
 for(const name of ['gerarObjetoBackup','importarBackup','restaurarSnapshotSeguro'])vm.runInContext(source(name),context);
+vm.runInContext(readFileSync(new URL('../web/nutrition-days.js',import.meta.url),'utf8'),context);
 const backup=JSON.parse(JSON.stringify(context.gerarObjetoBackup()));backupForSnapshot=backup;
 for(const [key,value] of original)assert.equal(backup[key],value,'Backup completo: '+key);
 storage.clear();context.importarBackup({target:{files:[{content:JSON.stringify(backup)}]}});
@@ -30,4 +32,9 @@ assert.equal(events[0],'antes_restauracao','Criar snapshot de segurança antes d
 for(const [key,value] of original)assert.equal(storage.get(key),value,'Snapshot preserva: '+key);
 const stable=JSON.stringify([...storage]);context.importarBackup({target:{files:[{content:'{invalid}'}]}});assert.equal(JSON.stringify([...storage]),stable);
 assert.equal(JSON.parse(storage.get('historicoTreinoV3'))[0].rir,0);assert.equal(JSON.parse(storage.get('nutritionGoalsV125')).kcal,2222);
+const legacy={...backup};delete legacy.nutritionDayStatusV1285;
+context.importarBackup({target:{files:[{content:JSON.stringify(legacy)}]}});
+assert.equal(storage.get('nutritionDayStatusV1285'),'{}','Backup antigo não mantém conclusões do conjunto substituído');
+storage.set('nutritionDayStatusV1285','{"old":{"completed":true}}');backupForSnapshot=legacy;
+await context.restaurarSnapshotSeguro('sample');assert.equal(storage.get('nutritionDayStatusV1285'),'{}','Snapshot antigo também limpa conclusões');
 console.log('OK: exportação/importação/snapshot, consentimento, preferências, metas, RIR zero, cache e horários preservados.');

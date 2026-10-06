@@ -6,6 +6,8 @@ Autorização adicional recebida: realizar os tópicos 3 e 4 na mesma continuida
 
 Autorização posterior recebida: continuar para o próximo tópico, implementando o tópico 5 na v12.8.4. Entregar e parar antes do tópico 6. A autorização não equivale a resultado dos testes físicos pendentes do tópico 4.
 
+Nova autorização recebida após entregar v12.8.4: realizar o tópico 6 na v12.8.5. Parar antes do tópico 7. Os testes físicos pendentes não foram declarados concluídos pelo usuário.
+
 1. Corrigir RIR/RPE ausente convertido em zero nas análises, preservando zero real e o histórico.
 2. Mostrar atualização de cada dado separadamente, inclusive dados anteriores mantidos do cache.
 3. Lembrar filtros e preferências de modalidade, período e gráfico ao reabrir.

@@ -296,16 +296,20 @@ function dadosRotinaAtividade(){
   const recovery=parseJSONSeguro(localStorage.getItem('healthRecoveryCacheV12')||'{}',{},'healthRecoveryCacheV12');
   (recovery.daily||[]).forEach(d=>{if(Number(d.weightKg)>0)weights[d.date]=Number(d.weightKg);});
   Object.assign(weights,getPeso());
-  return TreinoActivityData.trends(getAtividadeHealth(),periodoAtividade(),getRegistrosNutricao(),weights,document.getElementById('activityKind')?.value||'all');
+  const entries=getRegistrosNutricao(),marks=getEstadoDiasNutricao(),rows=TreinoActivityData.trends(getAtividadeHealth(),periodoAtividade(),entries,weights,document.getElementById('activityKind')?.value||'all');
+  return rows.map(d=>({...d,nutritionStatus:estadoDiaNutricao(d.date,entries,marks).state}));
 }
 function construirGraficoRotina(id,rows,series,type='line'){
   const canvas=document.getElementById(id);if(!canvas||typeof Chart==='undefined')return null;
-  const muted=getComputedStyle(document.body).getPropertyValue('--text-muted').trim(),grid=getComputedStyle(document.body).getPropertyValue('--border').trim();
+  const muted=getComputedStyle(document.body).getPropertyValue('--text-muted').trim(),grid=getComputedStyle(document.body).getPropertyValue('--border').trim(),
+    background=getComputedStyle(document.body).getPropertyValue('--surface').trim(),nutrition=series.some(s=>['kcal','protein','carbs','fat'].includes(s.key));
   return new Chart(canvas,{type,data:{labels:rows.map(d=>d.date.slice(8)+'/'+d.date.slice(5,7)),datasets:series.map(s=>({
     label:s.label,data:rows.map(d=>d[s.key]),borderColor:s.color,backgroundColor:s.color+'35',borderWidth:2,
-    tension:.2,spanGaps:false,pointRadius:rows.length>30?0:2,pointHoverRadius:5,fill:false
+    tension:.2,spanGaps:false,pointRadius:nutrition?3:rows.length>30?0:2,pointHoverRadius:5,fill:false,
+    pointBackgroundColor:nutrition?rows.map(d=>d.nutritionStatus==='complete'?s.color:background):s.color
   }))},options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},
-    plugins:{legend:{display:series.length>1,labels:{color:muted,boxWidth:12}},tooltip:{callbacks:{title:items=>rows[items[0]?.dataIndex]?.date.split('-').reverse().join('/')||''}}},
+    plugins:{legend:{display:series.length>1,labels:{color:muted,boxWidth:12}},tooltip:{callbacks:{title:items=>rows[items[0]?.dataIndex]?.date.split('-').reverse().join('/')||'',
+      afterTitle:items=>nutrition?(rows[items[0]?.dataIndex]?.nutritionStatus==='complete'?'Dia alimentar completo':'Parcial / não confirmado'):''}}},
     scales:{x:{grid:{display:false},ticks:{color:muted,maxTicksLimit:6,maxRotation:0}},y:{beginAtZero:!series.some(s=>s.key==='weight'),grid:{color:grid},ticks:{color:muted,maxTicksLimit:5}}}}});
 }
 function desenharGraficoAtividade(){
@@ -326,10 +330,11 @@ function renderizarEvolucaoRotina(){
     configs={weight:[{key:'weight',label:'Peso (kg)',color:'#f1bc6b'}],steps:[{key:'steps',label:'Passos',color:'#75aaff'}],
       cardioMinutes:[{key:'cardioMinutes',label:'Cardio (min)',color:'#65d8b0'}],cardioKcal:[{key:'cardioKcal',label:'Cardio (kcal)',color:'#f1bc6b'}],
       kcal:[{key:'kcal',label:'Kcal registradas',color:'#c6a3ff'}],macros:[{key:'protein',label:'Proteína (g)',color:'#75aaff'},{key:'carbs',label:'Carboidratos (g)',color:'#f1bc6b'},{key:'fat',label:'Gorduras (g)',color:'#ef97ae'}]},series=configs[mode],key=series[0].key,
-    vals=rows.filter(d=>d[key]!=null),past=vals.filter(d=>d.date<hoje()),avg=past.length?past.reduce((n,d)=>n+d[key],0)/past.length:null;
+    vals=rows.filter(d=>d[key]!=null),nutrition=mode==='kcal'||mode==='macros',past=vals.filter(d=>nutrition?d.nutritionStatus==='complete':d.date<hoje()),avg=past.length?past.reduce((n,d)=>n+d[key],0)/past.length:null;
   const note=document.getElementById('routineSummary');
   if(mode==='weight')note.textContent=vals.length>1?'Variação no período: '+(vals.at(-1).weight-vals[0].weight).toLocaleString('pt-BR',{maximumFractionDigits:2})+' kg · '+vals.length+' medidas.':vals.length+' medida(s) no período. Seu gráfico de peso original continua disponível abaixo.';
-  else note.textContent='Média: '+formatarAtividade(avg,mode==='macros'?' g de proteína':mode==='cardioMinutes'?' min':mode==='kcal'||mode==='cardioKcal'?' kcal':' passos',mode==='steps'?0:1)+' · '+past.length+' dias completos com registros.'+(mode==='kcal'&&goals?' Meta manual atual: '+formatarAtividade(goals.kcal,' kcal')+'.':'');
+  else note.textContent='Média: '+formatarAtividade(avg,mode==='macros'?' g de proteína':mode==='cardioMinutes'?' min':mode==='kcal'||mode==='cardioKcal'?' kcal':' passos',mode==='steps'?0:1)+' · '+past.length+(nutrition?' dias alimentares concluídos.':' dias completos com registros.')+(mode==='kcal'&&goals?' Meta manual atual: '+formatarAtividade(goals.kcal,' kcal')+'.':'');
+  if(nutrition)note.textContent+=' Gráfico: ● completo · ○ parcial / não confirmado. Todos os registros aparecem; parciais ficam fora da média.';
   const kind=document.getElementById('activityKind')?.value||'all';if(mode.startsWith('cardio')&&kind!=='all')note.textContent+=' Modalidade: '+TreinoActivityData.kinds[kind]+'.';
   if(mode==='steps'||mode.startsWith('cardio')){
     const s=resumoAtividadeAtual(),items=mode==='steps'?s.daily.filter(x=>x.steps!=null):mode==='cardioKcal'?s.sessions.filter(x=>x.kcal!=null):[...s.daily.filter(x=>x.cardioKnown),...s.sessions];

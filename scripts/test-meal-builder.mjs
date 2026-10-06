@@ -21,7 +21,7 @@ function environment(){
       focus(){events.push('focus:'+id);},classList:{add:v=>classes.add(v),remove:v=>classes.delete(v),contains:v=>classes.has(v)}});}
     return elements.get(id);
   };
-  const ctx=vm.createContext({window:{TreinoCommonFoods:catalog},console:{warn(){}},Date,
+  const ctx=vm.createContext({window:{TreinoCommonFoods:catalog},console:{warn(){}},Date,hoje:()=> '2026-10-06',
     localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>{if(k===failKey)throw new Error('QuotaExceededError');writes.push(k);storage.set(k,String(v));}},
     document:{getElementById:element,querySelectorAll:()=>[]},
     parseJSONSeguro:(s,f)=>{try{return JSON.parse(s);}catch{return f;}},
@@ -35,6 +35,7 @@ function environment(){
   });
   for(const name of ['numeroNutricao','arredondarNutricao','formatarNutricao','normalizarMicrosNutricao','somarMicrosNutricao','normalizarBuscaNutricao','getAlimentosNutricao','getRegistrosNutricao','getReceitasNutricao','totaisReceitaNutricao','receitaComoAlimentoNutricao','salvarAlimentosNutricaoLocal','salvarRegistrosNutricaoLocal','getAlimentosComunsNutricao','referenciaComumNutricao','getAlimentosDisponiveisNutricao','getItensCatalogoPessoalNutricao','fonteAlimentoNutricao','calcularPorGramasNutricao','totaisNutricao','quantidadeSelecionadaNutricao','selecionarFiltroAlimentoNutricao','abrirRegistroNutricao','selecionarAlimentoNutricao','atualizarPreviaRegistroNutricao','salvarRegistroNutricao','fecharModal'])vm.runInContext(source(name),ctx);
   vm.runInContext(builderSource,ctx);
+  vm.runInContext(readFileSync(new URL('../web/nutrition-days.js',import.meta.url),'utf8'),ctx);
   const builder=ctx.window.TreinoMealBuilder;
   function choose(id,amount,unit='grams'){
     ctx.selecionarAlimentoNutricao(id);
