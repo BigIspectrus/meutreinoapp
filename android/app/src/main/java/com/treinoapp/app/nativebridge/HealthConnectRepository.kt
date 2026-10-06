@@ -8,6 +8,7 @@ import androidx.health.connect.client.aggregate.AggregationResult
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.permission.HealthPermission.Companion.PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND
 import androidx.health.connect.client.records.ExerciseSessionRecord
+import androidx.health.connect.client.records.DistanceRecord
 import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.RestingHeartRateRecord
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
@@ -46,6 +47,7 @@ class HealthConnectRepository(private val context: Context) {
         HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class),
         HealthPermission.getReadPermission(ActiveCaloriesBurnedRecord::class),
         HealthPermission.getReadPermission(StepsRecord::class),
+        HealthPermission.getReadPermission(DistanceRecord::class),
         HealthPermission.getWritePermission(ExerciseSessionRecord::class),
         HealthPermission.getReadPermission(WeightRecord::class),
         HealthPermission.getWritePermission(WeightRecord::class),

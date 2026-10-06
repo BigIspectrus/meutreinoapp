@@ -4,9 +4,9 @@ window.TreinoActivityData = (() => {
   const value = v => v == null || !['number','string'].includes(typeof v) || String(v).trim()==='' || !Number.isFinite(Number(v)) || Number(v) < 0 ? null : Number(v);
   const dateValid = d => /^\d{4}-\d{2}-\d{2}$/.test(String(d));
   const time = v => value(v)>0&&value(v)<=8640000000000000?Math.floor(Number(v)):null;
-  const metrics=['steps','activeKcal','totalKcal','sessions','sessionKcal'];
-  const permission={steps:'readSteps',activeKcal:'readActiveCalories',totalKcal:'readCalories',sessions:'readExercise'};
-  const errorKey={steps:'steps',activeKcal:'calories',totalKcal:'calories',sessions:'sessions',sessionKcal:'sessionCalories'};
+  const metrics=['steps','activeKcal','totalKcal','sessions','sessionKcal','sessionDistance'];
+  const permission={steps:'readSteps',activeKcal:'readActiveCalories',totalKcal:'readCalories',sessions:'readExercise',sessionDistance:'readDistance'};
+  const errorKey={steps:'steps',activeKcal:'calories',totalKcal:'calories',sessions:'sessions',sessionKcal:'sessionCalories',sessionDistance:'sessionDistance'};
   function info(raw){
     const v=raw&&typeof raw==='object'?raw:{};
     return {readAt:time(v.readAt),checkedAt:time(v.checkedAt),state:['fresh','cached','missing','unknown'].includes(v.state)?v.state:'unknown',
@@ -21,12 +21,13 @@ window.TreinoActivityData = (() => {
     let state='ok';
     if(raw.available===false)state='unavailable';
     else if(raw.errors?.includes(errorKey[key]))state='error';
-    else if(raw[permission[key]]===false||(key==='sessionKcal'&&raw.readActiveCalories===false&&raw.readCalories===false))state='denied';
+    else if(raw[permission[key]]===false||(key==='sessionDistance'&&raw.readDistance!==true)||(key==='sessionKcal'&&raw.readActiveCalories===false&&raw.readCalories===false))state='denied';
     else if(key==='sessions'&&!raw.sessionsComplete)state='partial';
     return {state,checkedAt:attempt,readAt:state==='ok'?attempt:null};
   }
   function legacyInfo(raw,row,key,present){
     if(row.readInfo?.[key])return info(row.readInfo[key]);
+    if(key==='sessionDistance')return {readAt:time(row.distanceReadAt),checkedAt:time(row.distanceCheckedAt),state:present?'cached':'unknown',reason:'legacy'};
     const inRange=dateValid(raw.rangeStart)&&dateValid(raw.rangeEnd)&&row.date>=raw.rangeStart&&row.date<=raw.rangeEnd,
       verified=inRange&&raw.available===true&&time(raw.generatedAt)&&!raw.errors?.includes(errorKey[key])&&
         (key==='sessionKcal'?(raw.readActiveCalories===true||raw.readCalories===true):raw[permission[key]]===true)&&
@@ -61,7 +62,10 @@ window.TreinoActivityData = (() => {
         ...s,id:String(s.id),sourcePackage:String(s.sourcePackage||''),source:String(s.source||'Health Connect'),title:String(s.title||''),
         startMs:Number(s.startMs),endMs:Number(s.endMs),minutes:(Number(s.endMs)-Number(s.startMs))/60000,kcal:value(s.kcal),
         calorieKind:['active','total'].includes(s.calorieKind)?s.calorieKind:null,
-        readInfo:{sessions:legacyInfo(raw,s,'sessions',true),sessionKcal:legacyInfo(raw,s,'sessionKcal',value(s.kcal)!=null)}
+        distanceMeters:value(s.distanceMeters),distanceCoverage:value(s.distanceCoverage)<=1?value(s.distanceCoverage):null,
+        distanceComplete:value(s.distanceMeters)!=null&&s.distanceComplete===true&&value(s.distanceCoverage)>=.95&&value(s.distanceCoverage)<=1,
+        distanceReason:['','no_data','invalid_data','outside_interval','overlapping_records','ambiguous_interval','partial_coverage'].includes(s.distanceReason)?s.distanceReason:'no_data',
+        readInfo:{sessions:legacyInfo(raw,s,'sessions',true),sessionKcal:legacyInfo(raw,s,'sessionKcal',value(s.kcal)!=null),sessionDistance:legacyInfo(raw,s,'sessionDistance',value(s.distanceMeters)!=null)}
       })).sort((a,b)=>b.startMs-a.startMs),errors:Array.isArray(raw.errors)?raw.errors:[]
     };
   }
@@ -73,7 +77,7 @@ window.TreinoActivityData = (() => {
     const readStatus=Object.fromEntries(metrics.map(key=>[key,{...reads[key],readAt:reads[key].state==='ok'?reads[key].readAt:time(old.readStatus?.[key]?.readAt)}]));
     if(!fresh.available)return {...old,available:false,lastAttemptAt:attempt,readStatus,readTrackingVersion:1,
       daily:old.daily.map(d=>({...d,readInfo:Object.fromEntries(['steps','activeKcal','totalKcal','sessions'].map(key=>[key,savedInfo(d.readInfo[key],key==='sessions'?d.cardioKnown:d[key]!=null,reads[key])]))})),
-      sessions:old.sessions.map(s=>({...s,readInfo:{sessions:savedInfo(s.readInfo.sessions,true,reads.sessions),sessionKcal:savedInfo(s.readInfo.sessionKcal,s.kcal!=null,reads.sessionKcal)}}))};
+      sessions:old.sessions.map(s=>({...s,readInfo:{sessions:savedInfo(s.readInfo.sessions,true,reads.sessions),sessionKcal:savedInfo(s.readInfo.sessionKcal,s.kcal!=null,reads.sessionKcal),sessionDistance:savedInfo(s.readInfo.sessionDistance,s.distanceMeters!=null,reads.sessionDistance)}}))};
     const sameZone=!old.zoneId||old.zoneId===fresh.zoneId;
     const daily=new Map((sameZone?old.daily:[]).map(d=>[d.date,{...d,readInfo:Object.fromEntries(['steps','activeKcal','totalKcal','sessions'].map(key=>[key,outsideInfo(d.readInfo[key],key==='sessions'?d.cardioKnown:d[key]!=null)]))}]));
     fresh.daily.forEach(d=>{
@@ -91,16 +95,21 @@ window.TreinoActivityData = (() => {
     const retained=(sameZone?old.sessions:[]).filter(s=>!complete||s.date<fresh.rangeStart||s.date>fresh.rangeEnd).map(s=>{
       const inRange=s.date>=fresh.rangeStart&&s.date<=fresh.rangeEnd;
       return {...s,readInfo:{sessions:inRange?savedInfo(s.readInfo.sessions,true,reads.sessions):outsideInfo(s.readInfo.sessions,true),
-        sessionKcal:inRange?savedInfo(s.readInfo.sessionKcal,s.kcal!=null,reads.sessionKcal,reads.sessionKcal.state==='ok'?'partial':reads.sessionKcal.state):outsideInfo(s.readInfo.sessionKcal,s.kcal!=null)}};
+        sessionKcal:inRange?savedInfo(s.readInfo.sessionKcal,s.kcal!=null,reads.sessionKcal,reads.sessionKcal.state==='ok'?'partial':reads.sessionKcal.state):outsideInfo(s.readInfo.sessionKcal,s.kcal!=null),
+        sessionDistance:inRange?savedInfo(s.readInfo.sessionDistance,s.distanceMeters!=null,reads.sessionDistance,reads.sessionDistance.state==='ok'?'partial':reads.sessionDistance.state):outsideInfo(s.readInfo.sessionDistance,s.distanceMeters!=null)}};
     });
     const sessions=new Map(retained.map(s=>[s.sourcePackage+':'+s.id,s]));
     fresh.sessions.forEach(s=>{
       const previousSession=sameZone?old.sessions.find(x=>x.id===s.id&&x.sourcePackage===s.sourcePackage&&x.startMs===s.startMs&&x.endMs===s.endMs):null,
         energyRead=['ok','error','denied'].includes(s.kcalReadState)?{state:s.kcalReadState,readAt:time(s.kcalReadAt),checkedAt:time(s.kcalCheckedAt)||attempt}:reads.sessionKcal,
         cachedEnergy=energyRead.state!=='ok'&&previousSession?.kcal!=null,
+        distanceRead=['ok','error','denied'].includes(s.distanceReadState)?{state:s.distanceReadState,readAt:time(s.distanceReadAt),checkedAt:time(s.distanceCheckedAt)||attempt}:reads.sessionDistance,
+        cachedDistance=distanceRead.state!=='ok'&&previousSession?.distanceMeters!=null,
         readInfo={sessions:currentInfo({readAt:time(s.sessionReadAt)||reads.sessions.readAt||attempt,checkedAt:reads.sessions.checkedAt},true),
-          sessionKcal:energyRead.state==='ok'?currentInfo(energyRead,s.kcal!=null):savedInfo(previousSession?.readInfo.sessionKcal,cachedEnergy||s.kcal!=null,energyRead)};
-      sessions.set(s.sourcePackage+':'+s.id,{...s,...(cachedEnergy?{kcal:previousSession.kcal,calorieKind:previousSession.calorieKind}:{}),readInfo});
+          sessionKcal:energyRead.state==='ok'?currentInfo(energyRead,s.kcal!=null):savedInfo(previousSession?.readInfo.sessionKcal,cachedEnergy||s.kcal!=null,energyRead),
+          sessionDistance:distanceRead.state==='ok'?currentInfo(distanceRead,s.distanceMeters!=null):savedInfo(previousSession?.readInfo.sessionDistance,cachedDistance||s.distanceMeters!=null,distanceRead)};
+      sessions.set(s.sourcePackage+':'+s.id,{...s,...(cachedEnergy?{kcal:previousSession.kcal,calorieKind:previousSession.calorieKind}:{}),
+        ...(cachedDistance?{distanceMeters:previousSession.distanceMeters,distanceComplete:previousSession.distanceComplete,distanceCoverage:previousSession.distanceCoverage,distanceReason:previousSession.distanceReason}:{}),readInfo});
     });
     const cutoff=fresh.rangeEnd?dates(fresh.rangeEnd,366)[0]:'';
     return {...fresh,lastAttemptAt:attempt,readStatus,readTrackingVersion:1,daily:[...daily.values()].filter(d=>d.date>=cutoff).sort((a,b)=>a.date.localeCompare(b.date)),
@@ -125,7 +134,8 @@ window.TreinoActivityData = (() => {
       averageSteps:completed.length?completed.reduce((n,d)=>n+d.steps,0)/completed.length:null,stepDays:completed.length,
       cardioCount:sessions.length,minutes:sessions.reduce((n,s)=>n+s.minutes,0),
       kcal:withKcal.length?withKcal.reduce((n,s)=>n+s.kcal,0):null,kcalCount:withKcal.length,
-      totalFallback:withKcal.some(s=>s.calorieKind==='total'),knownDays:daily.filter(d=>d.cardioKnown).length};
+      totalFallback:withKcal.some(s=>s.calorieKind==='total'),knownDays:daily.filter(d=>d.cardioKnown).length,
+      distanceCount:sessions.filter(s=>s.distanceComplete).length,distanceKm:sessions.some(s=>s.distanceComplete)?sessions.filter(s=>s.distanceComplete).reduce((sum,s)=>sum+s.distanceMeters/1000,0):null};
   }
   function trends(snapshot, range, entries, weights, kind='all') {
     const data=normalize(snapshot),byDate=new Map(data.daily.map(d=>[d.date,d])),foods=new Map(),cardios=new Map();
@@ -135,23 +145,24 @@ window.TreinoActivityData = (() => {
       ['kcal','protein','carbs','fat'].forEach(k=>row[k]+=value(e[k])??0);row.count++;foods.set(e.date,row);
     });
     data.sessions.filter(s=>kind==='all'||s.kind===kind).forEach(s=>{
-      const row=cardios.get(s.date)||{count:0,minutes:0,kcal:0,kcalCount:0};
-      row.count++;row.minutes+=s.minutes;if(s.kcal!=null){row.kcal+=s.kcal;row.kcalCount++;}cardios.set(s.date,row);
+      const row=cardios.get(s.date)||{count:0,minutes:0,kcal:0,kcalCount:0,distanceKm:0,distanceCount:0};
+      row.count++;row.minutes+=s.minutes;if(s.kcal!=null){row.kcal+=s.kcal;row.kcalCount++;}if(s.distanceComplete){row.distanceKm+=s.distanceMeters/1000;row.distanceCount++;}cardios.set(s.date,row);
     });
     return range.map(date=>{
       const d=byDate.get(date),c=cardios.get(date),n=foods.get(date);
       return {date,steps:d?.steps??null,activeKcal:d?.activeKcal??null,totalKcal:d?.totalKcal??null,
         cardioCount:c?.count??(d?.cardioKnown?0:null),cardioMinutes:c?.minutes??(d?.cardioKnown?0:null),
-        cardioKcal:c?.kcalCount?c.kcal:null,weight:value(weights?.[date]),
+        cardioKcal:c?.kcalCount?c.kcal:null,cardioDistance:c?.distanceCount?c.distanceKm:null,weight:value(weights?.[date]),
         kcal:n?.kcal??null,protein:n?.protein??null,carbs:n?.carbs??null,fat:n?.fat??null};
     });
   }
-  return {kinds,value,time,metrics,dates,info,normalize,merge,failure,quality,summarize,trends};
+  function rates(session){const s=normalize({sessions:[session]}).sessions[0];if(!s?.distanceComplete||!(s.distanceMeters>0)||!(s.minutes>0))return {speedKmh:null,paceSeconds:null};const speedKmh=s.distanceMeters/1000/(s.minutes/60),paceSeconds=s.minutes*60/(s.distanceMeters/1000);return Number.isFinite(speedKmh)&&Number.isFinite(paceSeconds)&&speedKmh>0&&paceSeconds>0?{speedKmh,paceSeconds}:{speedKmh:null,paceSeconds:null};}
+  return {kinds,value,time,metrics,dates,info,normalize,merge,failure,quality,summarize,trends,rates};
 })();
 
 window.TreinoActivityPreferences=(()=>{
   const defaults={days:30,kind:'all',activityMetric:'steps',routineMetric:'weight',exerciseMetric:'carga',exercise:'',exerciseGroup:''};
-  const choices={kind:['all',...Object.keys(window.TreinoActivityData.kinds)],activityMetric:['steps','cardioMinutes','cardioCount','cardioKcal'],
+  const choices={kind:['all',...Object.keys(window.TreinoActivityData.kinds)],activityMetric:['steps','cardioMinutes','cardioCount','cardioKcal','cardioDistance'],
     routineMetric:['weight','steps','cardioMinutes','cardioKcal','kcal','macros'],exerciseMetric:['carga','volume','rm_estimado','tabela','peso'],exerciseGroup:['','Peito','Costas','Pernas','Ombros','Braços','Outros']};
   function normalize(raw){
     const v=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{},out={...defaults};
@@ -244,7 +255,7 @@ function htmlQualidadeAtividade(q,partial=false){return '<small class="activity-
 function htmlEstatisticaAtividade(value,label,note='',quality=null,partial=false){return '<div class="activity-stat"><strong>'+value+'</strong><span>'+label+'</span>'+(note?'<small>'+note+'</small>':'')+(quality?htmlQualidadeAtividade(quality,partial):'')+'</div>';}
 function renderizarStatusLeiturasAtividade(data){
   const el=document.getElementById('activityReadStatus');if(!el)return;
-  const labels={steps:'Passos',activeKcal:'Kcal ativas do dia',totalKcal:'Kcal totais do dia',sessions:'Lista de cardios',sessionKcal:'Kcal dos cardios'},
+  const labels={steps:'Passos',activeKcal:'Kcal ativas do dia',totalKcal:'Kcal totais do dia',sessions:'Lista de cardios',sessionKcal:'Kcal dos cardios',sessionDistance:'Distância dos cardios'},
     names={ok:'Consulta concluída',error:'Falhou · dados salvos mantidos',partial:'Consulta parcial',denied:'Sem permissão · sem nova leitura',unavailable:'Health indisponível',no_data:'Sem cardios para consultar'};
   el.innerHTML=TreinoActivityData.metrics.map(key=>{
     const s=data.readStatus?.[key],
@@ -258,6 +269,7 @@ function estadoAtividadeHealth(data){
   else if(!data.generatedAt&&!data.lastAttemptAt)notes.push('Conecte o Health Connect para importar suas atividades.');
   else {
     if(!data.readSteps)notes.push('Passos: autorize a leitura no Health Connect.');
+    if(!data.readDistance)notes.push('Distância: leitura opcional no Health Connect; outras métricas continuam funcionando.');
     if(!data.readExercise)notes.push('Cardios: autorize a leitura de exercícios.');
     if(!data.readActiveCalories&&!data.readCalories)notes.push('Kcal: autorize a leitura de calorias.');
     if(!data.historyGranted)notes.push('Sem acesso ao histórico antigo, a leitura nova cobre até 28 dias; dias já salvos são mantidos.');
@@ -268,6 +280,7 @@ function estadoAtividadeHealth(data){
   return notes.join(' ');
 }
 function renderizarAtividades(){
+  if(typeof renderizarMetasMovimento==='function')renderizarMetasMovimento();
   const el=document.getElementById('activityStats');if(!el)return;
   const data=getAtividadeHealth(),s=resumoAtividadeAtual();
   const last=data.daily.find(d=>d.date===hoje()),quality=TreinoActivityData.quality,
@@ -278,48 +291,60 @@ function renderizarAtividades(){
   el.innerHTML=htmlEstatisticaAtividade(formatarAtividade(s.todaySteps),'passos hoje','dia em andamento',stepsToday)+
     htmlEstatisticaAtividade(formatarAtividade(s.averageSteps),'média de passos/dia',s.stepDays+' dias completos com dados',stepsAverage)+
     htmlEstatisticaAtividade(s.knownDays||s.cardioCount?String(s.cardioCount):'—','cardios no período',formatarAtividade(s.minutes,' min',1),cardio,partialSessions)+
-    htmlEstatisticaAtividade(formatarAtividade(s.kcal,' kcal'),'kcal dos cardios',s.kcalCount+'/'+s.cardioCount+' sessões com kcal'+(s.totalFallback?' · inclui gasto total no intervalo':''),energy,data.readStatus?.sessionKcal?.state==='partial');
+    htmlEstatisticaAtividade(formatarAtividade(s.kcal,' kcal'),'kcal dos cardios',s.kcalCount+'/'+s.cardioCount+' sessões com kcal'+(s.totalFallback?' · inclui gasto total no intervalo':''),energy,data.readStatus?.sessionKcal?.state==='partial')+
+    (s.distanceCount?htmlEstatisticaAtividade(formatarAtividade(s.distanceKm,' km',2),'distância dos cardios',s.distanceCount+'/'+s.cardioCount+' sessões com cobertura suficiente',quality(s.sessions.filter(x=>x.distanceComplete),'sessionDistance')):'');
   document.getElementById('activityEnergy').innerHTML=['activeKcal','totalKcal'].map(key=>'<div><strong>'+formatarAtividade(last?.[key],' kcal')+'</strong><span>'+(key==='activeKcal'?'ativas hoje':'totais hoje')+'</span>'+htmlQualidadeAtividade(quality(last?[last]:[],key))+'</div>').join('');
   document.getElementById('activityStatus').textContent=(_activityBusy?'Atualizando Health Connect… ':'' )+estadoAtividadeHealth(data);
   document.getElementById('activitySyncButton').disabled=!!_activityBusy;
   renderizarStatusLeiturasAtividade(data);
   const filtered=s.sessions,shown=_activityAllRows?filtered:filtered.slice(0,10),list=document.getElementById('activitySessions');
-  list.innerHTML=shown.length?shown.map(row=>'<article class="activity-session"><div class="activity-session-mark" aria-hidden="true">'+(row.kind==='cycling'||row.kind==='stationary'?'↻':'↗')+'</div><div class="activity-session-main"><strong>'+esc(TreinoActivityData.kinds[row.kind])+'</strong><span>'+row.date.split('-').reverse().join('/')+' · '+new Date(row.startMs).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' · '+formatarAtividade(row.minutes,' min',1)+'</span><small>'+esc(row.source)+(row.title?' · '+esc(row.title):'')+'</small>'+htmlQualidadeAtividade(quality([row],'sessions'))+'</div><div class="activity-session-energy"><strong>'+formatarAtividade(row.kcal)+'</strong><small>'+(row.kcal==null?'kcal não informadas':row.calorieKind==='active'?'kcal ativas':'kcal no intervalo')+'</small>'+htmlQualidadeAtividade(quality([row],'sessionKcal'))+'</div></article>').join(''):
+list.innerHTML=shown.length?shown.map(row=>'<article class="activity-session"><div class="activity-session-mark" aria-hidden="true">'+(row.kind==='cycling'||row.kind==='stationary'?'↻':'↗')+'</div><div class="activity-session-main"><strong>'+esc(TreinoActivityData.kinds[row.kind])+'</strong><span>'+row.date.split('-').reverse().join('/')+' · '+new Date(row.startMs).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' · '+formatarAtividade(row.minutes,' min',1)+'</span><small>'+esc(row.source)+(row.title?' · '+esc(row.title):'')+'</small>'+htmlQualidadeAtividade(quality([row],'sessions'))+htmlDistanciaCardio(row)+'</div><div class="activity-session-energy"><strong>'+formatarAtividade(row.kcal)+'</strong><small>'+(row.kcal==null?'kcal não informadas':row.calorieKind==='active'?'kcal ativas':'kcal no intervalo')+'</small>'+htmlQualidadeAtividade(quality([row],'sessionKcal'))+'</div></article>').join(''):
     '<div class="activity-empty"><strong>Nenhum cardio neste período</strong><p>Finalize a atividade no relógio e aguarde Samsung Health → Health Connect. Caminhada, corrida, esteira e bicicletas aparecem aqui quando disponíveis.</p></div>';
   document.getElementById('activityShowAll').hidden=filtered.length<=10||_activityAllRows;
   document.getElementById('activityShowAll').textContent='Ver todos os '+filtered.length+' cardios';
   desenharGraficoAtividade();
 }
 function mostrarTodosCardios(){_activityAllRows=true;renderizarAtividades();}
+function formatarRitmoCardio(seconds){if(!Number.isFinite(seconds)||seconds<=0)return '—';const whole=Math.round(seconds);return Math.floor(whole/60)+':'+String(whole%60).padStart(2,'0')+' min/km';}
+function htmlDistanciaCardio(row){
+  const quality=TreinoActivityData.quality([row],'sessionDistance');
+  if(row.distanceMeters==null){const reason={outside_interval:'registro ultrapassa o intervalo do treino',overlapping_records:'registros de distância sobrepostos',ambiguous_interval:'intervalo de treino ambíguo',invalid_data:'dados inválidos'}[row.distanceReason];return '<small class="activity-distance-empty">Distância: '+(reason|| (quality.reasons.includes('denied')?'leitura não autorizada':'não informada pela fonte'))+'</small>';}
+  const rates=TreinoActivityData.rates(row),pace=['walking','running','treadmill'].includes(row.kind),
+    label=formatarAtividade(row.distanceMeters/1000,' km',2)+(row.distanceComplete?'':' · parcial');
+  return '<div class="activity-distance-values"><span>'+label+'</span>'+(rates.speedKmh!=null?'<span>'+formatarAtividade(rates.speedKmh,' km/h',1)+'</span>':'')+(pace&&rates.paceSeconds!=null?'<span>'+formatarRitmoCardio(rates.paceSeconds)+'</span>':'')+'</div>'+htmlQualidadeAtividade(quality)+
+    '<details class="activity-distance-note"><summary>Sobre distância e ritmo</summary><p>Cobertura de '+formatarAtividade((row.distanceCoverage||0)*100,'%',0)+' do intervalo. '+(row.distanceComplete?'Velocidade/ritmo derivados da distância registrada e do tempo total, incluindo pausas.':'Distância parcial: velocidade e ritmo não são calculados.')+(row.kind==='stationary'?' Na ergométrica, a distância pode ser virtual e depende da fonte.':'')+'</p></details>';
+}
 function dadosRotinaAtividade(){
   const weights={};
   const recovery=parseJSONSeguro(localStorage.getItem('healthRecoveryCacheV12')||'{}',{},'healthRecoveryCacheV12');
   (recovery.daily||[]).forEach(d=>{if(Number(d.weightKg)>0)weights[d.date]=Number(d.weightKg);});
   Object.assign(weights,getPeso());
   const entries=getRegistrosNutricao(),marks=getEstadoDiasNutricao(),rows=TreinoActivityData.trends(getAtividadeHealth(),periodoAtividade(),entries,weights,document.getElementById('activityKind')?.value||'all');
-  return rows.map(d=>({...d,nutritionStatus:estadoDiaNutricao(d.date,entries,marks).state}));
+  const trend=typeof getPesosParaTendencia==='function'?window.TreinoMovementData.weightRows(periodoAtividade(),getPesosParaTendencia()):[];
+  return rows.map((d,i)=>({...d,...(trend[i]||{}),nutritionStatus:estadoDiaNutricao(d.date,entries,marks).state}));
 }
 function construirGraficoRotina(id,rows,series,type='line'){
   const canvas=document.getElementById(id);if(!canvas||typeof Chart==='undefined')return null;
   const muted=getComputedStyle(document.body).getPropertyValue('--text-muted').trim(),grid=getComputedStyle(document.body).getPropertyValue('--border').trim(),
     background=getComputedStyle(document.body).getPropertyValue('--surface').trim(),nutrition=series.some(s=>['kcal','protein','carbs','fat'].includes(s.key));
   return new Chart(canvas,{type,data:{labels:rows.map(d=>d.date.slice(8)+'/'+d.date.slice(5,7)),datasets:series.map(s=>({
-    label:s.label,data:rows.map(d=>d[s.key]),borderColor:s.color,backgroundColor:s.color+'35',borderWidth:2,
+    label:s.label,data:rows.map(d=>d[s.key]),borderColor:s.color,backgroundColor:s.color+'35',borderWidth:2,borderDash:s.dash||[],
     tension:.2,spanGaps:false,pointRadius:nutrition?3:rows.length>30?0:2,pointHoverRadius:5,fill:false,
     pointBackgroundColor:nutrition?rows.map(d=>d.nutritionStatus==='complete'?s.color:background):s.color
   }))},options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},
     plugins:{legend:{display:series.length>1,labels:{color:muted,boxWidth:12}},tooltip:{callbacks:{title:items=>rows[items[0]?.dataIndex]?.date.split('-').reverse().join('/')||'',
-      afterTitle:items=>nutrition?(rows[items[0]?.dataIndex]?.nutritionStatus==='complete'?'Dia alimentar completo':'Parcial / não confirmado'):''}}},
+      afterTitle:items=>nutrition?(rows[items[0]?.dataIndex]?.nutritionStatus==='complete'?'Dia alimentar completo':'Parcial / não confirmado'):'',
+      afterLabel:item=>series[item.datasetIndex]?.key==='weightTrend'?(rows[item.dataIndex]?.weightTrendCount||0)+' medidas nos últimos 7 dias':''}}},
     scales:{x:{grid:{display:false},ticks:{color:muted,maxTicksLimit:6,maxRotation:0}},y:{beginAtZero:!series.some(s=>s.key==='weight'),grid:{color:grid},ticks:{color:muted,maxTicksLimit:5}}}}});
 }
 function desenharGraficoAtividade(){
   if(_activityChart){_activityChart.destroy();_activityChart=null;}
   if(!document.getElementById('sub-atividade')?.classList.contains('active'))return;
   const rows=dadosRotinaAtividade(),key=document.getElementById('activityChartMetric')?.value||'steps',
-    config={steps:['Passos','#75aaff','passos'],cardioMinutes:['Minutos de cardio','#65d8b0','minutos'],cardioCount:['Cardios','#c6a3ff','sessões'],cardioKcal:['Kcal dos cardios','#f1bc6b','kcal']},c=config[key];
+    config={steps:['Passos','#75aaff','passos'],cardioMinutes:['Minutos de cardio','#65d8b0','minutos'],cardioCount:['Cardios','#c6a3ff','sessões'],cardioKcal:['Kcal dos cardios','#f1bc6b','kcal'],cardioDistance:['Distância dos cardios','#65d8b0','km']},c=config[key]||config.steps;
   const any=rows.some(d=>d[key]!=null);document.getElementById('activityChartEmpty').hidden=any;
   document.getElementById('activityChartWrap').hidden=!any;
-  const s=resumoAtividadeAtual(),q=TreinoActivityData.quality(key==='cardioKcal'?s.sessions.filter(x=>x.kcal!=null):key==='steps'?s.daily.filter(x=>x.steps!=null):[...s.daily.filter(x=>x.cardioKnown),...s.sessions],key==='steps'?'steps':key==='cardioKcal'?'sessionKcal':'sessions');
+  const s=resumoAtividadeAtual(),q=TreinoActivityData.quality(key==='cardioDistance'?s.sessions.filter(x=>x.distanceComplete):key==='cardioKcal'?s.sessions.filter(x=>x.kcal!=null):key==='steps'?s.daily.filter(x=>x.steps!=null):[...s.daily.filter(x=>x.cardioKnown),...s.sessions],key==='steps'?'steps':key==='cardioKcal'?'sessionKcal':key==='cardioDistance'?'sessionDistance':'sessions');
   document.getElementById('activityChartUnit').textContent=c[2]+' por dia · lacunas = sem dados. '+textoQualidadeAtividade(q);
   if(any)_activityChart=construirGraficoRotina('activityChart',rows,[{key,label:c[0],color:c[1]}],'bar');
 }
@@ -327,11 +352,12 @@ function renderizarEvolucaoRotina(){
   if(_routineChart){_routineChart.destroy();_routineChart=null;}
   if(!document.getElementById('sub-evolucao')?.classList.contains('active'))return;
   const rows=dadosRotinaAtividade(),mode=document.getElementById('routineMetric')?.value||'weight',goals=getMetasNutricao(),
-    configs={weight:[{key:'weight',label:'Peso (kg)',color:'#f1bc6b'}],steps:[{key:'steps',label:'Passos',color:'#75aaff'}],
+    configs={weight:[{key:'weight',label:'Peso medido (kg)',color:'#f1bc6b'},{key:'weightTrend',label:'Tendência 7 dias (kg)',color:'#75aaff',dash:[6,4]}],steps:[{key:'steps',label:'Passos',color:'#75aaff'}],
       cardioMinutes:[{key:'cardioMinutes',label:'Cardio (min)',color:'#65d8b0'}],cardioKcal:[{key:'cardioKcal',label:'Cardio (kcal)',color:'#f1bc6b'}],
       kcal:[{key:'kcal',label:'Kcal registradas',color:'#c6a3ff'}],macros:[{key:'protein',label:'Proteína (g)',color:'#75aaff'},{key:'carbs',label:'Carboidratos (g)',color:'#f1bc6b'},{key:'fat',label:'Gorduras (g)',color:'#ef97ae'}]},series=configs[mode],key=series[0].key,
     vals=rows.filter(d=>d[key]!=null),nutrition=mode==='kcal'||mode==='macros',past=vals.filter(d=>nutrition?d.nutritionStatus==='complete':d.date<hoje()),avg=past.length?past.reduce((n,d)=>n+d[key],0)/past.length:null;
   const note=document.getElementById('routineSummary');
+  if(typeof renderizarTendenciaPeso==='function')renderizarTendenciaPeso();
   if(mode==='weight')note.textContent=vals.length>1?'Variação no período: '+(vals.at(-1).weight-vals[0].weight).toLocaleString('pt-BR',{maximumFractionDigits:2})+' kg · '+vals.length+' medidas.':vals.length+' medida(s) no período. Seu gráfico de peso original continua disponível abaixo.';
   else note.textContent='Média: '+formatarAtividade(avg,mode==='macros'?' g de proteína':mode==='cardioMinutes'?' min':mode==='kcal'||mode==='cardioKcal'?' kcal':' passos',mode==='steps'?0:1)+' · '+past.length+(nutrition?(past.length===1?' dia alimentar concluído.':' dias alimentares concluídos.'):' dias completos com registros.')+(mode==='kcal'&&goals?' Meta manual atual: '+formatarAtividade(goals.kcal,' kcal')+'.':'');
   if(nutrition)note.textContent+=' Gráfico: ● completo · ○ parcial / não confirmado. Todos os registros aparecem; parciais ficam fora da média.';
@@ -340,8 +366,9 @@ function renderizarEvolucaoRotina(){
     const s=resumoAtividadeAtual(),items=mode==='steps'?s.daily.filter(x=>x.steps!=null):mode==='cardioKcal'?s.sessions.filter(x=>x.kcal!=null):[...s.daily.filter(x=>x.cardioKnown),...s.sessions];
     note.textContent+=' '+textoQualidadeAtividade(TreinoActivityData.quality(items,mode==='steps'?'steps':mode==='cardioKcal'?'sessionKcal':'sessions'))+'.';
   }
-  document.getElementById('routineChartEmpty').hidden=!!vals.length;document.getElementById('routineChartWrap').hidden=!vals.length;
-  if(vals.length)_routineChart=construirGraficoRotina('routineChart',rows,series);
+  const any=!!vals.length||mode==='weight'&&rows.some(d=>d.weightTrend!=null);
+  document.getElementById('routineChartEmpty').hidden=any;document.getElementById('routineChartWrap').hidden=!any;
+  if(any)_routineChart=construirGraficoRotina('routineChart',rows,series);
   document.querySelectorAll('[data-activity-days]').forEach(b=>{const on=Number(b.dataset.activityDays)===_activityDays;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});
 }
 function renderizarAtividadeDashboard(){

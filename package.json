@@ -1,6 +1,6 @@
 {
   "name": "treinoapp-android",
-  "version": "12.8.5",
+  "version": "12.8.6",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,7 +9,7 @@
     "android:open": "npm run cap:sync && npx cap open android",
     "prepare:android": "npm run build:web && node scripts/copy-android-assets.mjs",
     "validate": "python scripts/validate_project.py",
-    "test:ui": "node scripts/test-mobile-ui.mjs && node scripts/test-nutrition-catalog.mjs && node scripts/test-meal-builder.mjs && node scripts/test-nutrition-days.mjs && node scripts/test-activity.mjs && node scripts/test-effort.mjs && node scripts/test-activity-freshness.mjs && node scripts/test-preferences.mjs && node scripts/test-backup-critical.mjs",
+    "test:ui": "node scripts/test-mobile-ui.mjs && node scripts/test-nutrition-catalog.mjs && node scripts/test-meal-builder.mjs && node scripts/test-nutrition-days.mjs && node scripts/test-movement.mjs && node scripts/test-cardio-distance.mjs && node scripts/test-activity.mjs && node scripts/test-effort.mjs && node scripts/test-activity-freshness.mjs && node scripts/test-preferences.mjs && node scripts/test-backup-critical.mjs",
     "android:prepare": "npm run build:web && node scripts/copy-android-assets.mjs"
   },
   "dependencies": {

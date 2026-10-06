@@ -1,4 +1,4 @@
-# TreinoApp v12.8.5 Beta — Dias alimentares completos e parciais
+# TreinoApp v12.8.6 Beta — Peso, metas de movimento e distância dos cardios
 
 TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capacitor. A variante Beta pode coexistir com a Stable.
 
@@ -6,10 +6,27 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 
 - Stable: `com.treinoapp.app`
 - Beta: `com.treinoapp.beta`
-- Versão: `12.8.5`
-- versionCode: `120805`
+- Versão: `12.8.6`
+- versionCode: `120806`
 - Android: compile/target API 36, minSdk 26
 - Room: schema 7, somente migrações explícitas
+
+## Peso e movimento v12.8.6 — tópicos 7, 8 e 9 de 14
+
+- tendência móvel de 7 dias corridos em Evolução/Peso, no mínimo duas medidas; gráfico medido preserva lacunas, sem inventar pesagens;
+- comparação dos últimos 7 dias com os 7 anteriores, quantidade de dias medidos e diferença entre médias somente com duas ou mais medidas por janela;
+- registro local válido tem prioridade sobre o cache Health no mesmo dia. Histórico local antigo também pode conter peso importado, portanto não atribuímos origem manual a todo ele;
+- metas opcionais manuais de passos/dia, minutos e sessões de cardio/semana; semana segunda–domingo, todas as modalidades independentemente do filtro, sem alterar metas alimentares;
+- chave `movementGoalsV1286` incluída em backup/importação/snapshots/reset, sem migração de peso ou diário;
+- leitura opcional `READ_DISTANCE` / `DistanceRecord`, paginada e filtrada por origens depois das consultas de calorias, com limite defensivo de 50 mil registros;
+- soma apenas registros contidos na sessão, mesma fonte, sem sobreposição ou sessões concorrentes; não rateia registros diários nem usa GPS/rota;
+- distância parcial identificada. Velocidade em km/h e ritmo min/km de caminhada/corrida/esteira só com cobertura de pelo menos 95% do intervalo e distância positiva; tempo total inclui pausas. Na ergométrica, distância pode ser virtual conforme a fonte;
+- gráfico de km, cobertura das sessões e horários próprios de leitura. Falha/permissão negada mantém cache identificado; resposta vazia confirmada não reutiliza valor antigo; intervalo alterado não reaproveita distância;
+- sem mudança de pacote, assinatura, schema Room ou permissões essenciais; única nova permissão é a leitura opcional de distância. FC/calorias e nutrição continuam independentes;
+- testes em `scripts/test-movement.mjs`, `scripts/test-cardio-distance.mjs` e `CardioMathTest`; roteiro `TESTE_v12.8.6_BETA.md`;
+- parar antes do tópico 10 (widgets configuráveis). Os testes físicos pendentes do tópico 4 e a validação da fonte Samsung Health continuam dependendo do usuário.
+
+Referências oficiais: [tipos e permissão de distância](https://developer.android.com/health-and-fitness/health-connect/data-types), [leitura bruta e paginação](https://developer.android.com/health-and-fitness/health-connect/read-data).
 
 ## Conclusão alimentar v12.8.5 — tópico 6 de 14
 

@@ -122,7 +122,7 @@ class AndroidCriticalCasesTest {
     @Test @Config(sdk = [33]) fun healthUnavailableDoesNotCreateValuesOrSuccessfulReads() = runBlocking {
         val snapshot = ActivityHealthRepository(context).snapshot(30)
         assertFalse(snapshot.available); assertTrue(snapshot.daily.isEmpty()); assertTrue(snapshot.sessions.isEmpty())
-        assertEquals(5, snapshot.readStatus.size)
+        assertEquals(6, snapshot.readStatus.size)
         snapshot.readStatus.values.forEach { assertEquals("unavailable", it.state); assertNull(it.readAt) }
     }
 }

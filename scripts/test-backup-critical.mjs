@@ -11,6 +11,7 @@ const original=new Map([
   ['nutritionDayStatusV1285','{"2026-10-05":{"completed":false,"updatedAt":1}}'],
   ['healthActivityCacheV128','{"daily":[{"date":"2026-10-05","steps":2000,"readInfo":{"steps":{"readAt":1791223200000,"state":"cached"}}}]}'],
   ['activityPreferencesV1283',JSON.stringify(prefs)],['temaPreferido','dark'],
+  ['movementGoalsV1286','{"stepsDaily":8000,"cardioMinutesWeekly":150,"cardioSessionsWeekly":3}'],
 ]);
 const storage=new Map(original),events=[];let consent=true,backupForSnapshot;
 const context=vm.createContext({console,Date,APP_VERSION:'12.8.3',APP_BUILD:'test',DATA_SCHEMA_VERSION:18,

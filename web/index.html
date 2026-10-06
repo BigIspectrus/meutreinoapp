@@ -10,8 +10,8 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <title>TreinoApp v12</title>
-  <meta name="treinoapp-version" content="12.8.5">
-  <meta name="treinoapp-build" content="2026.10.06.6">
+  <meta name="treinoapp-version" content="12.8.6">
+  <meta name="treinoapp-build" content="2026.10.06.7">
   <script defer src="./vendor/chart.umd.js"></script>
   <script defer src="./vendor/jspdf.umd.min.js"></script>
   <script defer src="./vendor/qrcode.min.js"></script>
@@ -1051,13 +1051,13 @@
 <!-- MODAL NOVIDADES -->
 <div class="modal-overlay" id="modalNovidades">
   <div class="modal" style="max-width:500px;">
-    <div class="modal-title">TreinoApp v12.8.5 Beta</div>
+    <div class="modal-title">TreinoApp v12.8.6 Beta</div>
     <div style="font-size:.88em;line-height:1.6;color:var(--text-muted);">
       <p style="color:var(--text);font-weight:700;margin-bottom:8px;">Principais novidades desta versão</p>
-      <p>Conclua o dia alimentar quando tiver registrado tudo. Concluir confirma o registro completo, não que as metas foram atingidas.</p>
-      <p style="margin-top:8px;">Ao adicionar, editar ou remover alimentos, o dia volta a parcial. Também é possível reabri-lo manualmente.</p>
-      <p style="margin-top:8px;">Resumo semanal, médias, metas e relações alimentares do relatório mensal usam apenas dias completos. Parciais continuam visíveis nos gráficos e nas listas, sem contar como zero.</p>
-      <p style="margin-top:8px;">Registros antigos não são concluídos automaticamente. Situação dos dias incluída nos backups; metas, treinos e integração Health preservados. Tópico 6 entregue; próximos aguardam autorização.</p>
+      <p>Peso com tendência de 7 dias e comparação com os 7 dias anteriores, indicando a quantidade de pesagens. Sem preencher datas sem medida.</p>
+      <p style="margin-top:8px;">Metas de passos/dia, minutos de cardio e sessões por semana definidas por você em Cardio &amp; passos, separadas da alimentação.</p>
+      <p style="margin-top:8px;">Distância, velocidade média e ritmo quando a fonte permitir. Revise a leitura opcional de distância no Health Connect; não há GPS nem acompanhamento em tempo real.</p>
+      <p style="margin-top:8px;">Dados parciais/ambíguos não geram ritmo ou velocidade. Alimentação, treinos e dados anteriores preservados. Tópicos 7, 8 e 9 entregues; próximos aguardam autorização.</p>
     </div>
     <div class="modal-footer"><button class="btn btn-primary" onclick="fecharNovidades()">Entendi</button></div>
   </div>
@@ -1181,6 +1181,16 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modalMovementGoals">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-title">Metas de movimento</div>
+    <p class="nutrition-note">Você escolhe os valores. Deixe um campo vazio para não acompanhar essa meta. Metas alimentares não são alteradas.</p>
+    <div class="form-group"><label>Passos por dia</label><input id="movementGoal-stepsDaily" type="number" min="1" max="100000" step="1" inputmode="numeric" placeholder="Opcional"></div>
+    <div class="form-group"><label>Minutos de cardio por semana</label><input id="movementGoal-cardioMinutesWeekly" type="number" min="0.1" max="10080" step="0.1" inputmode="decimal" placeholder="Opcional"></div>
+    <div class="form-group"><label>Sessões de cardio por semana</label><input id="movementGoal-cardioSessionsWeekly" type="number" min="1" max="1000" step="1" inputmode="numeric" placeholder="Opcional"></div>
+    <div class="modal-footer"><button type="button" class="btn btn-ghost" onclick="fecharModal('modalMovementGoals')">Cancelar</button><button type="button" class="btn btn-primary" onclick="salvarMetasMovimento()">Salvar metas</button></div>
+  </div>
+</div>
 <div class="modal-overlay" id="modalNutritionAdd">
   <div class="modal" style="max-width:520px;">
     <div class="modal-title">Montar refeição</div>
@@ -1647,6 +1657,7 @@
       <button type="button" data-activity-days="90" onclick="definirPeriodoAtividade(90)">90 dias</button>
     </div>
     <p id="routineSummary" class="activity-note"></p>
+    <div id="weightInsights" hidden></div>
     <div id="routineChartWrap" class="activity-chart-wrap"><canvas id="routineChart" role="img" aria-label="Evolução da rotina no período selecionado"></canvas></div>
     <div id="routineChartEmpty" class="activity-empty"><strong>Ainda sem registros neste período</strong><p>Registre seu peso ou alimentação, ou sincronize passos e cardio pelo Health Connect.</p></div>
     <p class="activity-note">Lacunas indicam dias sem dados. Médias de passos/cardio excluem hoje, que está em andamento. Médias alimentares usam apenas dias concluídos por você, incluindo hoje se concluído.</p>
@@ -1695,6 +1706,7 @@
   </div>
   </div><!-- /sub-evolucao -->
   <div class="sub-content" id="sub-atividade">
+    <section class="card" id="activityMovementGoals"></section>
     <section class="card">
       <div class="activity-toolbar"><h2>Cardio &amp; passos</h2><div class="activity-period" aria-label="Período das atividades">
         <button type="button" data-activity-days="7" onclick="definirPeriodoAtividade(7)">7 dias</button>
@@ -1724,6 +1736,7 @@
         <p>Kcal dos cardios são estimativas da mesma fonte e do intervalo da atividade. Preferimos calorias ativas; quando só há calorias totais naquele intervalo, isso é indicado. Sessões sem kcal não entram na soma; confira a cobertura.</p>
         <p>Kcal totais do dia incluem gasto em repouso. Não as somamos ao cardio, nem alteramos suas metas de alimentação. Atividades coincidentes do mesmo tipo em fontes diferentes são contabilizadas uma vez, priorizando Samsung Health.</p>
         <p>Os dados chegam após relógio → Samsung Health → Health Connect. Não há acompanhamento em tempo real.</p>
+        <p>Distância exige leitura opcional e registros da mesma fonte, contidos na sessão e sem sobreposição. Cobertura abaixo de 95% é parcial e não gera velocidade/ritmo; intervalos ambíguos não são atribuídos. As médias usam o tempo total, incluindo pausas. Não usamos GPS nem extrapolamos dados ausentes.</p>
       </details>
     </section>
     <section class="card">
@@ -1731,7 +1744,7 @@
       <label for="activityChartMetric">Visualizar</label>
       <select id="activityChartMetric" onchange="alterarGraficoAtividade()">
         <option value="steps">Passos</option><option value="cardioMinutes">Minutos de cardio</option>
-        <option value="cardioCount">Quantidade de cardios</option><option value="cardioKcal">Kcal dos cardios</option>
+        <option value="cardioCount">Quantidade de cardios</option><option value="cardioKcal">Kcal dos cardios</option><option value="cardioDistance">Distância dos cardios</option>
       </select>
       <div id="activityChartWrap" class="activity-chart-wrap"><canvas id="activityChart" role="img" aria-label="Atividade diária no período selecionado"></canvas></div>
       <p id="activityChartUnit" class="activity-note"></p>
@@ -2122,14 +2135,14 @@
 
 <script src="./data/common-foods.js"></script>
 <script>
-const APP_VERSION = '12.8.5';
-const APP_BUILD = '2026.10.06.6';
+const APP_VERSION = '12.8.6';
+const APP_BUILD = '2026.10.06.7';
 const DATA_SCHEMA_VERSION = 18;
 const GITHUB_REPO='BigIspectrus/meutreinoapp';
 const GITHUB_PAGES_BASE='https://bigispectrus.github.io/meutreinoapp';
 let _latestAndroidReleaseUrl='';
 let _nativeChannel='web';
-const APP_CACHE_VERSION = 'treinoapp-v12.8.5-202610066';
+const APP_CACHE_VERSION = 'treinoapp-v12.8.6-202610067';
 
 const SET_TYPES={workset:'Work set',warmup:'Aquecimento',topset:'Top set',backoff:'Back-off',dropset:'Drop set',cluster:'Cluster set',fst7:'FST-7',restpause:'Rest-pause',myoreps:'Myo-reps',amrap:'AMRAP'};
 function normalizarSetType(v){return SET_TYPES[v]?v:'workset';}
@@ -3198,6 +3211,7 @@ function salvarPeso() {
   invalidarCache();
   document.getElementById('valorPeso').value='';
   atualizarGrafico();
+  if(typeof renderizarEvolucaoRotina==='function')renderizarEvolucaoRotina();
   toast(`Peso ${peso}kg salvo!`,'success');
 }
 
@@ -3793,6 +3807,7 @@ function importarBackup(event) {
       if(d.healthRecoveryCacheV12) localStorage.setItem('healthRecoveryCacheV12',d.healthRecoveryCacheV12);
       if(d.healthActivityCacheV128) localStorage.setItem('healthActivityCacheV128',d.healthActivityCacheV128);
       if(d.activityPreferencesV1283) localStorage.setItem('activityPreferencesV1283',d.activityPreferencesV1283);
+      if(d.movementGoalsV1286!=null) localStorage.setItem('movementGoalsV1286',String(d.movementGoalsV1286));
       if(d.nutritionGoalsV125) localStorage.setItem('nutritionGoalsV125',d.nutritionGoalsV125);
       if(d.nutritionFoodsV125) localStorage.setItem('nutritionFoodsV125',d.nutritionFoodsV125);
       if(d.nutritionEntriesV125) localStorage.setItem('nutritionEntriesV125',d.nutritionEntriesV125);
@@ -3807,7 +3822,7 @@ function importarBackup(event) {
   };
   reader.readAsText(file);
 }
-function resetarDados() { const keys=['historicoTreinoV3','pesoCorporal','exerciciosCustomizadosV3','treinosTemplates','temaPreferido','userProfile','treinoMetas','conquistasDesbloqueadas','perfilPublico','treinoScores','timerSom','restVibration','restNotificationSound','backupConfig','descansoPadrao','effortMode','settingsCategory','_rascunhoTreino','_onboardingV9','_onboardingV10','_onboardingV11','_lastSeenVersion','_lastSnapshotDay','_restTimerEndAt','wakeLockEnabled','academiaModeEnabled','plateBarWeight','platePreset','healthLinksV12','healthPendingV12','healthHrMax','healthAutoSync','healthWriteEnabled','weeklyPlanV12','healthRecoveryCacheV12','healthActivityCacheV128','activityPreferencesV1283','nutritionGoalsV125','nutritionFoodsV125','nutritionEntriesV125','nutritionDayStatusV1285','nutritionRecipesV1251','nutritionMealTemplatesV1251','nutritionCatalogCacheV1251','nutritionCatalogCacheV1252','nutritionUsdaKeyV1251','nutritionHealthEnabledV1252','nutritionHealthSyncV1252','_nativeNutritionSyncV125','_nativeNutritionSyncV1251','_nativeNutritionSyncV1252','_appErrors']; keys.forEach(k=>localStorage.removeItem(k)); invalidarCache(); toast('Dados do TreinoApp apagados. Recarregando...','info'); setTimeout(()=>location.reload(),1000); }
+function resetarDados() { const keys=['historicoTreinoV3','pesoCorporal','exerciciosCustomizadosV3','treinosTemplates','temaPreferido','userProfile','treinoMetas','conquistasDesbloqueadas','perfilPublico','treinoScores','timerSom','restVibration','restNotificationSound','backupConfig','descansoPadrao','effortMode','settingsCategory','_rascunhoTreino','_onboardingV9','_onboardingV10','_onboardingV11','_lastSeenVersion','_lastSnapshotDay','_restTimerEndAt','wakeLockEnabled','academiaModeEnabled','plateBarWeight','platePreset','healthLinksV12','healthPendingV12','healthHrMax','healthAutoSync','healthWriteEnabled','weeklyPlanV12','healthRecoveryCacheV12','healthActivityCacheV128','activityPreferencesV1283','movementGoalsV1286','nutritionGoalsV125','nutritionFoodsV125','nutritionEntriesV125','nutritionDayStatusV1285','nutritionRecipesV1251','nutritionMealTemplatesV1251','nutritionCatalogCacheV1251','nutritionCatalogCacheV1252','nutritionUsdaKeyV1251','nutritionHealthEnabledV1252','nutritionHealthSyncV1252','_nativeNutritionSyncV125','_nativeNutritionSyncV1251','_nativeNutritionSyncV1252','_appErrors']; keys.forEach(k=>localStorage.removeItem(k)); invalidarCache(); toast('Dados do TreinoApp apagados. Recarregando...','info'); setTimeout(()=>location.reload(),1000); }
 
 
 // ════════════════════════════════════════════════
@@ -5043,7 +5058,7 @@ function verificarBackupAuto() {
   }
 }
 
-function gerarObjetoBackup(){return {app:'TreinoApp',appVersion:APP_VERSION,build:APP_BUILD,schemaVersion:DATA_SCHEMA_VERSION,exportedAt:new Date().toISOString(),pesoCorporal:localStorage.getItem('pesoCorporal'),historicoTreinoV3:localStorage.getItem('historicoTreinoV3'),exerciciosCustomizadosV3:localStorage.getItem('exerciciosCustomizadosV3'),treinosTemplates:localStorage.getItem('treinosTemplates'),temaPreferido:localStorage.getItem('temaPreferido'),userProfile:localStorage.getItem('userProfile'),treinoMetas:localStorage.getItem('treinoMetas'),conquistasDesbloqueadas:localStorage.getItem('conquistasDesbloqueadas'),perfilPublico:localStorage.getItem('perfilPublico'),treinoScores:localStorage.getItem('treinoScores'),timerSom:localStorage.getItem('timerSom'),restVibration:localStorage.getItem('restVibration'),restNotificationSound:localStorage.getItem('restNotificationSound'),backupConfig:localStorage.getItem('backupConfig'),descansoPadrao:localStorage.getItem('descansoPadrao'),effortMode:localStorage.getItem('effortMode'),wakeLockEnabled:localStorage.getItem('wakeLockEnabled'),academiaModeEnabled:localStorage.getItem('academiaModeEnabled'),plateBarWeight:localStorage.getItem('plateBarWeight'),platePreset:localStorage.getItem('platePreset'),healthLinksV12:localStorage.getItem('healthLinksV12'),healthHrMax:localStorage.getItem('healthHrMax'),healthAutoSync:localStorage.getItem('healthAutoSync'),healthWriteEnabled:localStorage.getItem('healthWriteEnabled'),weeklyPlanV12:localStorage.getItem('weeklyPlanV12'),healthRecoveryCacheV12:localStorage.getItem('healthRecoveryCacheV12'),healthActivityCacheV128:localStorage.getItem('healthActivityCacheV128'),activityPreferencesV1283:localStorage.getItem('activityPreferencesV1283'),nutritionGoalsV125:localStorage.getItem('nutritionGoalsV125'),nutritionFoodsV125:localStorage.getItem('nutritionFoodsV125'),nutritionEntriesV125:localStorage.getItem('nutritionEntriesV125'),nutritionDayStatusV1285:localStorage.getItem('nutritionDayStatusV1285'),nutritionRecipesV1251:localStorage.getItem('nutritionRecipesV1251'),nutritionMealTemplatesV1251:localStorage.getItem('nutritionMealTemplatesV1251'),nutritionHealthEnabledV1252:localStorage.getItem('nutritionHealthEnabledV1252')};}
+function gerarObjetoBackup(){return {app:'TreinoApp',appVersion:APP_VERSION,build:APP_BUILD,schemaVersion:DATA_SCHEMA_VERSION,exportedAt:new Date().toISOString(),pesoCorporal:localStorage.getItem('pesoCorporal'),historicoTreinoV3:localStorage.getItem('historicoTreinoV3'),exerciciosCustomizadosV3:localStorage.getItem('exerciciosCustomizadosV3'),treinosTemplates:localStorage.getItem('treinosTemplates'),temaPreferido:localStorage.getItem('temaPreferido'),userProfile:localStorage.getItem('userProfile'),treinoMetas:localStorage.getItem('treinoMetas'),conquistasDesbloqueadas:localStorage.getItem('conquistasDesbloqueadas'),perfilPublico:localStorage.getItem('perfilPublico'),treinoScores:localStorage.getItem('treinoScores'),timerSom:localStorage.getItem('timerSom'),restVibration:localStorage.getItem('restVibration'),restNotificationSound:localStorage.getItem('restNotificationSound'),backupConfig:localStorage.getItem('backupConfig'),descansoPadrao:localStorage.getItem('descansoPadrao'),effortMode:localStorage.getItem('effortMode'),wakeLockEnabled:localStorage.getItem('wakeLockEnabled'),academiaModeEnabled:localStorage.getItem('academiaModeEnabled'),plateBarWeight:localStorage.getItem('plateBarWeight'),platePreset:localStorage.getItem('platePreset'),healthLinksV12:localStorage.getItem('healthLinksV12'),healthHrMax:localStorage.getItem('healthHrMax'),healthAutoSync:localStorage.getItem('healthAutoSync'),healthWriteEnabled:localStorage.getItem('healthWriteEnabled'),weeklyPlanV12:localStorage.getItem('weeklyPlanV12'),healthRecoveryCacheV12:localStorage.getItem('healthRecoveryCacheV12'),healthActivityCacheV128:localStorage.getItem('healthActivityCacheV128'),activityPreferencesV1283:localStorage.getItem('activityPreferencesV1283'),movementGoalsV1286:localStorage.getItem('movementGoalsV1286'),nutritionGoalsV125:localStorage.getItem('nutritionGoalsV125'),nutritionFoodsV125:localStorage.getItem('nutritionFoodsV125'),nutritionEntriesV125:localStorage.getItem('nutritionEntriesV125'),nutritionDayStatusV1285:localStorage.getItem('nutritionDayStatusV1285'),nutritionRecipesV1251:localStorage.getItem('nutritionRecipesV1251'),nutritionMealTemplatesV1251:localStorage.getItem('nutritionMealTemplatesV1251'),nutritionHealthEnabledV1252:localStorage.getItem('nutritionHealthEnabledV1252')};}
 async function compartilharBackup(){
   const dados=gerarObjetoBackup(),conteudo=JSON.stringify(dados),nome=`treinoapp_backup_v${APP_VERSION}_${hoje()}.json`;
   if(isNativeAndroid()&&window.TreinoNativeBridge?.shareTextFile){
@@ -5990,7 +6005,7 @@ function salvarSnapshotDiario(){const d=hoje();if(localStorage.getItem('_lastSna
 async function listarSnapshotsSeguro(){try{const db=await openSafeDB();const arr=await new Promise((res,rej)=>{const r=db.transaction('snapshots').objectStore('snapshots').getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error);});db.close();return arr.sort((a,b)=>b.createdAt-a.createdAt);}catch(e){return[];}}
 async function excluirSnapshotSeguro(id){try{const db=await openSafeDB();await new Promise((res,rej)=>{const tx=db.transaction('snapshots','readwrite');tx.objectStore('snapshots').delete(id);tx.oncomplete=res;tx.onerror=()=>rej(tx.error);});db.close();}catch(e){}}
 async function abrirSnapshots(){const el=document.getElementById('snapshotList');document.getElementById('modalSnapshots').classList.add('open');if(!el)return;el.innerHTML='<div style="color:var(--text-muted);font-size:.82em;">Carregando...</div>';const arr=await listarSnapshotsSeguro();if(!arr.length){el.innerHTML='<div class="empty-state" style="padding:20px 0;"><p>Nenhum snapshot interno ainda.</p></div>';return;}el.innerHTML=arr.map(x=>`<div class="snapshot-item"><div><strong>${new Date(x.createdAt).toLocaleString('pt-BR')}</strong><div class="snapshot-meta">${esc(x.motivo||'snapshot')} · v${esc(x.version||'?')}</div></div><div style="display:flex;gap:5px;"><button class="btn btn-outline btn-sm" style="width:auto;" onclick="restaurarSnapshotSeguro('${x.id}')">Restaurar</button><button class="btn btn-danger btn-sm btn-icon" onclick="excluirSnapshotSeguro('${x.id}').then(abrirSnapshots)">×</button></div></div>`).join('');}
-async function restaurarSnapshotSeguro(id){const arr=await listarSnapshotsSeguro(),snap=arr.find(x=>x.id===id);if(!snap)return toast('Snapshot não encontrado','error');if(!confirm('Restaurar este snapshot? Os dados atuais serão substituídos.'))return;await salvarSnapshotSeguro('antes_restauracao');const d=snap.data||{},keys=['pesoCorporal','historicoTreinoV3','exerciciosCustomizadosV3','treinosTemplates','temaPreferido','userProfile','treinoMetas','conquistasDesbloqueadas','perfilPublico','treinoScores','timerSom','restVibration','restNotificationSound','backupConfig','descansoPadrao','effortMode','wakeLockEnabled','academiaModeEnabled','plateBarWeight','platePreset','healthLinksV12','healthHrMax','healthAutoSync','healthWriteEnabled','weeklyPlanV12','healthRecoveryCacheV12','healthActivityCacheV128','activityPreferencesV1283','nutritionGoalsV125','nutritionFoodsV125','nutritionEntriesV125','nutritionRecipesV1251','nutritionMealTemplatesV1251','nutritionHealthEnabledV1252'];keys.forEach(k=>{if(d[k]!==undefined&&d[k]!==null)localStorage.setItem(k,String(d[k]));});restaurarEstadoDiasBackupNutricao(d);invalidarCache();toast('Snapshot restaurado. Recarregando...','success');setTimeout(()=>location.reload(),900);}
+async function restaurarSnapshotSeguro(id){const arr=await listarSnapshotsSeguro(),snap=arr.find(x=>x.id===id);if(!snap)return toast('Snapshot não encontrado','error');if(!confirm('Restaurar este snapshot? Os dados atuais serão substituídos.'))return;await salvarSnapshotSeguro('antes_restauracao');const d=snap.data||{},keys=['pesoCorporal','historicoTreinoV3','exerciciosCustomizadosV3','treinosTemplates','temaPreferido','userProfile','treinoMetas','conquistasDesbloqueadas','perfilPublico','treinoScores','timerSom','restVibration','restNotificationSound','backupConfig','descansoPadrao','effortMode','wakeLockEnabled','academiaModeEnabled','plateBarWeight','platePreset','healthLinksV12','healthHrMax','healthAutoSync','healthWriteEnabled','weeklyPlanV12','healthRecoveryCacheV12','healthActivityCacheV128','activityPreferencesV1283','movementGoalsV1286','nutritionGoalsV125','nutritionFoodsV125','nutritionEntriesV125','nutritionRecipesV1251','nutritionMealTemplatesV1251','nutritionHealthEnabledV1252'];keys.forEach(k=>{if(d[k]!==undefined&&d[k]!==null)localStorage.setItem(k,String(d[k]));});restaurarEstadoDiasBackupNutricao(d);invalidarCache();toast('Snapshot restaurado. Recarregando...','success');setTimeout(()=>location.reload(),900);}
 
 // ════════════════════════════════════════════════
 // V11 — BUILD/DEPLOY E REPARO DO APP
@@ -6075,7 +6090,7 @@ async function inicializarNativeUI(){
   setTimeout(()=>reconciliarHealthPendentes(false),1800);
 }
 async function conectarHealthConnect(){if(!isNativeAndroid())return toast('Health Connect está disponível somente no APK Android','info');try{await window.TreinoNativeBridge.requestCorePermissions();const r=await window.TreinoNativeBridge.requestHealthPermissions();toast(r?.granted?'Health Connect conectado':'Revise as permissões do Health Connect','info');await atualizarHealthStatus();await sincronizarAtividadesHealth(true);if(r?.granted){await diagnosticarHealthConnect(false);reconciliarHealthPendentes(false);}}catch(e){toast('Não foi possível abrir as permissões do Health Connect','error');}}
-async function atualizarHealthStatus(){const el=document.getElementById('healthConnectStatus');if(!el||!isNativeAndroid())return;try{const r=await window.TreinoNativeBridge.getHealthStatus();if(!r.available){el.textContent='Health Connect indisponível neste aparelho';return;}const caps=[`Exercício ${r.readExercise?'✓':'✕'}`,`Gravação ${r.writeExercise?'✓':'✕'}`,`FC ${r.readHeartRate?'✓':'—'}`,`kcal ${r.readCalories?'✓':'—'}`,`Passos ${r.readSteps?'✓':'—'}`,`Kcal ativas ${r.readActiveCalories?'✓':'—'}`,`Histórico ${r.historyGranted?'✓':'—'}`,`Sono ${r.readSleep?'✓':'—'}`,`FC repouso ${r.readRestingHeartRate?'✓':'—'}`,`HRV ${r.readHrv?'✓':'—'}`,`Nutrição ${r.writeNutrition?'✓':'—'}`];el.textContent=r.granted?`Conectado · ${caps.join(' · ')}${r.backgroundAvailable?(r.backgroundGranted?' · segundo plano ✓':' · segundo plano não autorizado'):''}`:`Disponível · ${r.grantedCount||0}/${r.requiredCount||0} permissões concedidas · ${caps.join(' · ')}`;}catch(e){el.textContent='Não foi possível consultar o Health Connect';}}
+async function atualizarHealthStatus(){const el=document.getElementById('healthConnectStatus');if(!el||!isNativeAndroid())return;try{const r=await window.TreinoNativeBridge.getHealthStatus();if(!r.available){el.textContent='Health Connect indisponível neste aparelho';return;}const caps=[`Exercício ${r.readExercise?'✓':'✕'}`,`Gravação ${r.writeExercise?'✓':'✕'}`,`FC ${r.readHeartRate?'✓':'—'}`,`kcal ${r.readCalories?'✓':'—'}`,`Passos ${r.readSteps?'✓':'—'}`,`Distância ${r.readDistance?'✓':'—'}`,`Kcal ativas ${r.readActiveCalories?'✓':'—'}`,`Histórico ${r.historyGranted?'✓':'—'}`,`Sono ${r.readSleep?'✓':'—'}`,`FC repouso ${r.readRestingHeartRate?'✓':'—'}`,`HRV ${r.readHrv?'✓':'—'}`,`Nutrição ${r.writeNutrition?'✓':'—'}`];el.textContent=r.granted?`Conectado · ${caps.join(' · ')}${r.backgroundAvailable?(r.backgroundGranted?' · segundo plano ✓':' · segundo plano não autorizado'):''}`:`Disponível · ${r.grantedCount||0}/${r.requiredCount||0} permissões concedidas · ${caps.join(' · ')}`;}catch(e){el.textContent='Não foi possível consultar o Health Connect';}}
 function renderHealthLastMatch(){
   const el=document.getElementById('healthLastMatch');if(!el)return;
   const links=Object.entries(getHealthLinks()).sort((a,b)=>(b[1].linkedAt||0)-(a[1].linkedAt||0));
@@ -6913,6 +6928,7 @@ setInterval(()=>{if(isNativeAndroid()&&treinoAtivoTemplate&&!document.hidden)rec
 
 </script>
 <script src="./nutrition-days.js"></script>
+<script src="./movement.js"></script>
 <script src="./activity.js"></script>
 <script src="./meal-builder.js"></script>
 </body>

@@ -17,6 +17,7 @@ import androidx.core.content.FileProvider
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.permission.HealthPermission.Companion.PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND
 import androidx.health.connect.client.records.ExerciseSessionRecord
+import androidx.health.connect.client.records.DistanceRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
@@ -377,6 +378,7 @@ class TreinoNativePlugin : Plugin() {
                     put("readHeartRate", granted.contains(HealthPermission.getReadPermission(HeartRateRecord::class)))
                     put("readCalories", granted.contains(HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class)))
                     put("readSteps", granted.contains(HealthPermission.getReadPermission(StepsRecord::class)))
+                    put("readDistance", granted.contains(HealthPermission.getReadPermission(DistanceRecord::class)))
                     put("readActiveCalories", granted.contains(HealthPermission.getReadPermission(ActiveCaloriesBurnedRecord::class)))
                     put("historyGranted", HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY in granted)
                     put("readSleep", granted.contains(HealthPermission.getReadPermission(SleepSessionRecord::class)))
@@ -401,6 +403,7 @@ class TreinoNativePlugin : Plugin() {
                     put("rangeStart", r.rangeStart); put("rangeEnd", r.rangeEnd)
                     put("readSteps", r.readSteps); put("readExercise", r.readExercise)
                     put("readActiveCalories", r.readActiveCalories); put("readCalories", r.readCalories)
+                    put("readDistance", r.readDistance)
                     put("historyGranted", r.historyGranted); put("sessionsComplete", r.sessionsComplete)
                     put("duplicatesRemoved", r.duplicatesRemoved); put("errors", JSArray(r.errors))
                     put("readStatus", JSObject().apply {
@@ -422,6 +425,10 @@ class TreinoNativePlugin : Plugin() {
                             put("kcal", s.kcal); put("calorieKind", s.calorieKind)
                             put("sessionReadAt", s.sessionReadAt); put("kcalReadAt", s.kcalReadAt)
                             put("kcalCheckedAt", s.kcalCheckedAt); put("kcalReadState", s.kcalReadState)
+                            put("distanceMeters", s.distanceMeters); put("distanceCoverage", s.distanceCoverage)
+                            put("distanceComplete", s.distanceComplete); put("distanceReason", s.distanceReason)
+                            put("distanceReadAt", s.distanceReadAt); put("distanceCheckedAt", s.distanceCheckedAt)
+                            put("distanceReadState", s.distanceReadState)
                         }) }
                     })
                 })

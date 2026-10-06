@@ -1,0 +1,46 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+const activity=readFileSync(new URL('../web/activity.js',import.meta.url),'utf8'),movement=readFileSync(new URL('../web/movement.js',import.meta.url),'utf8');
+const plain=v=>JSON.parse(JSON.stringify(v)),storage=new Map([['nutritionGoalsV125','{"kcal":2222,"protein":150}'],['pesoCorporal','{"2026-10-05":80}'],['historicoTreinoV3','[{"rir":0}]']]),elements=new Map(),events=[];
+const el=id=>{if(!elements.has(id))elements.set(id,{value:'',innerHTML:'',textContent:'',hidden:false,classList:{add(){},contains:()=>false}});return elements.get(id);};
+let fail=false;
+const ctx=vm.createContext({window:{addEventListener(){}},document:{addEventListener(){},getElementById:el,querySelectorAll:()=>[]},console:{warn(){}},Date,Map,Set,
+  localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>{if(fail)throw new Error('quota');storage.set(k,String(v));}},
+  parseJSONSeguro:(s,f)=>{try{return JSON.parse(s);}catch{return f;}},hoje:()=> '2026-10-06',esc:s=>String(s),toast:s=>events.push(s),fecharModal:()=>events.push('close'),
+});
+vm.runInContext(activity,ctx);ctx.TreinoActivityData=ctx.window.TreinoActivityData;vm.runInContext(movement,ctx);
+const d=ctx.window.TreinoMovementData,before=JSON.stringify([...storage]);
+const manual={'2026-09-29':82,'2026-10-01':80,'2026-10-03':78,'2026-10-06':76,'2026-10-07':70,'2026-10-02':0,'2026-02-29':10};
+const weights=d.weights(manual,{daily:[{date:'2026-10-01',weightKg:100},{date:'2026-10-02',weightKg:79},{date:'2026-10-04',weightKg:null}]},'2026-10-06');
+assert.equal(weights['2026-10-01'].kg,80);assert.equal(weights['2026-10-01'].source,'Registro local');assert.equal(weights['2026-10-02'].kg,79);
+assert.equal(weights['2026-10-07'],undefined);assert.equal(weights['2026-02-29'],undefined);
+const rows=d.weightRows(d.dates('2026-10-06',7),weights);assert.equal(rows.at(-1).weightTrend,78.25);assert.equal(rows.at(-1).weightTrendCount,4);
+assert.equal(rows.find(r=>r.date==='2026-10-04').weight,null,'Não inventar pesagem em data sem dado');
+assert.equal(d.weightRows(['2026-10-06'],d.weights({'2026-10-06':76},{},'2026-10-06'))[0].weightTrend,null,'Uma medida não sustenta tendência');
+const comparison=d.weightSummary('2026-10-06',weights);assert.equal(comparison.current.value,78.25);assert.equal(comparison.previous.count,1);assert.equal(comparison.delta,null);
+const enough=d.weights({...manual,'2026-09-28':84},{},'2026-10-06'),summary=d.weightSummary('2026-10-06',enough);
+assert.equal(summary.previous.value,83);assert.ok(summary.delta<0);assert.equal(summary.latest.date,'2026-10-06');assert.equal(summary.current.start,'2026-09-30');
+assert.equal(d.validDate('2024-02-29'),true);assert.equal(d.validDate('2026-02-29'),false);
+assert.deepEqual(plain(d.week('2026-10-04')),{start:'2026-09-28',end:'2026-10-04',elapsed:plain(d.dates('2026-10-04',7))});
+assert.equal(d.week('2026-10-05').elapsed.length,1);assert.equal(d.week('2026-10-06').elapsed.length,2);
+assert.equal(JSON.stringify([...storage]),before,'Analisar pesos não regrava dados/metas');
+for(const bad of [null,undefined,'',0,-1,NaN,Infinity,false,[],{}])assert.equal(d.goalValue(bad,'stepsDaily'),null);
+assert.equal(d.goalValue(1.5,'stepsDaily'),null);assert.equal(d.goalValue(100001,'stepsDaily'),null);assert.equal(d.goalValue(2.5,'cardioSessionsWeekly'),null);
+assert.equal(d.goalValue(10.5,'cardioMinutesWeekly'),10.5);assert.equal(d.goalValue(10081,'cardioMinutesWeekly'),null);
+ctx.getAtividadeHealth=()=>({});ctx.renderizarMetasMovimento();assert.ok(el('activityMovementGoals').innerHTML.includes('Nenhum valor é definido automaticamente'));
+ctx.abrirMetasMovimento();assert.equal(el('movementGoal-stepsDaily').value,'');
+el('movementGoal-stepsDaily').value='8000';el('movementGoal-cardioMinutesWeekly').value='150';el('movementGoal-cardioSessionsWeekly').value='3';ctx.salvarMetasMovimento();
+assert.deepEqual(plain(ctx.getMetasMovimento()),{stepsDaily:8000,cardioMinutesWeekly:150,cardioSessionsWeekly:3});
+const saved=storage.get(d.goalsKey);fail=true;el('movementGoal-stepsDaily').value='9000';ctx.salvarMetasMovimento();assert.equal(storage.get(d.goalsKey),saved);
+fail=false;el('movementGoal-stepsDaily').value='8.5';ctx.salvarMetasMovimento();assert.equal(storage.get(d.goalsKey),saved);
+el('movementGoal-stepsDaily').value='';el('movementGoal-cardioMinutesWeekly').value='';el('movementGoal-cardioSessionsWeekly').value='';ctx.salvarMetasMovimento();assert.equal(Object.values(ctx.getMetasMovimento()).every(v=>v==null),true);
+for(const [k,v] of JSON.parse(before))assert.equal(storage.get(k),v,'Meta manual de movimento preserva '+k);
+const session=(id,date,kind='walking')=>({id,date,kind,sourcePackage:'samsung',startMs:100000,endMs:1900000});
+const snapshot={daily:[{date:'2026-10-05',steps:100,cardioKnown:true},{date:'2026-10-06',steps:0,cardioKnown:true}],sessions:[session('1','2026-10-05'),session('2','2026-10-06','cycling'),session('outside','2026-10-04')]};
+let progress=d.progress(snapshot,'2026-10-06');assert.equal(progress.steps,0);assert.equal(progress.minutes,60);assert.equal(progress.sessions,2);assert.equal(progress.complete,true);
+progress=d.progress({sessions:[session('1','2026-10-06')]},'2026-10-06');assert.equal(progress.complete,false);assert.equal(progress.minutes,30);
+assert.equal(d.progress({},'2026-10-06').minutes,null,'Sem leitura não apresentar zero de cardio');
+storage.set(d.goalsKey,'{invalid}');assert.equal(Object.values(ctx.getMetasMovimento()).every(v=>v==null),true);
+assert.ok(readFileSync(new URL('../web/sw.js',import.meta.url),'utf8').includes("'./movement.js'"));
+console.log('OK: tendência em 7 dias corridos, prioridade manual, lacunas/zeros, cobertura semanal, metas opcionais/limites, falha segura e alimentação/histórico intactos.');

@@ -8,6 +8,8 @@ Autorização posterior recebida: continuar para o próximo tópico, implementan
 
 Nova autorização recebida após entregar v12.8.4: realizar o tópico 6 na v12.8.5. Parar antes do tópico 7. Os testes físicos pendentes não foram declarados concluídos pelo usuário.
 
+Autorização após v12.8.5: realizar os três próximos tópicos, 7, 8 e 9, na v12.8.6. Entregar APK e parar antes do tópico 10. Isso não confirma testes físicos pendentes nem autoriza widgets/água/medidas/backup externo/painel.
+
 1. Corrigir RIR/RPE ausente convertido em zero nas análises, preservando zero real e o histórico.
 2. Mostrar atualização de cada dado separadamente, inclusive dados anteriores mantidos do cache.
 3. Lembrar filtros e preferências de modalidade, período e gráfico ao reabrir.
