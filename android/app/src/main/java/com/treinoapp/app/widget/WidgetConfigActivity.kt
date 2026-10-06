@@ -50,7 +50,10 @@ class WidgetConfigActivity : AppCompatActivity() {
         if (::content.isInitialized && managing && widgetId == AppWidgetManager.INVALID_APPWIDGET_ID) showManager()
     }
 
-    private fun validId(id: Int): Boolean = AppWidgetManager.getInstance(this).getAppWidgetInfo(id)?.provider?.className in WidgetConfiguration.providers.map { it.name }
+    private fun validId(id: Int): Boolean {
+        val provider = AppWidgetManager.getInstance(this).getAppWidgetInfo(id)?.provider ?: return false
+        return WidgetConfiguration.providers.any { it.name == provider.className }
+    }
     private fun optionsFor(id: Int) = WidgetConfiguration.load(this, id,
         WidgetConfiguration.defaultMode(AppWidgetManager.getInstance(this).getAppWidgetInfo(id)?.provider?.className))
     private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()

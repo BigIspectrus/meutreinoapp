@@ -121,7 +121,7 @@ class MainActivity : BridgeActivity() {
             } else if (openActivity && safe == "progresso") {
                 "(function openMovement(attempt){if(window.abrirCardioPassos){window.abrirCardioPassos();}else if(attempt<40){setTimeout(()=>openMovement(attempt+1),250);}})(0);"
             } else if (startNext) {
-                "window.irParaAba && window.irParaAba('treinar'); setTimeout(()=>window.iniciarTreinoWidget && window.iniciarTreinoWidget(),250);"
+                "(function openWorkout(attempt){if(window.iniciarTreinoWidget){window.iniciarTreinoWidget();}else if(attempt<40){setTimeout(()=>openWorkout(attempt+1),250);}})(0);"
             } else {
                 "window.irParaAba && window.irParaAba('$safe');"
             }

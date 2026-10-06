@@ -109,6 +109,7 @@ class WidgetModesTest {
         val density = context.resources.displayMetrics.density
         val cases = listOf(WidgetMode.NUTRITION to 180, WidgetMode.WORKOUT to 180, WidgetMode.MOVEMENT to 180,
             WidgetMode.COMBINED to 180, WidgetMode.COMBINED to 280, WidgetMode.COMBINED to 380, WidgetMode.COMBINED to 460)
+        val failures = mutableListOf<String>()
         for ((mode, height) in cases) {
             val view = build(mode, height = height)
             val widthPx = (250 * density).toInt(); val heightPx = (height * density).toInt()
@@ -116,12 +117,17 @@ class WidgetModesTest {
             view.layout(0, 0, widthPx, heightPx)
             val action = listOf(R.id.widgetButton, R.id.widgetMealButton, R.id.widgetMovementButton).map { view.findViewById<View>(it) }.first { it.visibility == View.VISIBLE }
             val row = action.parent as View
-            assertTrue("$mode $height: ação fora do widget", row.bottom <= heightPx)
+            println("$mode $height: heightPx=$heightPx action=${row.top}..${row.bottom}")
+            if (row.bottom > heightPx) failures += "$mode $height: ação fora do widget (${row.bottom} > $heightPx)"
             for (id in listOf(R.id.widgetTrainingSection, R.id.widgetNutritionSection, R.id.widgetMovementSection)) {
                 val section = view.findViewById<View>(id)
-                if (section.visibility == View.VISIBLE) assertTrue("$mode $height: conteúdo sobrepõe o atalho", section.bottom <= row.top)
+                if (section.visibility == View.VISIBLE) {
+                    println("section $id: ${section.top}..${section.bottom}")
+                    if (section.bottom > row.top) failures += "$mode $height: conteúdo sobrepõe o atalho"
+                }
             }
         }
+        assertTrue(failures.joinToString("; "), failures.isEmpty())
     }
 
     @Test fun dayWeekAndZoneChangesDoNotRelabelOldValues() {
