@@ -1,4 +1,4 @@
-# TreinoApp v12.9.0 Beta — Refeições persistentes, planejamento e aparelhos
+# TreinoApp v12.9.1 Beta — Tipo de carga e metas semanais por músculo
 
 TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capacitor. A variante Beta pode coexistir com a Stable.
 
@@ -6,12 +6,21 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 
 - Stable: `com.treinoapp.app`
 - Beta: `com.treinoapp.beta`
-- Versão: `12.9.0`
-- versionCode: `120900`
+- Versão: `12.9.1`
+- versionCode: `120901`
 - Android: compile/target API 36, minSdk 26
 - Room: schema 7, somente migrações explícitas
 
-## Melhorias v12.9.0 — somente itens 1, 2, 3, 4, 7 e 9 da nova lista
+## Melhorias v12.9.1 — somente itens 1 e 8 da última lista
+
+- tipo de carga por exercício: total, por halter, por lado ou assistência; valores históricos não convertidos e modo salvo nas novas séries/rascunhos;
+- comparativos, PRs e tendências por padrão, sem comparar tipos diferentes; assistência não gera PR de carga/e1RM nem volume levantado;
+- volume de halteres/lados mantém kg informados × reps, explicitamente sem conversão automática para carga total;
+- faixas semanais manuais de séries diretas/indiretas por músculo, inclusive com contagem zero; sem prescrição ou equivalência entre tipos de série;
+- metas e configurações incluídas nos backups; detalhes em `NOTAS_v12.9.1_BETA.md`;
+- somente compilação/identidade/assinatura, sem executar testes.
+
+## Melhorias v12.9.0 — somente itens 1, 2, 3, 4, 7 e 9 da lista anterior
 
 - montagem de refeição guardada automaticamente e retomável, com data/horário/finalidade e snapshots dos alimentos;
 - porções habituais pessoais, preenchimento explícito e revisão antes do consumo;

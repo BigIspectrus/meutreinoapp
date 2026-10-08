@@ -1,8 +1,8 @@
-const APP_VERSION = '12.9.0';
-const BUILD = '2026.10.08.1';
+const APP_VERSION = '12.9.1';
+const BUILD = '2026.10.08.2';
 const CACHE_PREFIX = 'treinoapp-';
 const CACHE_NAME = `${CACHE_PREFIX}v${APP_VERSION}-${BUILD}`;
-const APP_SHELL = ['./', './index.html', './mobile-ui.css', './mobile-fixes.css', './mobile-fixes.js', './nutrition-portions.js', './workflow-features.css', './workflow-store.js', './nutrition-workflow.js', './exercise-toolkit.js', './activity.css', './personalization.css', './personalization.js', './activity.js', './meal-builder.js', './nutrition-days.js', './movement.js', './manifest.json', './VERSION', './BUILD.json', './icon-192.png', './icon-512.png', './data/taco-v4.json', './data/common-foods.js'];
+const APP_SHELL = ['./', './index.html', './mobile-ui.css', './mobile-fixes.css', './mobile-fixes.js', './nutrition-portions.js', './workflow-features.css', './workflow-store.js', './nutrition-workflow.js', './exercise-toolkit.js', './load-conventions.js', './muscle-goals.js', './activity.css', './personalization.css', './personalization.js', './activity.js', './meal-builder.js', './nutrition-days.js', './movement.js', './manifest.json', './VERSION', './BUILD.json', './icon-192.png', './icon-512.png', './data/taco-v4.json', './data/common-foods.js'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));
