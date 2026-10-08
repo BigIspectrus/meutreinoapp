@@ -31,6 +31,8 @@ Autorização após a v12.8.6: implementar o tópico 10 na v12.8.7, gerar APK e 
 
 ## Regras de entrega
 
+Após a v12.8.9, o usuário autorizou juntos somente os itens 1, 2, 3, 4, 7 e 9 da NOVA lista: rascunho alimentar persistente, porções habituais, notas por aparelho, substitutos favoritos, planejamento alimentar separado do consumo e séries semanais por músculo. Entregar todos na v12.9.0. Não confundir com a numeração da lista antiga concluída e não antecipar os demais itens. Manter a preferência de não executar testes; compilar e gerar APK assinado.
+
 - Foco no APK Android/Beta e preservação dos dados, assinatura e pacote existentes.
 - Verificar em proporção ao risco; gerar APK assinado quando o tópico mudar o aplicativo.
 - Informar o que foi feito, o que foi testado e o que depende de verificação física.

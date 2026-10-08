@@ -1,0 +1,71 @@
+/* v12.9.0 — configuração de aparelhos, favoritos e séries por músculo. */
+const WORKOUT_MUSCLES=['Peitoral','Dorsais','Trapézio','Deltoide anterior','Deltoide lateral','Deltoide posterior','Bíceps','Tríceps','Antebraços','Quadríceps','Posterior de coxa','Glúteos','Panturrilhas','Abdômen','Lombar'];
+let _exerciseEditingName='',_exerciseFavoriteDraft=[],_occupiedExercise='',_addSessaoTargetEx='',_muscleWeekOffset=0;
+function getPerfisExercicios(){const raw=window.TreinoWorkflowStore.read(window.TreinoWorkflowStore.keys.profiles,[]);return Array.isArray(raw)?raw.filter(p=>p?.exercise&&typeof p.exercise==='string').map(p=>({exercise:p.exercise,notes:String(p.notes||'').slice(0,1000),primary:[...new Set((Array.isArray(p.primary)?p.primary:[]).filter(m=>WORKOUT_MUSCLES.includes(m)))],secondary:[...new Set((Array.isArray(p.secondary)?p.secondary:[]).filter(m=>WORKOUT_MUSCLES.includes(m)&&!(p.primary||[]).includes(m)))],alternatives:[...new Set((Array.isArray(p.alternatives)?p.alternatives:[]).filter(e=>typeof e==='string'&&e&&chaveExercicioSessao(e)!==chaveExercicioSessao(p.exercise)))],updatedAt:Number(p.updatedAt)||0})):[];}
+function getPerfilExercicio(ex){return getPerfisExercicios().find(p=>chaveExercicioSessao(p.exercise)===chaveExercicioSessao(ex))||{exercise:ex,notes:'',primary:[],secondary:[],alternatives:[]};}
+function exerciciosConhecidosToolkit(){return [...new Set([...Object.values(obterExerciciosSalvos()).flat(),...getHist().map(r=>r.exercicio),...getTreinosSalvos().flatMap(t=>t.exercicios||[])].filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));}
+function abrirCatalogoAparelhos(){document.getElementById('exerciseProfileCatalog').innerHTML='<option value="">Escolha um exercício…</option>'+exerciciosConhecidosToolkit().map(ex=>'<option value="'+esc(ex)+'">'+esc(ex)+'</option>').join('');document.getElementById('modalExerciseProfileCatalog').classList.add('open');}
+function abrirPerfilExercicio(ex,showMuscles=false){
+  if(!ex)return;_exerciseEditingName=ex;const profile=getPerfilExercicio(ex);_exerciseFavoriteDraft=[...profile.alternatives];
+  document.getElementById('exerciseProfileTitle').textContent=ex;document.getElementById('exerciseProfileNotes').value=profile.notes;
+  for(const role of ['primary','secondary'])document.getElementById('exerciseMuscles-'+role).innerHTML=WORKOUT_MUSCLES.map(m=>'<label class="muscle-option"><input type="checkbox" data-muscle-role="'+role+'" value="'+esc(m)+'"'+(profile[role].includes(m)?' checked':'')+' onchange="evitarMusculosDuplicados()">'+esc(m)+'</label>').join('');
+  const group=grupoDoExercicio(ex),known=exerciciosConhecidosToolkit().filter(x=>chaveExercicioSessao(x)!==chaveExercicioSessao(ex));
+  document.getElementById('exerciseAlternativeSelect').innerHTML='<option value="">Escolha um substituto favorito…</option>'+known.filter(x=>grupoDoExercicio(x)===group).map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('')+'<optgroup label="Outros grupos">'+known.filter(x=>grupoDoExercicio(x)!==group).map(x=>'<option value="'+esc(x)+'">'+esc(x)+' · '+esc(grupoDoExercicio(x)||'Sem grupo')+'</option>').join('')+'</optgroup>';
+  renderizarFavoritosPerfil();evitarMusculosDuplicados();document.getElementById('exerciseMuscleDetails').open=showMuscles;document.getElementById('modalExerciseProfile').classList.add('open');
+}
+function evitarMusculosDuplicados(){const primary=[...document.querySelectorAll('[data-muscle-role="primary"]:checked')].map(el=>el.value);document.querySelectorAll('[data-muscle-role="secondary"]').forEach(el=>{el.disabled=primary.includes(el.value);if(el.disabled)el.checked=false;});}
+function adicionarFavoritoPerfil(){const ex=document.getElementById('exerciseAlternativeSelect').value;if(!ex)return;if(!_exerciseFavoriteDraft.some(x=>chaveExercicioSessao(x)===chaveExercicioSessao(ex)))_exerciseFavoriteDraft.push(ex);renderizarFavoritosPerfil();}
+function removerFavoritoPerfil(index){_exerciseFavoriteDraft.splice(index,1);renderizarFavoritosPerfil();}
+function renderizarFavoritosPerfil(){document.getElementById('exerciseAlternativeList').innerHTML=_exerciseFavoriteDraft.length?_exerciseFavoriteDraft.map((ex,i)=>'<div class="exercise-favorite-row"><span>'+esc(ex)+'</span><button type="button" class="btn btn-ghost btn-sm" onclick="removerFavoritoPerfil('+i+')" aria-label="Remover favorito">×</button></div>').join(''):'<p class="nutrition-note">Cadastre os aparelhos/exercícios que você prefere usar como alternativa. Não há equivalência de carga automática.</p>';}
+function salvarPerfilExercicio(){
+  if(!_exerciseEditingName)return;const primary=[...document.querySelectorAll('[data-muscle-role="primary"]:checked')].map(el=>el.value),secondary=[...document.querySelectorAll('[data-muscle-role="secondary"]:checked')].map(el=>el.value).filter(m=>!primary.includes(m));
+  if(secondary.length&&!primary.length)return toast('Escolha pelo menos um músculo principal para usar os secundários.','warn');
+  const profile={exercise:_exerciseEditingName,notes:document.getElementById('exerciseProfileNotes').value.trim().slice(0,1000),primary,secondary,alternatives:[..._exerciseFavoriteDraft],updatedAt:Date.now()},all=getPerfisExercicios().filter(p=>chaveExercicioSessao(p.exercise)!==chaveExercicioSessao(profile.exercise));
+  if(window.TreinoWorkflowStore.save(window.TreinoWorkflowStore.keys.profiles,all.concat(profile))){fecharModal('modalExerciseProfile');injetarFerramentasExercicios();renderizarSeriesMusculares();toast('Configuração deste exercício guardada','success');}
+}
+function injetarFerramentasExercicios(){
+  for(const card of getExerciseCards()){const ex=card.dataset.ex,body=card.querySelector('.ex-card-body');if(!body||!ex)continue;
+    let box=body.querySelector('.exercise-context-tools');if(!box){box=document.createElement('div');box.className='exercise-context-tools';body.prepend(box);}
+    const profile=getPerfilExercicio(ex);box.innerHTML='<div class="workflow-actions"><button type="button" class="btn btn-ghost btn-sm" onclick=\'abrirPerfilExercicio('+jsArg(ex)+')\'>Notas do aparelho</button><button type="button" class="btn btn-outline btn-sm" onclick=\'abrirAparelhoOcupado('+jsArg(ex)+')\''+(card.classList.contains('skipped')?' disabled':'')+'>Aparelho ocupado</button></div>';
+    if(profile.notes){const note=document.createElement('div');note.className='exercise-note-preview';note.textContent=profile.notes;box.appendChild(note);}
+  }
+}
+function abrirAparelhoOcupado(ex){
+  const card=getExerciseCards().find(c=>c.dataset.ex===ex&&!c.classList.contains('skipped'));if(!card)return;_occupiedExercise=ex;
+  document.getElementById('occupiedExerciseTitle').textContent='Alternativas para '+ex;const profile=getPerfilExercicio(ex),known=exerciciosConhecidosToolkit();
+  document.getElementById('occupiedExerciseList').innerHTML=profile.alternatives.length?profile.alternatives.map(alt=>{const valid=known.includes(alt)&&!getExerciseCards().some(c=>chaveExercicioSessao(c.dataset.ex)===chaveExercicioSessao(alt));return '<button type="button" class="btn btn-outline" onclick=\'prepararSubstitutoFavorito('+jsArg(alt)+')\''+(!valid?' disabled':'')+'>'+esc(alt)+(!valid?' · já está na sessão ou indisponível':'')+'</button>';}).join(''):'<p class="nutrition-note">Nenhum favorito ainda. Cadastre as alternativas que fazem sentido para você.</p>';
+  document.getElementById('modalOccupiedExercise').classList.add('open');
+}
+function configurarFavoritosOcupado(){fecharModal('modalOccupiedExercise');abrirPerfilExercicio(_occupiedExercise);}
+function exercicioTemSeriesIniciadas(card){return !!card&&[...card.querySelectorAll('.serie-row')].some(row=>row.querySelector('.serie-check.checked')||Number(row.dataset.setStartedAt)>0);}
+function alvoAlteracaoExercicioSessao(){return getExerciseCards().find(c=>c.dataset.ex===_addSessaoTargetEx&&!c.classList.contains('skipped'))||cardExercicioAtivoSessao();}
+function prepararSubstitutoFavorito(alt){
+  const card=getExerciseCards().find(c=>c.dataset.ex===_occupiedExercise&&!c.classList.contains('skipped'));if(!card)return;
+  const group=grupoDoExercicio(alt);if(!group)return toast('Cadastre esse exercício no catálogo antes de usá-lo.','warn');
+  focarExercicioCard(card,false);fecharModal('modalOccupiedExercise');abrirAddExSessao();_addSessaoTargetEx=card.dataset.ex;
+  document.getElementById('addSessaoGrupo').value=group;atualizarExsAddSessao();document.getElementById('addSessaoEx').value=alt;
+  const started=exercicioTemSeriesIniciadas(card);document.getElementById('addSessaoAction').value=started?'add':'replace';atualizarAcaoAddSessao();
+  if(started)document.getElementById('addSessaoActionNote').textContent='Já há séries iniciadas/concluídas: o favorito será adicional. O original e suas séries serão preservados; finalize apenas o que realmente concluir.';
+}
+function capturarMapaMuscularSerie(ex){const profile=getPerfilExercicio(ex);return profile.primary.length?{primary:[...profile.primary],secondary:[...profile.secondary],capturedAt:Date.now()}:null;}
+function mapaMuscularRegistro(row){
+  const saved=row.muscleSnapshot;if(saved&&Array.isArray(saved.primary)&&saved.primary.some(m=>WORKOUT_MUSCLES.includes(m)))return {primary:[...new Set(saved.primary.filter(m=>WORKOUT_MUSCLES.includes(m)))],secondary:[...new Set((Array.isArray(saved.secondary)?saved.secondary:[]).filter(m=>WORKOUT_MUSCLES.includes(m)&&!saved.primary.includes(m)))],current:false};
+  const profile=getPerfilExercicio(row.exercicio);return {primary:profile.primary,secondary:profile.secondary,current:true};
+}
+function periodoMuscular(){const date=new Date(hoje()+'T12:00:00Z'),offset=(date.getUTCDay()+6)%7;date.setUTCDate(date.getUTCDate()-offset+7*_muscleWeekOffset);const start=date.toISOString().slice(0,10);return {start,end:dataOffsetNutricao(start,6)};}
+function mudarSemanaMuscular(delta){if(delta===1&&_muscleWeekOffset>=0)return;_muscleWeekOffset+=delta;renderizarSeriesMusculares();}
+function renderizarSeriesMusculares(){
+  const el=document.getElementById('muscleWeeklyContent');if(!el)return;const period=periodoMuscular(),rows=getHist().filter(r=>r.data>=period.start&&r.data<=period.end&&r.data<=hoje()&&Number(r.reps)>0&&Number.isFinite(Number(r.carga))&&Number(r.carga)>=0&&normalizarSetType(r.setType)!=='warmup'),counts=new Map(WORKOUT_MUSCLES.map(m=>[m,{direct:0,indirect:0}])),unknown=new Map();let current=0,mapped=0;
+  for(const row of rows){const map=mapaMuscularRegistro(row);if(!map.primary.length){unknown.set(row.exercicio,(unknown.get(row.exercicio)||0)+1);continue;}mapped++;if(map.current)current++;for(const muscle of map.primary)counts.get(muscle).direct++;for(const muscle of map.secondary)counts.get(muscle).indirect++;}
+  const dateLabel=date=>date.split('-').reverse().join('/');
+  el.innerHTML='<div class="workflow-week-nav"><button class="btn btn-ghost btn-sm" onclick="mudarSemanaMuscular(-1)" aria-label="Semana anterior">‹</button><strong>'+dateLabel(period.start)+' – '+dateLabel(period.end)+'</strong><button class="btn btn-ghost btn-sm" onclick="mudarSemanaMuscular(1)"'+(_muscleWeekOffset>=0?' disabled':'')+' aria-label="Próxima semana">›</button></div><p class="nutrition-note">'+rows.length+' séries registradas · '+mapped+' mapeadas · aquecimento excluído. Treino em andamento não entra nesta contagem.</p>'+(mapped?'<div class="muscle-weekly-table"><div><strong>Músculo</strong><strong>Diretas</strong><strong>Indiretas</strong></div>'+[...counts].filter(([,c])=>c.direct||c.indirect).map(([muscle,c])=>'<div><span>'+esc(muscle)+'</span><b>'+c.direct+'</b><b>'+c.indirect+'</b></div>').join('')+'</div>':'<p class="nutrition-note">Mapeie os músculos dos seus exercícios para detalhar as séries.</p>')+(unknown.size?'<details open><summary class="nutrition-note">Sem mapeamento: '+(rows.length-mapped)+' séries</summary><div class="unmapped-exercises">'+[...unknown].map(([ex,n])=>'<button class="btn btn-outline btn-sm" onclick=\'abrirPerfilExercicio('+jsArg(ex)+')\'>'+esc(ex)+' · '+n+' séries</button>').join('')+'</div></details>':'')+'<p class="nutrition-note">Uma série pode aparecer em mais de um músculo. Indiretas são exposições registradas, sem pesos de equivalência. '+(current?current+' séries usam sua classificação atual por não terem um mapeamento histórico salvo.':'As classificações salvas são preservadas.')+'</p>';
+}
+const _prepareAcademiaBeforeToolkit=prepararModoAcademiaCards;
+prepararModoAcademiaCards=function(){const result=_prepareAcademiaBeforeToolkit.apply(this,arguments);injetarFerramentasExercicios();return result;};
+const _createExerciseBeforeToolkit=criarCardExercicioSessao;
+criarCardExercicioSessao=function(){const card=_createExerciseBeforeToolkit.apply(this,arguments);injetarFerramentasExercicios();return card;};
+const _openAddBeforeToolkit=abrirAddExSessao;
+abrirAddExSessao=function(){_addSessaoTargetEx=cardExercicioAtivoSessao()?.dataset.ex||'';return _openAddBeforeToolkit.apply(this,arguments);};
+const _subTabBeforeMuscles=ativarSubTab;
+ativarSubTab=function(id){const result=_subTabBeforeMuscles.apply(this,arguments);if(id==='evolucao')renderizarSeriesMusculares();return result;};
+document.addEventListener('DOMContentLoaded',()=>{renderizarSeriesMusculares();});

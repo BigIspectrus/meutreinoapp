@@ -11,7 +11,7 @@ const vendor = resolve(web, 'vendor');
 mkdirSync(vendor, { recursive: true });
 writeCommonFoods();
 // Compilar a sintaxe do controlador global sem executar testes ou código do app.
-for (const file of ['personalization.js', 'nutrition-portions.js', 'mobile-fixes.js', 'meal-builder.js']) {
+for (const file of ['personalization.js', 'nutrition-portions.js', 'mobile-fixes.js', 'meal-builder.js', 'workflow-store.js', 'nutrition-workflow.js', 'exercise-toolkit.js']) {
   transformSync(readFileSync(resolve(web, file), 'utf8'), { loader: 'js', target: 'es2020', sourcefile: file });
 }
 for (const [index, script] of [...readFileSync(resolve(web, 'index.html'), 'utf8').matchAll(/<script>([\s\S]*?)<\/script>/g)].entries()) {

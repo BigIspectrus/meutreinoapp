@@ -8,7 +8,7 @@ function normalizarPorcaoRegistradaNutricao(raw,grams){
 }
 function capturarPorcaoNutricao(food,amount,unit,grams){
   let serving={unit:'grams',amount:Number(amount),gramsPerUnit:1,name:'g'};
-  if(unit==='ml')serving={unit:'ml',amount:Number(amount),gramsPerUnit:Number(referenciaComumNutricao(food)?.liquidGramsPerMl),name:'mL'};
+  if(unit==='ml')serving={unit:'ml',amount:Number(amount),gramsPerUnit:Number(food.liquidGramsPerMlSnapshot||referenciaComumNutricao(food)?.liquidGramsPerMl),name:'mL'};
   else if(String(unit).startsWith('measure:')){const measure=(food.measures||[])[Number(unit.split(':')[1])];serving={unit:'measure',amount:Number(amount),gramsPerUnit:Number(measure?.grams),name:String(measure?.name||'')};}
   return normalizarPorcaoRegistradaNutricao(serving,grams);
 }
@@ -23,6 +23,7 @@ function referenciaPorcaoRegistroNutricao(entry,food=null){
 }
 function textoPorcaoNutricao(serving){
   const amount=Number(serving.amount).toLocaleString('pt-BR',{maximumFractionDigits:2});
+  if(serving.unit==='measure'&&/^1\s+mL$/i.test(serving.name))return amount+' mL';
   if(serving.unit==='ml')return amount+' mL';if(serving.unit==='grams')return amount+' g';
   const name=String(serving.name),match=name.match(/^1\s+(unidade|clara|fatia|porção|colher|copo|xícara|ovo|banana)(\b|\s|$)(.*)$/i);
   if(!match)return amount+' × '+name;

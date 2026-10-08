@@ -1,4 +1,4 @@
-# TreinoApp v12.8.9 Beta — Área segura Android, macros e quantidades nas refeições
+# TreinoApp v12.9.0 Beta — Refeições persistentes, planejamento e aparelhos
 
 TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capacitor. A variante Beta pode coexistir com a Stable.
 
@@ -6,10 +6,20 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 
 - Stable: `com.treinoapp.app`
 - Beta: `com.treinoapp.beta`
-- Versão: `12.8.9`
-- versionCode: `120809`
+- Versão: `12.9.0`
+- versionCode: `120900`
 - Android: compile/target API 36, minSdk 26
 - Room: schema 7, somente migrações explícitas
+
+## Melhorias v12.9.0 — somente itens 1, 2, 3, 4, 7 e 9 da nova lista
+
+- montagem de refeição guardada automaticamente e retomável, com data/horário/finalidade e snapshots dos alimentos;
+- porções habituais pessoais, preenchimento explícito e revisão antes do consumo;
+- anotações por exercício/aparelho e alternativas favoritas pelo fluxo de troca existente, preservando séries já realizadas;
+- planejamento alimentar em armazenamento separado; projeções não viram consumo. Confirmação real grava um único lote com IDs estáveis;
+- séries por músculo/semana: mapeamento manual principal/secundário, aquecimento excluído, histórico sem mapeamento identificado e snapshots nas novas sessões;
+- todos os novos dados entram em backup/importação/snapshots/reset, sem alteração de pacote, certificado, metas manuais ou schema Room;
+- detalhes em `NOTAS_v12.9.0_BETA.md`. Compilação apenas, sem testes por preferência do usuário.
 
 ## Correções v12.8.9
 
