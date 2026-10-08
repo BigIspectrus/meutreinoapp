@@ -30,7 +30,8 @@ class ExternalBackupRepository(context: Context) {
         require(folder != null && folder.isDirectory && folder.canWrite()) { "Escolha uma pasta com permissão de gravação." }
         val oldUri = prefs.getString("folderUri", null)
         check(prefs.edit().putString("folderUri", uri.toString()).putString("folderName", folder.name ?: "Pasta selecionada")
-            .putString("lastError", "").putLong("lastSuccessAt", 0L).putString("lastFile", "").commit()) { "Não foi possível salvar a pasta." }
+            .putBoolean("enabled", false).putString("lastError", "").putLong("lastSuccessAt", 0L).putString("lastFile", "").commit()) { "Não foi possível salvar a pasta." }
+        ExternalBackupScheduler.cancel(context)
         // A nova seleção só substitui o acesso anterior depois de estar salva.
         if (oldUri != null && oldUri != uri.toString()) runCatching {
             context.contentResolver.releasePersistableUriPermission(Uri.parse(oldUri), flags)
