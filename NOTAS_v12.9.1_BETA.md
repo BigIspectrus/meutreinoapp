@@ -8,7 +8,7 @@ Exemplos: halteres de 20 kg cada = 20 por halter; 30 kg de anilhas de cada lado 
 
 Cada nova série da sessão recebe `loadSnapshot`; o rascunho guarda o tipo de todas as linhas, inclusive vazias. Rascunhos anteriores permanecem no padrão indefinido. Não se altera o tipo com séries iniciadas/concluídas. Antes de começar, trocar exige confirmar a limpeza das cargas/comparativos daquele exercício, mantendo repetições; nenhuma série histórica é regravada.
 
-Preenchimento anterior, comparativos de carga, PRs avançados e gráficos/insights por exercício separam os padrões. Configurar outro tipo pode deixar o gráfico atual sem dados até registrar novas séries; dados anteriores permanecem no histórico, identificados pelo tipo. Edição de registros preserva o tipo salvo e aceita IDs textuais/numéricos e carga zero válida.
+Preenchimento anterior, comparativos de carga, PRs avançados e gráficos/insights por exercício separam os padrões. Configurar outro tipo pode deixar o gráfico atual sem dados até registrar novas séries; dados anteriores permanecem no histórico, identificados pelo tipo. Metas de carga antigas permanecem no padrão indefinido; novas guardam o tipo e não mudam de interpretação ao alterar o perfil do exercício. Edição de registros preserva o tipo salvo e aceita IDs textuais/numéricos e carga zero válida.
 
 ## 8. Metas semanais manuais de séries por músculo
 
