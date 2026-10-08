@@ -1,7 +1,7 @@
 import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildSync } from 'esbuild';
+import { buildSync, transformSync } from 'esbuild';
 import { writeCommonFoods } from './build-common-foods.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -10,6 +10,10 @@ const web = resolve(root, 'web');
 const vendor = resolve(web, 'vendor');
 mkdirSync(vendor, { recursive: true });
 writeCommonFoods();
+// Compilar a sintaxe do controlador global sem executar testes ou código do app.
+transformSync(readFileSync(resolve(web, 'personalization.js'), 'utf8'), {
+  loader: 'js', target: 'es2020', sourcefile: 'personalization.js'
+});
 
 buildSync({
   entryPoints:[resolve(root, 'src/native-bridge.js')],
