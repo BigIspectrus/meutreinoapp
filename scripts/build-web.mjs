@@ -11,9 +11,12 @@ const vendor = resolve(web, 'vendor');
 mkdirSync(vendor, { recursive: true });
 writeCommonFoods();
 // Compilar a sintaxe do controlador global sem executar testes ou código do app.
-transformSync(readFileSync(resolve(web, 'personalization.js'), 'utf8'), {
-  loader: 'js', target: 'es2020', sourcefile: 'personalization.js'
-});
+for (const file of ['personalization.js', 'nutrition-portions.js', 'mobile-fixes.js', 'meal-builder.js']) {
+  transformSync(readFileSync(resolve(web, file), 'utf8'), { loader: 'js', target: 'es2020', sourcefile: file });
+}
+for (const [index, script] of [...readFileSync(resolve(web, 'index.html'), 'utf8').matchAll(/<script>([\s\S]*?)<\/script>/g)].entries()) {
+  transformSync(script[1], { loader: 'js', target: 'es2020', sourcefile: `index-inline-${index}.js` });
+}
 
 buildSync({
   entryPoints:[resolve(root, 'src/native-bridge.js')],

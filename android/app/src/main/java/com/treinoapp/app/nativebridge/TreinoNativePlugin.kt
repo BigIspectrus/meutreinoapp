@@ -61,6 +61,20 @@ class TreinoNativePlugin : Plugin() {
     private val externalBackup by lazy { ExternalBackupRepository(context) }
 
     @PluginMethod
+    fun setWindowBackground(call: PluginCall) {
+        val light = call.getBoolean("light", false) == true
+        activity.runOnUiThread {
+            val color = android.graphics.Color.parseColor(if (light) "#f4f6fb" else "#10141c")
+            activity.window.decorView.setBackgroundColor(color)
+            if (Build.VERSION.SDK_INT < 35) {
+                activity.window.statusBarColor = color
+                activity.window.navigationBarColor = color
+            }
+            call.resolve()
+        }
+    }
+
+    @PluginMethod
     fun chooseBackupFolder(call: PluginCall) {
         activity.runOnUiThread { (activity as? MainActivity)?.chooseBackupFolder(call) ?: call.reject("Activity indisponível") }
     }

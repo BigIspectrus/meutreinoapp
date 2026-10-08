@@ -71,7 +71,7 @@ function salvarMontagemRefeicaoNutricao(){
   if(!NUTRITION_MEALS.some(m=>m.id===mealType)||!/^\d{4}-\d{2}-\d{2}$/.test(draft.date)||!/^([01]\d|2[0-3]):[0-5]\d$/.test(time))return toast('Confira a data, refeição e horário.','warn');
   draft.saving=true;renderizarMontagemRefeicaoNutricao();
   const now=Date.now(),rows=draft.items.slice(),entries=rows.map(row=>({id:gerarId('meal'),date:draft.date,time,mealType,foodId:row.food.id,name:row.food.name,
-    grams:arredondarNutricao(row.grams),...calcularPorGramasNutricao(row.food,row.grams),createdAt:now,updatedAt:now}));
+    grams:arredondarNutricao(row.grams),serving:capturarPorcaoNutricao(row.food,row.amount,row.unit,row.grams),...calcularPorGramasNutricao(row.food,row.grams),createdAt:now,updatedAt:now}));
   try{
     // Um único setItem para o conjunto inteiro. Se falhar, o rascunho permanece.
     salvarRegistrosNutricaoLocal(getRegistrosNutricao().concat(entries));

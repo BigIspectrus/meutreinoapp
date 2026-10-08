@@ -1,4 +1,4 @@
-# TreinoApp v12.8.8 Beta — Backup externo automático e painel personalizável
+# TreinoApp v12.8.9 Beta — Área segura Android, macros e quantidades nas refeições
 
 TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capacitor. A variante Beta pode coexistir com a Stable.
 
@@ -6,10 +6,19 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 
 - Stable: `com.treinoapp.app`
 - Beta: `com.treinoapp.beta`
-- Versão: `12.8.8`
-- versionCode: `120808`
+- Versão: `12.8.9`
+- versionCode: `120809`
 - Android: compile/target API 36, minSdk 26
 - Room: schema 7, somente migrações explícitas
+
+## Correções v12.8.9
+
+- usa áreas seguras de SystemBars em todos os controles de borda e acompanha a altura real do cabeçalho do treino, sem assumir 65 px para posicionar a segunda barra;
+- resumo de kcal/Prot/Carb/Gord por refeição, visível com a refeição fechada;
+- snapshot opcional `serving` com quantidade/medida original e peso por medida; preservado em registros, cópias, refeições prontas e backups;
+- registros antigos mostram equivalência aproximada quando a referência é única. Valores de consumo e metas existentes não são recalculados pela exibição;
+- edição em gramas ou medida e rodapé de refeição compacto;
+- sem testes por solicitação/preferência do usuário. Compilação apenas; detalhes em `NOTAS_v12.8.9_BETA.md`.
 
 ## Backup e painel v12.8.8 — tópicos 13 e 14
 

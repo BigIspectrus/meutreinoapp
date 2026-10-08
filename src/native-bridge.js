@@ -1,4 +1,4 @@
-import { Capacitor, registerPlugin } from '@capacitor/core';
+import { Capacitor, registerPlugin, SystemBars } from '@capacitor/core';
 
 const Native = registerPlugin('TreinoNative');
 const BarcodeScanner = registerPlugin('CapacitorBarcodeScanner');
@@ -11,6 +11,7 @@ function call(method, payload = {}) {
 
 window.TreinoNativeBridge = {
   isNative: native,
+  setSystemBarsStyle: style => native() ? SystemBars.setStyle({ style }).then(() => call('setWindowBackground', {light:style==='LIGHT'})) : Promise.resolve({native:false}),
   getNativeInfo: () => call('getNativeInfo'),
   getNativeStorageInfo: () => call('getNativeStorageInfo'),
   openUrl: url => call('openUrl', { url }),
