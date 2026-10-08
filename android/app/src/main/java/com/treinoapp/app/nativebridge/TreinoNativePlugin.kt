@@ -58,6 +58,43 @@ class TreinoNativePlugin : Plugin() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val health by lazy { HealthConnectRepository(context) }
     private val db by lazy { TreinoDatabase.get(context) }
+    private val externalBackup by lazy { ExternalBackupRepository(context) }
+
+    @PluginMethod
+    fun chooseBackupFolder(call: PluginCall) {
+        activity.runOnUiThread { (activity as? MainActivity)?.chooseBackupFolder(call) ?: call.reject("Activity indisponível") }
+    }
+
+    @PluginMethod
+    fun getExternalBackupStatus(call: PluginCall) {
+        scope.launch { try { resolve(call, JSObject(externalBackup.status().toString())) }
+            catch (error: Exception) { reject(call, "Não foi possível consultar o backup.", error) } }
+    }
+
+    @PluginMethod
+    fun configureExternalBackup(call: PluginCall) {
+        scope.launch {
+            try {
+                if (call.getBoolean("clearMirror", false) == true) externalBackup.clearMirror()
+                val result = externalBackup.configure(call.getBoolean("enabled", false) == true,
+                    call.getInt("hours", 24) ?: 24, call.getInt("keep", 0) ?: 0)
+                resolve(call, JSObject(result.toString()))
+            } catch (error: Exception) { reject(call, error.message ?: "Não foi possível configurar o backup.", error) }
+        }
+    }
+
+    @PluginMethod
+    fun stageExternalBackup(call: PluginCall) {
+        val content = call.getString("content") ?: return call.reject("Backup obrigatório")
+        scope.launch { try { resolve(call, JSObject(externalBackup.stage(content).toString())) }
+            catch (error: Exception) { reject(call, error.message ?: "Não foi possível preparar o backup.", error) } }
+    }
+
+    @PluginMethod
+    fun writeExternalBackup(call: PluginCall) {
+        scope.launch { try { resolve(call, JSObject(externalBackup.write(force = true).toString())) }
+            catch (error: Exception) { reject(call, error.message ?: "Não foi possível gravar o backup.", error) } }
+    }
 
     @PluginMethod
     fun getNativeInfo(call: PluginCall) {

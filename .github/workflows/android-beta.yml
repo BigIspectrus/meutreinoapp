@@ -3,6 +3,11 @@ on:
   push:
     branches: [beta]
   workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Gerar APK sem executar testes, quando solicitado pelo usuário'
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
@@ -27,7 +32,9 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: npm run build:web
       - run: python scripts/validate_project.py
+        if: ${{ !inputs.skip_tests && !contains(github.event.head_commit.message, '[skip-tests]') }}
       - run: npm run test:ui
+        if: ${{ !inputs.skip_tests && !contains(github.event.head_commit.message, '[skip-tests]') }}
       - run: npm run prepare:android
       - name: Restaurar chave de assinatura
         shell: bash
@@ -45,13 +52,16 @@ jobs:
           TREINOAPP_KEY_PASSWORD: ${{ secrets.TREINOAPP_KEY_PASSWORD }}
           GITHUB_SHA: ${{ github.sha }}
           BUILD_TIME: ${{ github.event.head_commit.timestamp }}
+          SKIP_REQUESTED_TESTS: ${{ inputs.skip_tests || contains(github.event.head_commit.message, '[skip-tests]') }}
         # Room exporta o mesmo schema para ambas as variantes. Etapas separadas
         # impedem leitura/escrita simultânea do JSON por processadores KAPT.
         run: |
-          gradle testBetaDebugUnitTest --max-workers=1 --stacktrace
+          if [ "$SKIP_REQUESTED_TESTS" != "true" ]; then
+            gradle testBetaDebugUnitTest --max-workers=1 --stacktrace
+          fi
           gradle assembleBetaRelease bundleBetaRelease --max-workers=1 --stacktrace
       - name: Publicar resultados dos testes Android
-        if: always()
+        if: ${{ always() && !inputs.skip_tests && !contains(github.event.head_commit.message, '[skip-tests]') }}
         uses: actions/upload-artifact@v4
         with:
           name: TreinoApp-Testes-Android-${{ github.sha }}

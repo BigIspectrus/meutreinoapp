@@ -12,12 +12,33 @@ import com.getcapacitor.PluginCall
 import com.treinoapp.app.nativebridge.HealthConnectRepository
 import com.treinoapp.app.nativebridge.HealthSyncScheduler
 import com.treinoapp.app.nativebridge.TreinoNativePlugin
+import com.treinoapp.app.nativebridge.ExternalBackupRepository
+import com.treinoapp.app.nativebridge.ExternalBackupScheduler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MainActivity : BridgeActivity() {
     private var pendingHealthCall: PluginCall? = null
     private var pendingNutritionCall: PluginCall? = null
     private var pendingCoreCall: PluginCall? = null
+    private var pendingBackupFolderCall: PluginCall? = null
     private lateinit var healthRepository: HealthConnectRepository
+
+    private val backupFolderLauncher = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        val call = pendingBackupFolderCall
+        pendingBackupFolderCall = null
+        if (call != null) {
+            if (uri == null) call.resolve(com.getcapacitor.JSObject().apply { put("cancelled", true) })
+            else CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val repository = ExternalBackupRepository(this@MainActivity)
+                    repository.setFolder(uri)
+                    runOnUiThread { call.resolve(com.getcapacitor.JSObject(repository.status().toString())) }
+                } catch (error: Exception) { runOnUiThread { call.reject(error.message ?: "Não foi possível usar esta pasta.") } }
+            }
+        }
+    }
 
     private val healthPermissionsLauncher = registerForActivityResult(
         PermissionController.createRequestPermissionResultContract()
@@ -61,6 +82,7 @@ class MainActivity : BridgeActivity() {
         registerPlugin(TreinoNativePlugin::class.java)
         super.onCreate(savedInstanceState)
         HealthSyncScheduler.ensurePeriodic(this)
+        ExternalBackupScheduler.ensure(this)
         routeIntent(intent)
     }
 
@@ -77,6 +99,12 @@ class MainActivity : BridgeActivity() {
         }
         pendingHealthCall = call
         healthPermissionsLauncher.launch(healthRepository.requestablePermissions())
+    }
+
+    fun chooseBackupFolder(call: PluginCall) {
+        if (pendingBackupFolderCall != null) { call.reject("O seletor de pasta já está aberto."); return }
+        pendingBackupFolderCall = call
+        backupFolderLauncher.launch(null)
     }
 
     fun requestNutritionPermissions(call: PluginCall) {

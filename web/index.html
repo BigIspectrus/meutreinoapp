@@ -10,8 +10,8 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <title>TreinoApp v12</title>
-  <meta name="treinoapp-version" content="12.8.7">
-  <meta name="treinoapp-build" content="2026.10.06.8">
+  <meta name="treinoapp-version" content="12.8.8">
+  <meta name="treinoapp-build" content="2026.10.08.9">
   <script defer src="./vendor/chart.umd.js"></script>
   <script defer src="./vendor/jspdf.umd.min.js"></script>
   <script defer src="./vendor/qrcode.min.js"></script>
@@ -796,6 +796,7 @@
 </style>
   <link rel="stylesheet" href="./mobile-ui.css">
   <link rel="stylesheet" href="./activity.css">
+  <link rel="stylesheet" href="./personalization.css">
 </head>
 <body>
 
@@ -1064,6 +1065,9 @@
 </div>
 
 <!-- MODAL BACKUPS INTERNOS -->
+<div class="modal-overlay" id="modalHomeLayout">
+  <div class="modal"><div class="modal-title">Seu painel inicial</div><p class="backup-external-note">Escolha o que aparece primeiro. Use as setas para ordenar e envie informações secundárias para “Em detalhes”.</p><div id="homeLayoutEditor" class="home-layout-editor"></div><div class="modal-footer"><button class="btn btn-ghost" onclick="fecharModal('modalHomeLayout')">Cancelar</button><button class="btn btn-primary" onclick="salvarPersonalizacaoInicio()">Salvar painel</button></div><button class="btn btn-ghost btn-sm" onclick="restaurarRascunhoPainel()">Restaurar organização padrão</button></div>
+</div>
 <div class="modal-overlay" id="modalSnapshots">
   <div class="modal" style="max-width:520px;">
     <div class="modal-title">Backups internos de segurança</div>
@@ -1361,14 +1365,21 @@
 <!-- ═══════════════ ABA: DASHBOARD ═══════════════ -->
 <div class="tab-content" id="aba-dashboard">
   <div id="dashHero"></div>
+  <div class="home-customize-bar"><button type="button" class="btn btn-ghost btn-sm" onclick="abrirPersonalizacaoInicio()">Personalizar início</button></div>
+  <div id="homeMainCards">
+  <div class="home-panel-slot" id="homeSlotWorkout"></div>
+  <div class="home-panel-slot" id="homeSlotWeek"></div>
+  <div class="home-panel-slot" id="homeSlotShortcuts"></div>
   <div id="dashPlannedWorkout"></div>
-  <div id="dashNutritionToday"></div>
-  <button type="button" class="activity-dashboard" id="activityDashboard" onclick="abrirCardioPassos()" aria-label="Ver cardio e passos"></button>
+  <div class="home-panel-slot" id="homeSlotNutrition"><div id="dashNutritionToday"></div></div>
+  <div class="home-panel-slot" id="homeSlotMovement"><button type="button" class="activity-dashboard" id="activityDashboard" onclick="abrirCardioPassos()" aria-label="Ver cardio e passos"></button></div>
+  </div>
+  <div class="card home-empty" id="homeEmptyState" hidden><strong>Seu início, do seu jeito</strong><p>Escolha os cartões que quer ver aqui. As outras áreas continuam acessíveis pelo menu inferior.</p><button class="btn btn-outline" onclick="abrirPersonalizacaoInicio()">Escolher cartões</button></div>
   <button type="button" class="dashboard-more-toggle" id="dashboardMoreToggle" onclick="toggleDashboardSecondary()" aria-expanded="false">Ver evolução e conquistas <span aria-hidden="true">⌄</span></button>
   <div class="dashboard-secondary" id="dashboardSecondary">
-  <div id="dashDesafio"></div>
+  <div class="home-panel-slot" id="homeSlotChallenge"><div id="dashDesafio"></div></div>
 
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+  <div class="home-panel-slot" id="homeSlotCharts"><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
     <div class="card" style="margin-bottom:0;">
       <div class="card-title" style="font-size:.95em;margin-bottom:10px;">📈 Evolução rápida</div>
       <canvas id="dashMiniChart" height="120"></canvas>
@@ -1379,12 +1390,16 @@
     </div>
   </div>
 
+  </div>
   <!-- Peso corporal sparkline -->
+  <div class="home-panel-slot" id="homeSlotWeight">
   <div class="card" id="dashPesoCard" style="display:none;">
     <div class="card-title" style="font-size:.95em;margin-bottom:10px;">⚖️ Peso Corporal</div>
     <canvas id="dashPesoChart" height="80"></canvas>
   </div>
 
+  </div>
+  <div class="home-panel-slot" id="homeSlotLevel">
   <div class="card">
     <div class="card-title" style="justify-content:space-between;">
       <span>⭐ Nível & XP</span>
@@ -1392,11 +1407,15 @@
     </div>
     <div id="xpContent"></div>
   </div>
+  </div>
 
+  <div class="home-panel-slot" id="homeSlotAchievements">
   <div class="card">
     <div class="card-title">🏅 Conquistas recentes</div>
     <div class="conquistas-grid" id="dashConquistas"></div>
   </div>
+  </div>
+  <div class="home-panel-slot" id="homeSlotBackup"><div id="homeBackupSummary"></div></div>
   </div>
 </div>
 
@@ -2043,6 +2062,19 @@
       </select>
     </div>
   </div>
+  <div class="card" id="externalBackupCard" data-settings-group="dados" hidden>
+    <div class="card-title">Backup automático em pasta</div>
+    <p class="backup-external-note">Escolha ou crie uma pasta TreinoApp no Android. As cópias ficam fora do aplicativo e podem ser importadas em outro aparelho.</p>
+    <div class="external-backup-status" id="externalBackupStatus" aria-live="polite">Consultando...</div>
+    <button type="button" class="btn btn-outline" id="externalBackupFolderButton" onclick="escolherPastaBackupExterno()">Escolher pasta e ativar</button>
+    <div class="config-item"><label for="externalBackupEnabled">Cópias automáticas</label><select id="externalBackupEnabled" onchange="alterarConfigBackupExterno()"><option value="0">Desativadas</option><option value="1">Ativadas</option></select></div>
+    <div class="config-item"><label for="externalBackupHours">Frequência</label><select id="externalBackupHours" onchange="alterarConfigBackupExterno()"><option value="12">A cada 12 horas</option><option value="24">Diariamente</option><option value="168">Semanalmente</option></select></div>
+    <div class="config-item"><label for="externalBackupKeep">Versões automáticas</label><select id="externalBackupKeep" onchange="alterarConfigBackupExterno()"><option value="0">Guardar todas</option><option value="7">Manter as 7 últimas</option><option value="30">Manter as 30 últimas</option></select></div>
+    <button type="button" class="btn btn-primary" id="externalBackupNowButton" onclick="salvarBackupExternoAgora()">Salvar cópia agora</button>
+    <button type="button" class="btn btn-ghost" onclick="compartilharBackup()">Enviar backup para outro aparelho</button>
+    <div id="externalBackupRecent" class="backup-external-recent"></div>
+    <details class="backup-external-note"><summary>Como funciona</summary><p>O app prepara seus dados ao usá-lo e o Android grava essa cópia na frequência escolhida, inclusive com o app fechado. A bateria ou a indisponibilidade da pasta podem adiar a gravação. “Salvar cópia agora” usa seus dados atuais.</p><p>Ao escolher 7 ou 30 versões, somente cópias automáticas criadas pelo app nessa pasta podem ser excluídas após uma nova cópia bem-sucedida. Cópias manuais são preservadas. A pasta deve ser escolhida novamente em outro aparelho.</p></details>
+  </div>
   <div class="card" data-settings-group="dados">
     <div class="card-title">💾 Backup</div>
     <p style="font-size:.83em;color:var(--text-muted);margin-bottom:14px;">Faça backup regularmente para não perder seus dados.</p>
@@ -2094,6 +2126,7 @@
     <p style="font-size:.75em;color:var(--text-muted);margin-top:8px;line-height:1.5">Também disponíveis ao tocar e segurar a tela inicial → Widgets → TreinoApp. Toque em ⋮ no widget para editar. Movimento mostra as últimas leituras salvas; para atualizar, abra Cardio e passos.</p>
   </div>
 
+  <div class="card" data-settings-group="app"><div class="card-title">Seu painel inicial</div><p class="backup-external-note">Escolha a ordem e quais cartões aparecem no início, em detalhes ou ficam ocultos.</p><button class="btn btn-outline" onclick="abrirPersonalizacaoInicio()">Organizar cartões</button></div>
   <div class="card" id="appInfoCard" data-settings-group="app">
     <div class="card-title">Aplicativo e dados</div>
     <div class="config-item"><div><div class="config-label">Versão instalada</div><div class="config-sub" id="appVersionInfo">v11.0.0</div></div><button class="btn btn-outline btn-sm" style="width:auto;" onclick="verificarAtualizacaoManual()">Verificar atualização</button></div>
@@ -2142,14 +2175,14 @@
 
 <script src="./data/common-foods.js"></script>
 <script>
-const APP_VERSION = '12.8.7';
-const APP_BUILD = '2026.10.06.8';
+const APP_VERSION = '12.8.8';
+const APP_BUILD = '2026.10.08.9';
 const DATA_SCHEMA_VERSION = 18;
 const GITHUB_REPO='BigIspectrus/meutreinoapp';
 const GITHUB_PAGES_BASE='https://bigispectrus.github.io/meutreinoapp';
 let _latestAndroidReleaseUrl='';
 let _nativeChannel='web';
-const APP_CACHE_VERSION = 'treinoapp-v12.8.7-202610068';
+const APP_CACHE_VERSION = 'treinoapp-v12.8.8-202610089';
 
 const SET_TYPES={workset:'Work set',warmup:'Aquecimento',topset:'Top set',backoff:'Back-off',dropset:'Drop set',cluster:'Cluster set',fst7:'FST-7',restpause:'Rest-pause',myoreps:'Myo-reps',amrap:'AMRAP'};
 function normalizarSetType(v){return SET_TYPES[v]?v:'workset';}
@@ -3787,6 +3820,9 @@ function importarBackup(event) {
       const d=JSON.parse(e.target.result);
       let qtdRegs=0,qtdTreinos=0; try{qtdRegs=JSON.parse(d.historicoTreinoV3||'[]').length}catch(e){} try{qtdTreinos=JSON.parse(d.treinosTemplates||'[]').length}catch(e){} if(!confirm(`Backup encontrado: ${qtdRegs} registros e ${qtdTreinos} treinos. Importar e substituir os dados correspondentes deste aparelho?`)) return;
       if(d.pesoCorporal) localStorage.setItem('pesoCorporal',d.pesoCorporal);
+      if(d.homeLayoutV1288!=null) localStorage.setItem('homeLayoutV1288',String(d.homeLayoutV1288));
+      if(d._rascunhoTreino!=null) localStorage.setItem('_rascunhoTreino',String(d._rascunhoTreino));
+      if(d.healthPendingV12!=null) localStorage.setItem('healthPendingV12',String(d.healthPendingV12));
       if(d.historicoTreinoV3) localStorage.setItem('historicoTreinoV3',d.historicoTreinoV3);
       if(d.exerciciosCustomizadosV3) localStorage.setItem('exerciciosCustomizadosV3',d.exerciciosCustomizadosV3);
       if(d.treinosTemplates) localStorage.setItem('treinosTemplates',d.treinosTemplates);
@@ -3823,13 +3859,15 @@ function importarBackup(event) {
       if(d.nutritionMealTemplatesV1251) localStorage.setItem('nutritionMealTemplatesV1251',d.nutritionMealTemplatesV1251);
       if(d.nutritionHealthEnabledV1252) localStorage.setItem('nutritionHealthEnabledV1252',d.nutritionHealthEnabledV1252);
       toast('Backup importado! Recarregando...','success');
+      localStorage.removeItem('_nativeDbSyncedSchema');
+      prepararEspelhoBackupExterno();
       invalidarCache();
       setTimeout(()=>location.reload(),1500);
     } catch(err){ toast('Arquivo inválido!','error'); }
   };
   reader.readAsText(file);
 }
-function resetarDados() { const keys=['historicoTreinoV3','pesoCorporal','exerciciosCustomizadosV3','treinosTemplates','temaPreferido','userProfile','treinoMetas','conquistasDesbloqueadas','perfilPublico','treinoScores','timerSom','restVibration','restNotificationSound','backupConfig','descansoPadrao','effortMode','settingsCategory','_rascunhoTreino','_onboardingV9','_onboardingV10','_onboardingV11','_lastSeenVersion','_lastSnapshotDay','_restTimerEndAt','wakeLockEnabled','academiaModeEnabled','plateBarWeight','platePreset','healthLinksV12','healthPendingV12','healthHrMax','healthAutoSync','healthWriteEnabled','weeklyPlanV12','healthRecoveryCacheV12','healthActivityCacheV128','activityPreferencesV1283','movementGoalsV1286','nutritionGoalsV125','nutritionFoodsV125','nutritionEntriesV125','nutritionDayStatusV1285','nutritionRecipesV1251','nutritionMealTemplatesV1251','nutritionCatalogCacheV1251','nutritionCatalogCacheV1252','nutritionUsdaKeyV1251','nutritionHealthEnabledV1252','nutritionHealthSyncV1252','_nativeNutritionSyncV125','_nativeNutritionSyncV1251','_nativeNutritionSyncV1252','_appErrors']; keys.forEach(k=>localStorage.removeItem(k)); invalidarCache(); toast('Dados do TreinoApp apagados. Recarregando...','info'); setTimeout(()=>location.reload(),1000); }
+function resetarDados() { const keys=['homeLayoutV1288','historicoTreinoV3','pesoCorporal','exerciciosCustomizadosV3','treinosTemplates','temaPreferido','userProfile','treinoMetas','conquistasDesbloqueadas','perfilPublico','treinoScores','timerSom','restVibration','restNotificationSound','backupConfig','descansoPadrao','effortMode','settingsCategory','_rascunhoTreino','_onboardingV9','_onboardingV10','_onboardingV11','_lastSeenVersion','_lastSnapshotDay','_restTimerEndAt','wakeLockEnabled','academiaModeEnabled','plateBarWeight','platePreset','healthLinksV12','healthPendingV12','healthHrMax','healthAutoSync','healthWriteEnabled','weeklyPlanV12','healthRecoveryCacheV12','healthActivityCacheV128','activityPreferencesV1283','movementGoalsV1286','nutritionGoalsV125','nutritionFoodsV125','nutritionEntriesV125','nutritionDayStatusV1285','nutritionRecipesV1251','nutritionMealTemplatesV1251','nutritionCatalogCacheV1251','nutritionCatalogCacheV1252','nutritionUsdaKeyV1251','nutritionHealthEnabledV1252','nutritionHealthSyncV1252','_nativeNutritionSyncV125','_nativeNutritionSyncV1251','_nativeNutritionSyncV1252','_appErrors']; keys.forEach(k=>localStorage.removeItem(k)); invalidarCache(); toast('Dados do TreinoApp apagados. Recarregando...','info'); setTimeout(()=>location.reload(),1000); }
 
 
 // ════════════════════════════════════════════════
@@ -5065,7 +5103,7 @@ function verificarBackupAuto() {
   }
 }
 
-function gerarObjetoBackup(){return {app:'TreinoApp',appVersion:APP_VERSION,build:APP_BUILD,schemaVersion:DATA_SCHEMA_VERSION,exportedAt:new Date().toISOString(),pesoCorporal:localStorage.getItem('pesoCorporal'),historicoTreinoV3:localStorage.getItem('historicoTreinoV3'),exerciciosCustomizadosV3:localStorage.getItem('exerciciosCustomizadosV3'),treinosTemplates:localStorage.getItem('treinosTemplates'),temaPreferido:localStorage.getItem('temaPreferido'),userProfile:localStorage.getItem('userProfile'),treinoMetas:localStorage.getItem('treinoMetas'),conquistasDesbloqueadas:localStorage.getItem('conquistasDesbloqueadas'),perfilPublico:localStorage.getItem('perfilPublico'),treinoScores:localStorage.getItem('treinoScores'),timerSom:localStorage.getItem('timerSom'),restVibration:localStorage.getItem('restVibration'),restNotificationSound:localStorage.getItem('restNotificationSound'),backupConfig:localStorage.getItem('backupConfig'),descansoPadrao:localStorage.getItem('descansoPadrao'),effortMode:localStorage.getItem('effortMode'),wakeLockEnabled:localStorage.getItem('wakeLockEnabled'),academiaModeEnabled:localStorage.getItem('academiaModeEnabled'),plateBarWeight:localStorage.getItem('plateBarWeight'),platePreset:localStorage.getItem('platePreset'),healthLinksV12:localStorage.getItem('healthLinksV12'),healthHrMax:localStorage.getItem('healthHrMax'),healthAutoSync:localStorage.getItem('healthAutoSync'),healthWriteEnabled:localStorage.getItem('healthWriteEnabled'),weeklyPlanV12:localStorage.getItem('weeklyPlanV12'),healthRecoveryCacheV12:localStorage.getItem('healthRecoveryCacheV12'),healthActivityCacheV128:localStorage.getItem('healthActivityCacheV128'),activityPreferencesV1283:localStorage.getItem('activityPreferencesV1283'),movementGoalsV1286:localStorage.getItem('movementGoalsV1286'),nutritionGoalsV125:localStorage.getItem('nutritionGoalsV125'),nutritionFoodsV125:localStorage.getItem('nutritionFoodsV125'),nutritionEntriesV125:localStorage.getItem('nutritionEntriesV125'),nutritionDayStatusV1285:localStorage.getItem('nutritionDayStatusV1285'),nutritionRecipesV1251:localStorage.getItem('nutritionRecipesV1251'),nutritionMealTemplatesV1251:localStorage.getItem('nutritionMealTemplatesV1251'),nutritionHealthEnabledV1252:localStorage.getItem('nutritionHealthEnabledV1252')};}
+function gerarObjetoBackup(){return {app:'TreinoApp',appVersion:APP_VERSION,build:APP_BUILD,schemaVersion:DATA_SCHEMA_VERSION,homeLayoutV1288:localStorage.getItem('homeLayoutV1288'),_rascunhoTreino:localStorage.getItem('_rascunhoTreino'),healthPendingV12:localStorage.getItem('healthPendingV12'),exportedAt:new Date().toISOString(),pesoCorporal:localStorage.getItem('pesoCorporal'),historicoTreinoV3:localStorage.getItem('historicoTreinoV3'),exerciciosCustomizadosV3:localStorage.getItem('exerciciosCustomizadosV3'),treinosTemplates:localStorage.getItem('treinosTemplates'),temaPreferido:localStorage.getItem('temaPreferido'),userProfile:localStorage.getItem('userProfile'),treinoMetas:localStorage.getItem('treinoMetas'),conquistasDesbloqueadas:localStorage.getItem('conquistasDesbloqueadas'),perfilPublico:localStorage.getItem('perfilPublico'),treinoScores:localStorage.getItem('treinoScores'),timerSom:localStorage.getItem('timerSom'),restVibration:localStorage.getItem('restVibration'),restNotificationSound:localStorage.getItem('restNotificationSound'),backupConfig:localStorage.getItem('backupConfig'),descansoPadrao:localStorage.getItem('descansoPadrao'),effortMode:localStorage.getItem('effortMode'),wakeLockEnabled:localStorage.getItem('wakeLockEnabled'),academiaModeEnabled:localStorage.getItem('academiaModeEnabled'),plateBarWeight:localStorage.getItem('plateBarWeight'),platePreset:localStorage.getItem('platePreset'),healthLinksV12:localStorage.getItem('healthLinksV12'),healthHrMax:localStorage.getItem('healthHrMax'),healthAutoSync:localStorage.getItem('healthAutoSync'),healthWriteEnabled:localStorage.getItem('healthWriteEnabled'),weeklyPlanV12:localStorage.getItem('weeklyPlanV12'),healthRecoveryCacheV12:localStorage.getItem('healthRecoveryCacheV12'),healthActivityCacheV128:localStorage.getItem('healthActivityCacheV128'),activityPreferencesV1283:localStorage.getItem('activityPreferencesV1283'),movementGoalsV1286:localStorage.getItem('movementGoalsV1286'),nutritionGoalsV125:localStorage.getItem('nutritionGoalsV125'),nutritionFoodsV125:localStorage.getItem('nutritionFoodsV125'),nutritionEntriesV125:localStorage.getItem('nutritionEntriesV125'),nutritionDayStatusV1285:localStorage.getItem('nutritionDayStatusV1285'),nutritionRecipesV1251:localStorage.getItem('nutritionRecipesV1251'),nutritionMealTemplatesV1251:localStorage.getItem('nutritionMealTemplatesV1251'),nutritionHealthEnabledV1252:localStorage.getItem('nutritionHealthEnabledV1252')};}
 async function compartilharBackup(){
   const dados=gerarObjetoBackup(),conteudo=JSON.stringify(dados),nome=`treinoapp_backup_v${APP_VERSION}_${hoje()}.json`;
   if(isNativeAndroid()&&window.TreinoNativeBridge?.shareTextFile){
@@ -6012,7 +6050,7 @@ function salvarSnapshotDiario(){const d=hoje();if(localStorage.getItem('_lastSna
 async function listarSnapshotsSeguro(){try{const db=await openSafeDB();const arr=await new Promise((res,rej)=>{const r=db.transaction('snapshots').objectStore('snapshots').getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error);});db.close();return arr.sort((a,b)=>b.createdAt-a.createdAt);}catch(e){return[];}}
 async function excluirSnapshotSeguro(id){try{const db=await openSafeDB();await new Promise((res,rej)=>{const tx=db.transaction('snapshots','readwrite');tx.objectStore('snapshots').delete(id);tx.oncomplete=res;tx.onerror=()=>rej(tx.error);});db.close();}catch(e){}}
 async function abrirSnapshots(){const el=document.getElementById('snapshotList');document.getElementById('modalSnapshots').classList.add('open');if(!el)return;el.innerHTML='<div style="color:var(--text-muted);font-size:.82em;">Carregando...</div>';const arr=await listarSnapshotsSeguro();if(!arr.length){el.innerHTML='<div class="empty-state" style="padding:20px 0;"><p>Nenhum snapshot interno ainda.</p></div>';return;}el.innerHTML=arr.map(x=>`<div class="snapshot-item"><div><strong>${new Date(x.createdAt).toLocaleString('pt-BR')}</strong><div class="snapshot-meta">${esc(x.motivo||'snapshot')} · v${esc(x.version||'?')}</div></div><div style="display:flex;gap:5px;"><button class="btn btn-outline btn-sm" style="width:auto;" onclick="restaurarSnapshotSeguro('${x.id}')">Restaurar</button><button class="btn btn-danger btn-sm btn-icon" onclick="excluirSnapshotSeguro('${x.id}').then(abrirSnapshots)">×</button></div></div>`).join('');}
-async function restaurarSnapshotSeguro(id){const arr=await listarSnapshotsSeguro(),snap=arr.find(x=>x.id===id);if(!snap)return toast('Snapshot não encontrado','error');if(!confirm('Restaurar este snapshot? Os dados atuais serão substituídos.'))return;await salvarSnapshotSeguro('antes_restauracao');const d=snap.data||{},keys=['pesoCorporal','historicoTreinoV3','exerciciosCustomizadosV3','treinosTemplates','temaPreferido','userProfile','treinoMetas','conquistasDesbloqueadas','perfilPublico','treinoScores','timerSom','restVibration','restNotificationSound','backupConfig','descansoPadrao','effortMode','wakeLockEnabled','academiaModeEnabled','plateBarWeight','platePreset','healthLinksV12','healthHrMax','healthAutoSync','healthWriteEnabled','weeklyPlanV12','healthRecoveryCacheV12','healthActivityCacheV128','activityPreferencesV1283','movementGoalsV1286','nutritionGoalsV125','nutritionFoodsV125','nutritionEntriesV125','nutritionRecipesV1251','nutritionMealTemplatesV1251','nutritionHealthEnabledV1252'];keys.forEach(k=>{if(d[k]!==undefined&&d[k]!==null)localStorage.setItem(k,String(d[k]));});restaurarEstadoDiasBackupNutricao(d);invalidarCache();toast('Snapshot restaurado. Recarregando...','success');setTimeout(()=>location.reload(),900);}
+async function restaurarSnapshotSeguro(id){const arr=await listarSnapshotsSeguro(),snap=arr.find(x=>x.id===id);if(!snap)return toast('Snapshot não encontrado','error');if(!confirm('Restaurar este snapshot? Os dados atuais serão substituídos.'))return;await salvarSnapshotSeguro('antes_restauracao');const d=snap.data||{},keys=['homeLayoutV1288','_rascunhoTreino','healthPendingV12','pesoCorporal','historicoTreinoV3','exerciciosCustomizadosV3','treinosTemplates','temaPreferido','userProfile','treinoMetas','conquistasDesbloqueadas','perfilPublico','treinoScores','timerSom','restVibration','restNotificationSound','backupConfig','descansoPadrao','effortMode','wakeLockEnabled','academiaModeEnabled','plateBarWeight','platePreset','healthLinksV12','healthHrMax','healthAutoSync','healthWriteEnabled','weeklyPlanV12','healthRecoveryCacheV12','healthActivityCacheV128','activityPreferencesV1283','movementGoalsV1286','nutritionGoalsV125','nutritionFoodsV125','nutritionEntriesV125','nutritionRecipesV1251','nutritionMealTemplatesV1251','nutritionHealthEnabledV1252'];keys.forEach(k=>{if(d[k]!==undefined&&d[k]!==null)localStorage.setItem(k,String(d[k]));});restaurarEstadoDiasBackupNutricao(d);invalidarCache();toast('Snapshot restaurado. Recarregando...','success');setTimeout(()=>location.reload(),900);}
 
 // ════════════════════════════════════════════════
 // V11 — BUILD/DEPLOY E REPARO DO APP
@@ -6940,5 +6978,6 @@ setInterval(()=>{if(isNativeAndroid()&&treinoAtivoTemplate&&!document.hidden)rec
 <script src="./movement.js"></script>
 <script src="./activity.js"></script>
 <script src="./meal-builder.js"></script>
+<script src="./personalization.js"></script>
 </body>
 </html>

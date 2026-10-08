@@ -1,4 +1,4 @@
-# TreinoApp v12.8.7 Beta — Widgets separados e configuráveis
+# TreinoApp v12.8.8 Beta — Backup externo automático e painel personalizável
 
 TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capacitor. A variante Beta pode coexistir com a Stable.
 
@@ -6,10 +6,23 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 
 - Stable: `com.treinoapp.app`
 - Beta: `com.treinoapp.beta`
-- Versão: `12.8.7`
-- versionCode: `120807`
+- Versão: `12.8.8`
+- versionCode: `120808`
 - Android: compile/target API 36, minSdk 26
 - Room: schema 7, somente migrações explícitas
+
+## Backup e painel v12.8.8 — tópicos 13 e 14
+
+- pasta escolhida pelo Storage Access Framework, com permissão persistente; nenhum acesso amplo adicional ao armazenamento;
+- espelho JSON privado com escrita atômica, atualizado após mudanças dos dados. WorkManager grava a última cópia preparada em intervalos de 12h/24h/7 dias, inclusive com app fechado, conforme disponibilidade do Android;
+- cópias externas imutáveis com nomes únicos, gravação manual, status de captura/gravação, histórico recente e erro de pasta/permissão visível;
+- retenção opcional apenas para versões automáticas rastreadas na pasta atual; todas são preservadas por padrão e cópias manuais nunca entram na limpeza;
+- compartilhamento/importação JSON entre aparelhos, preferências do painel e rascunho incluídos. Pasta/permissões são específicas do aparelho e não entram no JSON;
+- seleção e ordem dos cartões, destinos início/detalhes/oculto, opção de padrão, salvamento/cancelamento; registros de treino e alimentação não são alterados ao organizar a apresentação;
+- tópicos 11 e 12 descartados por pedido explícito. Build sem testes nesta entrega, conforme solicitação do usuário; somente compilação e identidade do APK. Validação no Android fica com ele;
+- detalhes de uso e limitações em `NOTAS_v12.8.8_BETA.md`.
+
+Referências: [pastas e permissão persistente](https://developer.android.com/training/data-storage/shared/documents-files), [execução periódica](https://developer.android.com/develop/background-work/background-tasks/persistent/getting-started/define-work).
 
 ## Widgets v12.8.7 — tópico 10 de 14
 
