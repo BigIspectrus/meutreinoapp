@@ -2,6 +2,7 @@ import { Capacitor, registerPlugin, SystemBars } from '@capacitor/core';
 
 const Native = registerPlugin('TreinoNative');
 const BarcodeScanner = registerPlugin('CapacitorBarcodeScanner');
+const FoodLabel = registerPlugin('FoodLabel');
 const native = () => Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
 
 function call(method, payload = {}) {
@@ -11,6 +12,7 @@ function call(method, payload = {}) {
 
 window.TreinoNativeBridge = {
   isNative: native,
+  readFoodLabel: source => native() ? FoodLabel.readLabel({source:source||'camera'}) : Promise.resolve({native:false,available:false}),
   setSystemBarsStyle: style => native() ? SystemBars.setStyle({ style }).then(() => call('setWindowBackground', {light:style==='LIGHT'})) : Promise.resolve({native:false}),
   getNativeInfo: () => call('getNativeInfo'),
   getNativeStorageInfo: () => call('getNativeStorageInfo'),

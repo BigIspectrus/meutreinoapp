@@ -10,8 +10,8 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <title>TreinoApp v12</title>
-  <meta name="treinoapp-version" content="12.9.1">
-  <meta name="treinoapp-build" content="2026.10.08.2">
+  <meta name="treinoapp-version" content="12.10.0">
+  <meta name="treinoapp-build" content="2026.10.09.1">
   <script defer src="./vendor/chart.umd.js"></script>
   <script defer src="./vendor/jspdf.umd.min.js"></script>
   <script defer src="./vendor/qrcode.min.js"></script>
@@ -799,6 +799,7 @@
   <link rel="stylesheet" href="./personalization.css">
   <link rel="stylesheet" href="./mobile-fixes.css">
   <link rel="stylesheet" href="./workflow-features.css">
+  <link rel="stylesheet" href="./release12100.css">
 </head>
 <body>
 
@@ -1230,6 +1231,7 @@
     <div class="row" id="nutritionAmountFields" style="display:none"><div class="form-group col"><label>Quantidade</label><input type="number" id="nutritionAddAmount" min="0.1" step="0.1" inputmode="decimal" oninput="atualizarPreviaRegistroNutricao()"></div><div class="form-group col"><label>Unidade</label><select id="nutritionAddUnit" onchange="atualizarPreviaRegistroNutricao()"><option value="grams">gramas</option><option value="portion">porção</option></select></div></div>
     <button type="button" id="nutritionPickNext" class="btn btn-outline btn-sm" onclick="escolherOutroAlimentoMontagemNutricao()" hidden>+ Escolher outro alimento</button>
     <div id="nutritionMealSearch">
+    <section class="meal-context-shortcuts" id="mealContextShortcuts" hidden></section>
     <input type="search" id="nutritionFoodSearch" placeholder="Ex: arroz, feijão, frango..." aria-label="Buscar alimento" oninput="renderizarBuscaAlimentosNutricao()">
     <div class="nutrition-filter-chips" id="nutritionFoodFilters"><button type="button" class="active" data-scope="recent" onclick="selecionarFiltroAlimentoNutricao('recent')">Recentes</button><button type="button" data-scope="favorites" onclick="selecionarFiltroAlimentoNutricao('favorites')">Favoritos</button><button type="button" data-scope="recipes" onclick="selecionarFiltroAlimentoNutricao('recipes')">Receitas</button><button type="button" data-scope="all" onclick="selecionarFiltroAlimentoNutricao('all')">Todos</button></div>
     <button type="button" class="btn btn-ghost btn-sm" style="width:auto" data-scope="common" onclick="selecionarFiltroAlimentoNutricao('common')">Alimentos comuns · offline</button>
@@ -1245,6 +1247,7 @@
   <div class="modal" style="max-width:560px;">
     <div class="modal-title">📚 Meus alimentos</div>
     <div class="row" style="align-items:center"><input class="col" type="search" id="nutritionManageSearch" placeholder="Buscar alimento..." oninput="renderizarGerenciadorAlimentosNutricao()"><button class="btn btn-primary btn-sm" style="width:auto" onclick="abrirModalAlimentoNutricao()">+ Novo</button></div>
+    <button type="button" class="btn btn-outline btn-sm" style="margin:10px 0" onclick="abrirLeitorRotulo()">Cadastrar lendo o rótulo</button>
     <div class="nutrition-inline-actions" style="margin-top:8px"><label class="btn btn-outline btn-sm" style="width:auto;cursor:pointer">Importar lote JSON<input type="file" id="nutritionFoodBatchFile" accept=".json,application/json" onchange="importarLoteAlimentosNutricao(event)" style="display:none"></label><button class="btn btn-ghost btn-sm" style="width:auto" onclick="baixarModeloImportacaoNutricao()">Baixar modelo</button></div>
     <div class="nutrition-food-results" id="nutritionManageList" style="max-height:430px"></div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="fecharModal('modalNutritionFoods')">Fechar</button></div>
@@ -1355,6 +1358,8 @@
     <div class="modal-title">Opções do treino</div>
     <p class="nutrition-note" style="margin-bottom:18px">A sessão continua em andamento.</p>
     <div class="ui-tools-list">
+      <button class="btn btn-ghost" onclick="fecharModal('modalWorkoutToolsUI');togglePausaTreino()"><span>Pausar / retomar treino<small>Preserva a sessão e os registros já preenchidos</small></span></button>
+      <button class="btn btn-ghost" onclick="fecharModal('modalWorkoutToolsUI');desfazerUltimaSerie()"><span>Desfazer última série concluída<small>Corrigir um toque acidental, quando disponível</small></span></button>
       <button class="btn btn-ghost" onclick="fecharModal('modalWorkoutToolsUI');abrirAddExSessao()"><span data-ui-icon="plus" aria-hidden="true"></span><span>Adicionar ou trocar exercício<small>Inclusive criar um novo nesta sessão</small></span></button>
       <button class="btn btn-ghost" onclick="fecharModal('modalWorkoutToolsUI');toggleVisaoGeralTreino()"><span data-ui-icon="history" aria-hidden="true"></span><span>Ver todos os exercícios<small>Consultar a sequência e reordenar</small></span></button>
       <button class="btn btn-ghost" onclick="fecharModal('modalWorkoutToolsUI');abrirModalAnilhas()"><span data-ui-icon="train" aria-hidden="true"></span><span>Calculadora de anilhas<small>Conferir a carga de cada lado</small></span></button>
@@ -1691,6 +1696,7 @@
   </div>
   <div class="sub-content active" id="sub-evolucao">
   <details class="card workflow-muscle-panel"><summary>Séries por músculo · semana</summary><div id="muscleWeeklyContent"></div></details>
+  <details class="card workflow-muscle-panel"><summary>Evolução contextual · carga, reps e esforço</summary><div id="progressQualityContent"></div></details>
   <section class="card routine-card">
     <div class="card-title">Sua rotina em gráficos</div>
     <label for="routineMetric">Acompanhar</label>
@@ -1823,8 +1829,8 @@
 
   <!-- Plateau warnings -->
   <div class="card" id="plateauCard" style="display:none;">
-    <div class="card-title">📉 Exercícios em Plateau</div>
-    <p style="font-size:.82em;color:var(--text-muted);margin-bottom:12px;">Sem aumento de carga nas últimas 3 sessões. Hora de rever a progressão!</p>
+    <div class="card-title">Registros estáveis para revisar</div>
+    <p style="font-size:.82em;color:var(--text-muted);margin-bottom:12px;">Mesmas séries, cargas, repetições e RIR/RPE em quatro sessões comparáveis. Isso não comprova estagnação nem pede mudança automática de treino.</p>
     <div id="plateauList"></div>
   </div>
 
@@ -2131,6 +2137,7 @@
     <button class="btn btn-ghost" onclick="exportarPDF()" style="margin-bottom:8px;">Exportar histórico em PDF</button>
     <button class="btn btn-ghost" onclick="exportarCSV()" style="margin-bottom:8px;">Exportar dados em CSV</button>
     <button class="btn btn-ghost" onclick="abrirSnapshots()" style="margin-bottom:8px;">Backups internos de segurança</button>
+    <button class="btn btn-outline" onclick="abrirLixeira()" style="margin-bottom:8px;">Lixeira · recuperar exclusões</button>
     <hr class="divider">
     <button class="btn btn-danger" onclick="confirmarAcao('Apagar todos os dados?','Isso remove histórico, treinos, metas, perfil e preferências deste dispositivo. Faça backup antes.',resetarDados)">Apagar todos os dados do app</button>
   </div>
@@ -2158,6 +2165,7 @@
 
   <div class="card" data-settings-group="app"><div class="card-title">Seu painel inicial</div><p class="backup-external-note">Escolha a ordem e quais cartões aparecem no início, em detalhes ou ficam ocultos.</p><button class="btn btn-outline" onclick="abrirPersonalizacaoInicio()">Organizar cartões</button></div>
   <div class="card" data-settings-group="treinos"><div class="card-title">Exercícios e aparelhos</div><p class="nutrition-note">Regulagens, alternativas favoritas e classificação de músculos.</p><button class="btn btn-outline" onclick="abrirCatalogoAparelhos()">Configurar exercícios</button></div>
+  <div class="card" data-settings-group="treinos"><div class="card-title">Controles para uma mão</div><p class="nutrition-note">Carga, repetições e a ação da série na parte inferior durante o treino. Não modifica a rotina nem o descanso configurado.</p><label for="oneHandModeSetting">Modo de treino</label><select id="oneHandModeSetting" onchange="definirModoUmaMao(this.value)"><option value="1">Controles inferiores</option><option value="0">Interface anterior</option></select></div>
   <div class="card" id="appInfoCard" data-settings-group="app">
     <div class="card-title">Aplicativo e dados</div>
     <div class="config-item"><div><div class="config-label">Versão instalada</div><div class="config-sub" id="appVersionInfo">v11.0.0</div></div><button class="btn btn-outline btn-sm" style="width:auto;" onclick="verificarAtualizacaoManual()">Verificar atualização</button></div>
@@ -2204,19 +2212,38 @@
   </div>
 </div>
 
+<section id="oneHandWorkout" class="one-hand-bar" aria-label="Controles da série atual" hidden>
+  <div class="onehand-heading"><div><strong id="oneHandExercise"></strong><small id="oneHandStateLabel"></small></div><button type="button" class="btn btn-ghost" onclick="abrirOpcoesUmaMao()" aria-label="Opções, pausa e ferramentas do treino">⋯</button></div>
+  <div id="oneHandFields" class="onehand-fields"><label for="oneHandWeight"><span id="oneHandWeightLabel">Carga (kg)</span><input id="oneHandWeight" type="number" min="0" step="any" inputmode="decimal" placeholder="kg"></label><label for="oneHandReps">Repetições<input id="oneHandReps" type="number" min="0" step="1" inputmode="numeric" placeholder="reps"></label></div>
+  <div class="onehand-rest" id="oneHandRestControls" hidden><button class="btn btn-ghost" type="button" onclick="adicionarTempoTimer(-15)">−15 s</button><span>Descanso <b id="oneHandRestTime">0:00</b></span><button class="btn btn-ghost" type="button" onclick="adicionarTempoTimer(15)">+15 s</button></div>
+  <button id="oneHandMainAction" type="button" class="btn btn-primary" onclick="agirTreinoUmaMao()">Iniciar série</button>
+</section>
+<div class="modal-overlay" id="modalRecycleBin"><div class="modal"><div class="modal-title">Lixeira · recuperação por 30 dias</div><p class="nutrition-note">Exclusões novas de séries/sessões, rotinas e alimentos registrados. Restaurar mantém IDs, datas, quantidades e valores originais, sem duplicar itens já presentes. Cópias expiradas são removidas nas próximas exclusões; backups anteriores são independentes. Apagar todos os dados não passa pela lixeira.</p><div id="recycleBinList"></div><div class="modal-footer"><button class="btn btn-ghost" onclick="fecharModal('modalRecycleBin')">Fechar</button><button class="btn btn-outline" onclick="esvaziarLixeira()">Esvaziar lixeira</button></div></div></div>
+<div class="modal-overlay" id="modalFoodLabel"><div class="modal">
+  <div class="modal-title">Ler tabela nutricional</div><p class="nutrition-note">Reconhecimento no próprio Android. Não estima nutrientes pela aparência da comida, não cadastra nem registra consumo automaticamente. Sempre confira o rótulo; reflexos, foco e colunas podem causar erros.</p>
+  <div class="workflow-actions food-label-source-actions"><button type="button" class="btn btn-primary" data-label-capture onclick="capturarRotuloAlimento('camera')">Fotografar rótulo</button><button type="button" class="btn btn-outline" data-label-capture onclick="capturarRotuloAlimento('gallery')">Escolher imagem</button></div>
+  <p class="food-label-status" id="foodLabelStatus" role="status"></p><label for="foodLabelName">Nome do alimento · preenchimento manual</label><input type="text" id="foodLabelName" maxlength="120" placeholder="Nome e variante do produto">
+  <details class="workflow-details" open><summary>Texto lido · corrigir se necessário</summary><textarea class="food-label-text" id="foodLabelText" maxlength="30000" rows="6" placeholder="O texto da tabela aparecerá aqui"></textarea><button class="btn btn-ghost btn-sm" type="button" onclick="usarTextoOriginalRotulo()">Usar texto original</button></details>
+  <label for="foodLabelColumn">Coluna dos valores desejados · não inclui %VD</label><select id="foodLabelColumn"><option value="">Escolha após conferir o rótulo</option><option value="1">Primeira coluna de valores</option><option value="2">Segunda coluna de valores</option></select><button class="btn btn-outline" type="button" onclick="interpretarTextoRotulo()" style="margin:10px 0">Interpretar para revisar</button>
+  <label for="foodLabelBasis">Os valores escolhidos são por</label><select id="foodLabelBasis" onchange="atualizarBaseRotulo()"><option value="">Escolha a base indicada no rótulo</option><option value="100">100 g</option><option value="portion">Uma porção com peso em gramas</option></select>
+  <div id="foodLabelPortion" class="food-label-portion" hidden><label for="foodLabelPortionGrams">Peso da porção (g)<input type="number" id="foodLabelPortionGrams" min="0.1" step="any" inputmode="decimal"></label><label for="foodLabelPortionName">Nome da porção<input type="text" id="foodLabelPortionName" maxlength="30" placeholder="Ex: 1 unidade"></label></div>
+  <p class="nutrition-note">Não converte valores por 100 mL automaticamente para 100 g. Em líquidos, informe uma porção com o peso em gramas conhecido. Fibras/sódio são opcionais; se não reconhecidos, preencha pelo rótulo. O cadastro atual normaliza campos opcionais vazios para zero, que não comprova ausência do nutriente.</p>
+  <div class="food-label-fields" id="foodLabelFields"></div><label class="food-label-review"><input type="checkbox" id="foodLabelReviewed">Conferi os números, as unidades, a coluna e a base no rótulo.</label>
+  <div class="modal-footer"><button class="btn btn-ghost" onclick="fecharModal('modalFoodLabel')">Fechar</button><button class="btn btn-primary" onclick="revisarCadastroDoRotulo()">Revisar alimento antes de salvar</button></div>
+</div></div>
 <script src="./data/common-foods.js"></script>
 <script src="./workflow-store.js"></script>
 <script src="./load-conventions.js"></script>
 <script src="./nutrition-portions.js"></script>
 <script>
-const APP_VERSION = '12.9.1';
-const APP_BUILD = '2026.10.08.2';
+const APP_VERSION = '12.10.0';
+const APP_BUILD = '2026.10.09.1';
 const DATA_SCHEMA_VERSION = 18;
 const GITHUB_REPO='BigIspectrus/meutreinoapp';
 const GITHUB_PAGES_BASE='https://bigispectrus.github.io/meutreinoapp';
 let _latestAndroidReleaseUrl='';
 let _nativeChannel='web';
-const APP_CACHE_VERSION = 'treinoapp-v12.9.1-202610082';
+const APP_CACHE_VERSION = 'treinoapp-v12.10.0-202610091';
 
 const SET_TYPES={workset:'Work set',warmup:'Aquecimento',topset:'Top set',backoff:'Back-off',dropset:'Drop set',cluster:'Cluster set',fst7:'FST-7',restpause:'Rest-pause',myoreps:'Myo-reps',amrap:'AMRAP'};
 function normalizarSetType(v){return SET_TYPES[v]?v:'workset';}
@@ -3387,7 +3414,7 @@ function renderizarHistoricoAgrupado(lista, busca='') {
     const grupos=[...new Set(regs.map(t=>t.grupo||''))].filter(Boolean); const nomeSessao=regs.find(r=>r.templateNome)?.templateNome||'Treino';
     const dur=Math.max(...regs.map(r=>Number(r.durationSec)||0),0); const durTxt=dur?` · ${Math.max(1,Math.round(dur/60))} min`:'';
     let exsHTML='';
-    Object.entries(porEx).forEach(([ex,series])=>{ const temPR=series.some(x=>ehPrCargaRegistro(x)), temPlateau=plateau.includes(ex); const pills=series.sort((a,b)=>a.numSerie-b.numSerie).map(x=>`<span class="serie-pill${ehPrCargaRegistro(x)?' pr':''}">${esc(textoCargaRegistro(x))} ×${x.reps||'?'}</span>`).join(''); exsHTML+=`<div class="hist-sessao-ex"><div class="hist-sessao-ex-nome">${esc(ex)}${temPR?'<span class="pr-badge">PR</span>':''}${temPlateau?'<span class="plateau-badge">Plateau</span>':''}</div><div class="hist-sessao-series">${pills}</div></div>`; });
+    Object.entries(porEx).forEach(([ex,series])=>{ const temPR=series.some(x=>ehPrCargaRegistro(x)), temPlateau=plateau.includes(ex); const pills=series.sort((a,b)=>a.numSerie-b.numSerie).map(x=>`<span class="serie-pill${ehPrCargaRegistro(x)?' pr':''}">${esc(textoCargaRegistro(x))} ×${x.reps||'?'}</span>`).join(''); exsHTML+=`<div class="hist-sessao-ex"><div class="hist-sessao-ex-nome">${esc(ex)}${temPR?'<span class="pr-badge">PR</span>':''}${temPlateau?'<span class="plateau-badge">Estável</span>':''}</div><div class="hist-sessao-series">${pills}</div></div>`; });
     const sessao=document.createElement('div'); sessao.className='hist-sessao';
     const hlink=getHealthLinks?.()?.[sessionKey];
     sessao.innerHTML=`<div class="hist-sessao-header"><div class="eyebrow">${dataBr}${hlink?' · Relógio conectado aos dados':''}</div><div class="hist-sessao-title">${esc(nomeSessao)}</div><div class="hist-sessao-meta">${Object.keys(porEx).length} exercícios · ${totalSeries} séries${durTxt}<br>${esc(grupos.join(' / '))}${hlink?.avgHr?' · '+Math.round(hlink.avgHr)+' bpm':''}</div><div class="hist-session-actions"><button class="btn btn-outline btn-sm" onclick='abrirDetalhesTreino(${jsArg(sessionKey)})'>Análise do treino ›</button><button class="btn btn-danger btn-sm btn-icon" style="flex:none" aria-label="Excluir sessão" onclick='apagarSessao(${jsArg(sessionKey)})'>×</button></div></div><details class="hist-session-details"><summary>Ver exercícios e séries</summary><div class="hist-sessao-body">${exsHTML}</div></details>`;
@@ -3397,30 +3424,7 @@ function renderizarHistoricoAgrupado(lista, busca='') {
 
 // Detecta exercícios em plateau (≥3 sessões sem aumento de carga máxima)
 function detectarPlateauExercicios(hist) {
-  const exDatas = {};
-  hist.forEach(t => {
-    if(!cargaComparavelAtual(t)||!setContaParaPR(t))return;
-    if(!exDatas[t.exercicio]) exDatas[t.exercicio] = {};
-    if(!exDatas[t.exercicio][t.data] || t.carga > exDatas[t.exercicio][t.data])
-      exDatas[t.exercicio][t.data] = t.carga;
-  });
-  const plateaus = [];
-  Object.entries(exDatas).forEach(([ex, dataMap]) => {
-    const datas = Object.keys(dataMap).sort();
-    if(datas.length < 3) return;
-    const ultimas3 = datas.slice(-3).map(d => dataMap[d]);
-    const maxUltimas3 = Math.max(...ultimas3);
-    // Se tem sessões anteriores às últimas 3, comparar
-    const anteriores = datas.slice(0,-3);
-    if(anteriores.length > 0) {
-      const maxAnterior = Math.max(...anteriores.map(d=>dataMap[d]));
-      if(maxUltimas3 <= maxAnterior) plateaus.push(ex);
-    } else {
-      // Só tem 3 sessões: plateau se todas têm mesma carga (sem progressão nenhuma)
-      if(ultimas3[0] === ultimas3[1] && ultimas3[1] === ultimas3[2]) plateaus.push(ex);
-    }
-  });
-  return plateaus;
+  return typeof analisarEvolucaoContextual==='function'?analisarEvolucaoContextual(hist).filter(r=>r.status==='stable').map(r=>r.ex):[];
 }
 
 function apagarSessao(sessionKey) {
@@ -3821,7 +3825,7 @@ function renderizarPlateauWarnings(hist=null) {
         <div class="pr-ex">${ex}</div>
         <div style="font-size:.75em;color:var(--text-muted)">Últimas 3 sessões: ${cargasStr}</div>
       </div>
-      <span class="plateau-badge" style="font-size:.85em;padding:4px 8px;">📉 Plateau</span>
+      <span class="plateau-badge" style="font-size:.85em;padding:4px 8px;">Registros estáveis</span>
     </div>`;
   }).join('');
 }
@@ -3861,7 +3865,7 @@ function importarBackup(event) {
       let qtdRegs=0,qtdTreinos=0; try{qtdRegs=JSON.parse(d.historicoTreinoV3||'[]').length}catch(e){} try{qtdTreinos=JSON.parse(d.treinosTemplates||'[]').length}catch(e){} if(!confirm(`Backup encontrado: ${qtdRegs} registros e ${qtdTreinos} treinos. Importar e substituir os dados correspondentes deste aparelho?`)) return;
       if(d.pesoCorporal) localStorage.setItem('pesoCorporal',d.pesoCorporal);
       if(d.homeLayoutV1288!=null) localStorage.setItem('homeLayoutV1288',String(d.homeLayoutV1288));
-      for(const key of ['nutritionMealDraftV1290','nutritionUsualPortionsV1290','nutritionPlansV1290','exerciseProfilesV1290','muscleGoalsV1291'])if(d[key]!=null)localStorage.setItem(key,String(d[key]));
+      for(const key of ['nutritionMealDraftV1290','nutritionUsualPortionsV1290','nutritionPlansV1290','exerciseProfilesV1290','muscleGoalsV1291','recycleBinV12100','oneHandModeV12100'])if(d[key]!=null)localStorage.setItem(key,String(d[key]));
       if(d._rascunhoTreino!=null) localStorage.setItem('_rascunhoTreino',String(d._rascunhoTreino));
       if(d.healthPendingV12!=null) localStorage.setItem('healthPendingV12',String(d.healthPendingV12));
       if(d.historicoTreinoV3) localStorage.setItem('historicoTreinoV3',d.historicoTreinoV3);
@@ -3908,7 +3912,7 @@ function importarBackup(event) {
   };
   reader.readAsText(file);
 }
-function resetarDados() { const keys=['nutritionMealDraftV1290','nutritionUsualPortionsV1290','nutritionPlansV1290','exerciseProfilesV1290','muscleGoalsV1291','homeLayoutV1288','historicoTreinoV3','pesoCorporal','exerciciosCustomizadosV3','treinosTemplates','temaPreferido','userProfile','treinoMetas','conquistasDesbloqueadas','perfilPublico','treinoScores','timerSom','restVibration','restNotificationSound','backupConfig','descansoPadrao','effortMode','settingsCategory','_rascunhoTreino','_onboardingV9','_onboardingV10','_onboardingV11','_lastSeenVersion','_lastSnapshotDay','_restTimerEndAt','wakeLockEnabled','academiaModeEnabled','plateBarWeight','platePreset','healthLinksV12','healthPendingV12','healthHrMax','healthAutoSync','healthWriteEnabled','weeklyPlanV12','healthRecoveryCacheV12','healthActivityCacheV128','activityPreferencesV1283','movementGoalsV1286','nutritionGoalsV125','nutritionFoodsV125','nutritionEntriesV125','nutritionDayStatusV1285','nutritionRecipesV1251','nutritionMealTemplatesV1251','nutritionCatalogCacheV1251','nutritionCatalogCacheV1252','nutritionUsdaKeyV1251','nutritionHealthEnabledV1252','nutritionHealthSyncV1252','_nativeNutritionSyncV125','_nativeNutritionSyncV1251','_nativeNutritionSyncV1252','_appErrors']; keys.forEach(k=>localStorage.removeItem(k)); invalidarCache(); toast('Dados do TreinoApp apagados. Recarregando...','info'); setTimeout(()=>location.reload(),1000); }
+function resetarDados() { const keys=['nutritionMealDraftV1290','nutritionUsualPortionsV1290','nutritionPlansV1290','exerciseProfilesV1290','muscleGoalsV1291','recycleBinV12100','oneHandModeV12100','homeLayoutV1288','historicoTreinoV3','pesoCorporal','exerciciosCustomizadosV3','treinosTemplates','temaPreferido','userProfile','treinoMetas','conquistasDesbloqueadas','perfilPublico','treinoScores','timerSom','restVibration','restNotificationSound','backupConfig','descansoPadrao','effortMode','settingsCategory','_rascunhoTreino','_onboardingV9','_onboardingV10','_onboardingV11','_lastSeenVersion','_lastSnapshotDay','_restTimerEndAt','wakeLockEnabled','academiaModeEnabled','plateBarWeight','platePreset','healthLinksV12','healthPendingV12','healthHrMax','healthAutoSync','healthWriteEnabled','weeklyPlanV12','healthRecoveryCacheV12','healthActivityCacheV128','activityPreferencesV1283','movementGoalsV1286','nutritionGoalsV125','nutritionFoodsV125','nutritionEntriesV125','nutritionDayStatusV1285','nutritionRecipesV1251','nutritionMealTemplatesV1251','nutritionCatalogCacheV1251','nutritionCatalogCacheV1252','nutritionUsdaKeyV1251','nutritionHealthEnabledV1252','nutritionHealthSyncV1252','_nativeNutritionSyncV125','_nativeNutritionSyncV1251','_nativeNutritionSyncV1252','_appErrors']; keys.forEach(k=>localStorage.removeItem(k)); invalidarCache(); toast('Dados do TreinoApp apagados. Recarregando...','info'); setTimeout(()=>location.reload(),1000); }
 
 
 // ════════════════════════════════════════════════
@@ -5147,7 +5151,7 @@ function verificarBackupAuto() {
   }
 }
 
-function gerarObjetoBackup(){return {app:'TreinoApp',appVersion:APP_VERSION,build:APP_BUILD,schemaVersion:DATA_SCHEMA_VERSION,nutritionMealDraftV1290:localStorage.getItem('nutritionMealDraftV1290'),nutritionUsualPortionsV1290:localStorage.getItem('nutritionUsualPortionsV1290'),nutritionPlansV1290:localStorage.getItem('nutritionPlansV1290'),exerciseProfilesV1290:localStorage.getItem('exerciseProfilesV1290'),muscleGoalsV1291:localStorage.getItem('muscleGoalsV1291'),homeLayoutV1288:localStorage.getItem('homeLayoutV1288'),_rascunhoTreino:localStorage.getItem('_rascunhoTreino'),healthPendingV12:localStorage.getItem('healthPendingV12'),exportedAt:new Date().toISOString(),pesoCorporal:localStorage.getItem('pesoCorporal'),historicoTreinoV3:localStorage.getItem('historicoTreinoV3'),exerciciosCustomizadosV3:localStorage.getItem('exerciciosCustomizadosV3'),treinosTemplates:localStorage.getItem('treinosTemplates'),temaPreferido:localStorage.getItem('temaPreferido'),userProfile:localStorage.getItem('userProfile'),treinoMetas:localStorage.getItem('treinoMetas'),conquistasDesbloqueadas:localStorage.getItem('conquistasDesbloqueadas'),perfilPublico:localStorage.getItem('perfilPublico'),treinoScores:localStorage.getItem('treinoScores'),timerSom:localStorage.getItem('timerSom'),restVibration:localStorage.getItem('restVibration'),restNotificationSound:localStorage.getItem('restNotificationSound'),backupConfig:localStorage.getItem('backupConfig'),descansoPadrao:localStorage.getItem('descansoPadrao'),effortMode:localStorage.getItem('effortMode'),wakeLockEnabled:localStorage.getItem('wakeLockEnabled'),academiaModeEnabled:localStorage.getItem('academiaModeEnabled'),plateBarWeight:localStorage.getItem('plateBarWeight'),platePreset:localStorage.getItem('platePreset'),healthLinksV12:localStorage.getItem('healthLinksV12'),healthHrMax:localStorage.getItem('healthHrMax'),healthAutoSync:localStorage.getItem('healthAutoSync'),healthWriteEnabled:localStorage.getItem('healthWriteEnabled'),weeklyPlanV12:localStorage.getItem('weeklyPlanV12'),healthRecoveryCacheV12:localStorage.getItem('healthRecoveryCacheV12'),healthActivityCacheV128:localStorage.getItem('healthActivityCacheV128'),activityPreferencesV1283:localStorage.getItem('activityPreferencesV1283'),movementGoalsV1286:localStorage.getItem('movementGoalsV1286'),nutritionGoalsV125:localStorage.getItem('nutritionGoalsV125'),nutritionFoodsV125:localStorage.getItem('nutritionFoodsV125'),nutritionEntriesV125:localStorage.getItem('nutritionEntriesV125'),nutritionDayStatusV1285:localStorage.getItem('nutritionDayStatusV1285'),nutritionRecipesV1251:localStorage.getItem('nutritionRecipesV1251'),nutritionMealTemplatesV1251:localStorage.getItem('nutritionMealTemplatesV1251'),nutritionHealthEnabledV1252:localStorage.getItem('nutritionHealthEnabledV1252')};}
+function gerarObjetoBackup(){return {app:'TreinoApp',appVersion:APP_VERSION,build:APP_BUILD,schemaVersion:DATA_SCHEMA_VERSION,nutritionMealDraftV1290:localStorage.getItem('nutritionMealDraftV1290'),nutritionUsualPortionsV1290:localStorage.getItem('nutritionUsualPortionsV1290'),nutritionPlansV1290:localStorage.getItem('nutritionPlansV1290'),exerciseProfilesV1290:localStorage.getItem('exerciseProfilesV1290'),muscleGoalsV1291:localStorage.getItem('muscleGoalsV1291'),recycleBinV12100:localStorage.getItem('recycleBinV12100'),oneHandModeV12100:localStorage.getItem('oneHandModeV12100'),homeLayoutV1288:localStorage.getItem('homeLayoutV1288'),_rascunhoTreino:localStorage.getItem('_rascunhoTreino'),healthPendingV12:localStorage.getItem('healthPendingV12'),exportedAt:new Date().toISOString(),pesoCorporal:localStorage.getItem('pesoCorporal'),historicoTreinoV3:localStorage.getItem('historicoTreinoV3'),exerciciosCustomizadosV3:localStorage.getItem('exerciciosCustomizadosV3'),treinosTemplates:localStorage.getItem('treinosTemplates'),temaPreferido:localStorage.getItem('temaPreferido'),userProfile:localStorage.getItem('userProfile'),treinoMetas:localStorage.getItem('treinoMetas'),conquistasDesbloqueadas:localStorage.getItem('conquistasDesbloqueadas'),perfilPublico:localStorage.getItem('perfilPublico'),treinoScores:localStorage.getItem('treinoScores'),timerSom:localStorage.getItem('timerSom'),restVibration:localStorage.getItem('restVibration'),restNotificationSound:localStorage.getItem('restNotificationSound'),backupConfig:localStorage.getItem('backupConfig'),descansoPadrao:localStorage.getItem('descansoPadrao'),effortMode:localStorage.getItem('effortMode'),wakeLockEnabled:localStorage.getItem('wakeLockEnabled'),academiaModeEnabled:localStorage.getItem('academiaModeEnabled'),plateBarWeight:localStorage.getItem('plateBarWeight'),platePreset:localStorage.getItem('platePreset'),healthLinksV12:localStorage.getItem('healthLinksV12'),healthHrMax:localStorage.getItem('healthHrMax'),healthAutoSync:localStorage.getItem('healthAutoSync'),healthWriteEnabled:localStorage.getItem('healthWriteEnabled'),weeklyPlanV12:localStorage.getItem('weeklyPlanV12'),healthRecoveryCacheV12:localStorage.getItem('healthRecoveryCacheV12'),healthActivityCacheV128:localStorage.getItem('healthActivityCacheV128'),activityPreferencesV1283:localStorage.getItem('activityPreferencesV1283'),movementGoalsV1286:localStorage.getItem('movementGoalsV1286'),nutritionGoalsV125:localStorage.getItem('nutritionGoalsV125'),nutritionFoodsV125:localStorage.getItem('nutritionFoodsV125'),nutritionEntriesV125:localStorage.getItem('nutritionEntriesV125'),nutritionDayStatusV1285:localStorage.getItem('nutritionDayStatusV1285'),nutritionRecipesV1251:localStorage.getItem('nutritionRecipesV1251'),nutritionMealTemplatesV1251:localStorage.getItem('nutritionMealTemplatesV1251'),nutritionHealthEnabledV1252:localStorage.getItem('nutritionHealthEnabledV1252')};}
 async function compartilharBackup(){
   const dados=gerarObjetoBackup(),conteudo=JSON.stringify(dados),nome=`treinoapp_backup_v${APP_VERSION}_${hoje()}.json`;
   if(isNativeAndroid()&&window.TreinoNativeBridge?.shareTextFile){
@@ -6095,7 +6099,7 @@ function salvarSnapshotDiario(){const d=hoje();if(localStorage.getItem('_lastSna
 async function listarSnapshotsSeguro(){try{const db=await openSafeDB();const arr=await new Promise((res,rej)=>{const r=db.transaction('snapshots').objectStore('snapshots').getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error);});db.close();return arr.sort((a,b)=>b.createdAt-a.createdAt);}catch(e){return[];}}
 async function excluirSnapshotSeguro(id){try{const db=await openSafeDB();await new Promise((res,rej)=>{const tx=db.transaction('snapshots','readwrite');tx.objectStore('snapshots').delete(id);tx.oncomplete=res;tx.onerror=()=>rej(tx.error);});db.close();}catch(e){}}
 async function abrirSnapshots(){const el=document.getElementById('snapshotList');document.getElementById('modalSnapshots').classList.add('open');if(!el)return;el.innerHTML='<div style="color:var(--text-muted);font-size:.82em;">Carregando...</div>';const arr=await listarSnapshotsSeguro();if(!arr.length){el.innerHTML='<div class="empty-state" style="padding:20px 0;"><p>Nenhum snapshot interno ainda.</p></div>';return;}el.innerHTML=arr.map(x=>`<div class="snapshot-item"><div><strong>${new Date(x.createdAt).toLocaleString('pt-BR')}</strong><div class="snapshot-meta">${esc(x.motivo||'snapshot')} · v${esc(x.version||'?')}</div></div><div style="display:flex;gap:5px;"><button class="btn btn-outline btn-sm" style="width:auto;" onclick="restaurarSnapshotSeguro('${x.id}')">Restaurar</button><button class="btn btn-danger btn-sm btn-icon" onclick="excluirSnapshotSeguro('${x.id}').then(abrirSnapshots)">×</button></div></div>`).join('');}
-async function restaurarSnapshotSeguro(id){const arr=await listarSnapshotsSeguro(),snap=arr.find(x=>x.id===id);if(!snap)return toast('Snapshot não encontrado','error');if(!confirm('Restaurar este snapshot? Os dados atuais serão substituídos.'))return;await salvarSnapshotSeguro('antes_restauracao');const d=snap.data||{},keys=['nutritionMealDraftV1290','nutritionUsualPortionsV1290','nutritionPlansV1290','exerciseProfilesV1290','muscleGoalsV1291','homeLayoutV1288','_rascunhoTreino','healthPendingV12','pesoCorporal','historicoTreinoV3','exerciciosCustomizadosV3','treinosTemplates','temaPreferido','userProfile','treinoMetas','conquistasDesbloqueadas','perfilPublico','treinoScores','timerSom','restVibration','restNotificationSound','backupConfig','descansoPadrao','effortMode','wakeLockEnabled','academiaModeEnabled','plateBarWeight','platePreset','healthLinksV12','healthHrMax','healthAutoSync','healthWriteEnabled','weeklyPlanV12','healthRecoveryCacheV12','healthActivityCacheV128','activityPreferencesV1283','movementGoalsV1286','nutritionGoalsV125','nutritionFoodsV125','nutritionEntriesV125','nutritionRecipesV1251','nutritionMealTemplatesV1251','nutritionHealthEnabledV1252'];keys.forEach(k=>{if(d[k]!==undefined&&d[k]!==null)localStorage.setItem(k,String(d[k]));});restaurarEstadoDiasBackupNutricao(d);invalidarCache();toast('Snapshot restaurado. Recarregando...','success');setTimeout(()=>location.reload(),900);}
+async function restaurarSnapshotSeguro(id){const arr=await listarSnapshotsSeguro(),snap=arr.find(x=>x.id===id);if(!snap)return toast('Snapshot não encontrado','error');if(!confirm('Restaurar este snapshot? Os dados atuais serão substituídos.'))return;await salvarSnapshotSeguro('antes_restauracao');const d=snap.data||{},keys=['nutritionMealDraftV1290','nutritionUsualPortionsV1290','nutritionPlansV1290','exerciseProfilesV1290','muscleGoalsV1291','recycleBinV12100','oneHandModeV12100','homeLayoutV1288','_rascunhoTreino','healthPendingV12','pesoCorporal','historicoTreinoV3','exerciciosCustomizadosV3','treinosTemplates','temaPreferido','userProfile','treinoMetas','conquistasDesbloqueadas','perfilPublico','treinoScores','timerSom','restVibration','restNotificationSound','backupConfig','descansoPadrao','effortMode','wakeLockEnabled','academiaModeEnabled','plateBarWeight','platePreset','healthLinksV12','healthHrMax','healthAutoSync','healthWriteEnabled','weeklyPlanV12','healthRecoveryCacheV12','healthActivityCacheV128','activityPreferencesV1283','movementGoalsV1286','nutritionGoalsV125','nutritionFoodsV125','nutritionEntriesV125','nutritionRecipesV1251','nutritionMealTemplatesV1251','nutritionHealthEnabledV1252'];keys.forEach(k=>{if(d[k]!==undefined&&d[k]!==null)localStorage.setItem(k,String(d[k]));});restaurarEstadoDiasBackupNutricao(d);invalidarCache();toast('Snapshot restaurado. Recarregando...','success');setTimeout(()=>location.reload(),900);}
 
 // ════════════════════════════════════════════════
 // V11 — BUILD/DEPLOY E REPARO DO APP
@@ -7027,5 +7031,10 @@ setInterval(()=>{if(isNativeAndroid()&&treinoAtivoTemplate&&!document.hidden)rec
 <script src="./nutrition-workflow.js"></script>
 <script src="./exercise-toolkit.js"></script>
 <script src="./muscle-goals.js"></script>
+<script src="./progress-quality.js"></script>
+<script src="./meal-shortcuts.js"></script>
+<script src="./food-label.js"></script>
+<script src="./onehand-workout.js"></script>
+<script src="./recycle-bin.js"></script>
 </body>
 </html>

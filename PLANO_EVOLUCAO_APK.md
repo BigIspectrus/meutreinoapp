@@ -31,6 +31,8 @@ Autorização após a v12.8.6: implementar o tópico 10 na v12.8.7, gerar APK e 
 
 ## Regras de entrega
 
+Autorização em 08/10/2026: da lista mais recente de 15 sugestões, implementar somente 1 (modo uma mão), 6 (revisão de evolução/plateau), 10 (OCR do rótulo), 11 (atalhos por refeição) e 14 (lixeira) juntos na v12.10.0. Não confundir com a lista antiga cujo 14 era painel inicial, nem com a anterior em que 1/8 eram carga/metas musculares. Preservar dados/assinatura/Health e gerar APK sem testes funcionais, mantendo a preferência anterior. Não implementar os demais itens.
+
 Após a v12.9.0, autorizado somente 1 (tipo de carga por exercício) e 8 (metas semanais manuais de séries por músculo) da última lista. Entregar v12.9.1, sem antecipar outros itens. Preservar o histórico sem conversão entre carga total, por halter, por lado ou assistência. Faixas musculares escolhidas pelo usuário, diretas/indiretas separadas. Manter compilação sem testes.
 
 Após a v12.8.9, o usuário autorizou juntos somente os itens 1, 2, 3, 4, 7 e 9 da NOVA lista: rascunho alimentar persistente, porções habituais, notas por aparelho, substitutos favoritos, planejamento alimentar separado do consumo e séries semanais por músculo. Entregar todos na v12.9.0. Não confundir com a numeração da lista antiga concluída e não antecipar os demais itens. Manter a preferência de não executar testes; compilar e gerar APK assinado.

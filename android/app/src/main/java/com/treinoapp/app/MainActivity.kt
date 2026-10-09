@@ -12,6 +12,7 @@ import com.getcapacitor.PluginCall
 import com.treinoapp.app.nativebridge.HealthConnectRepository
 import com.treinoapp.app.nativebridge.HealthSyncScheduler
 import com.treinoapp.app.nativebridge.TreinoNativePlugin
+import com.treinoapp.app.nativebridge.FoodLabelPlugin
 import com.treinoapp.app.nativebridge.ExternalBackupRepository
 import com.treinoapp.app.nativebridge.ExternalBackupScheduler
 import kotlinx.coroutines.CoroutineScope
@@ -80,6 +81,7 @@ class MainActivity : BridgeActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         healthRepository = HealthConnectRepository(this)
         registerPlugin(TreinoNativePlugin::class.java)
+        registerPlugin(FoodLabelPlugin::class.java)
         super.onCreate(savedInstanceState)
         HealthSyncScheduler.ensurePeriodic(this)
         ExternalBackupScheduler.ensure(this)
