@@ -3,14 +3,14 @@ let _nutritionBuilderPurpose='consumed',_nutritionPlanningDate='',_nutritionPlan
 const NWF=window.TreinoWorkflowStore;
 function idsConsumoRascunho(draft){return draft.items.map(row=>'draft:'+draft.id+':'+row.key);}
 function rascunhoRefeicaoPendente(){
-  const draft=window.TreinoMealBuilder.data()||window.TreinoMealBuilder.loadSaved();if(!draft?.items.length)return null;
-  const recorded=draft.mode==='planned'?getPlanosAlimentares().some(plan=>plan.id===draft.id&&!draft.editPlanId):idsConsumoRascunho(draft).every(id=>getRegistrosNutricao().some(e=>e.id===id));
+  const draft=window.TreinoMealBuilder.data()||window.TreinoMealBuilder.loadSaved();if(!draft||(!draft.items.length&&!String(draft.textInput||'').trim()))return null;
+  const recorded=!String(draft.textInput||'').trim()&&draft.items.length>0&&(draft.mode==='planned'?getPlanosAlimentares().some(plan=>plan.id===draft.id&&!draft.editPlanId):idsConsumoRascunho(draft).every(id=>getRegistrosNutricao().some(e=>e.id===id)));
   if(recorded){window.TreinoMealBuilder.clear();return null;}return draft;
 }
 function renderizarRascunhoRefeicaoPendente(){
   const el=document.getElementById('nutritionPendingDraft');if(!el)return;const draft=rascunhoRefeicaoPendente();
   el.hidden=!draft;if(!draft)return;
-  el.innerHTML='<div><strong>'+(draft.mode==='planned'?'Planejamento em montagem':'Refeição em montagem')+'</strong><small>'+esc(draft.date.split('-').reverse().join('/'))+' · '+draft.items.length+' alimentos'+(window.TreinoMealBuilder.storageError()?' · não foi possível guardar a última alteração':' · guardado neste aparelho')+'</small></div><button type="button" class="btn btn-outline btn-sm" onclick="retomarRascunhoRefeicao()">Continuar</button><button type="button" class="btn btn-ghost btn-sm" onclick="descartarRascunhoRefeicao()">Descartar</button>';
+  el.innerHTML='<div><strong>'+(draft.mode==='planned'?'Planejamento em montagem':'Refeição em montagem')+'</strong><small>'+esc(draft.date.split('-').reverse().join('/'))+' · '+draft.items.length+' alimentos'+(String(draft.textInput||'').trim()?' · texto para revisar':'')+(window.TreinoMealBuilder.storageError()?' · não foi possível guardar a última alteração':' · guardado neste aparelho')+'</small></div><button type="button" class="btn btn-outline btn-sm" onclick="retomarRascunhoRefeicao()">Continuar</button><button type="button" class="btn btn-ghost btn-sm" onclick="descartarRascunhoRefeicao()">Descartar</button>';
 }
 function descartarRascunhoRefeicao(){if(!confirm('Descartar somente a refeição em montagem? Registros e planos já salvos permanecem.'))return;window.TreinoMealBuilder.clear();limparSelecaoMontagemNutricao();document.getElementById('modalNutritionAdd').classList.remove('open');renderizarRascunhoRefeicaoPendente();}
 function abrirMontagemRefeicaoNutricao(meal='snack',mode='consumed',date=_nutritionDate){
@@ -53,8 +53,8 @@ function usarPorcaoHabitual(){
 }
 function renderizarPorcaoHabitualMontagem(){
   const food=foodMontagemAtual(),host=document.getElementById('nutritionSelectedFood');if(!food||!host)return;host.querySelector('.usual-portion-tools')?.remove();
-  const habit=getPorcoesHabituais().find(row=>row.foodId===(food.originalFoodId||food.id)),box=document.createElement('div');box.className='usual-portion-tools';
-  box.innerHTML=(habit?'<button type="button" class="btn btn-outline btn-sm" onclick="usarPorcaoHabitual()">Usar minha porção · '+esc(textoPorcaoNutricao(habit.serving))+'</button>':'')+'<button type="button" class="btn btn-ghost btn-sm" onclick="guardarPorcaoHabitual()">'+(habit?'Atualizar porção habitual':'Guardar porção habitual')+'</button>'+(habit?'<button type="button" class="btn btn-ghost btn-sm" onclick="esquecerPorcaoHabitual()">Esquecer</button>':'')+'<small>Apenas preenche a quantidade. Revise a prévia e salve quando consumir.</small>';host.appendChild(box);
+  const habit=getPorcoesHabituais().find(row=>row.foodId===(food.originalFoodId||food.id)),box=document.createElement('details');box.className='usual-portion-tools';
+  box.innerHTML='<summary>Minha porção habitual'+(habit?' · '+esc(textoPorcaoNutricao(habit.serving)):'')+'</summary>'+(habit?'<button type="button" class="btn btn-outline btn-sm" onclick="usarPorcaoHabitual()">Usar minha porção</button>':'')+'<button type="button" class="btn btn-ghost btn-sm" onclick="guardarPorcaoHabitual()">'+(habit?'Atualizar porção habitual':'Guardar porção habitual')+'</button>'+(habit?'<button type="button" class="btn btn-ghost btn-sm" onclick="esquecerPorcaoHabitual()">Esquecer</button>':'')+'<small>Apenas preenche a quantidade. Revise a prévia e salve quando consumir.</small>';host.appendChild(box);
 }
 function normalizarItemPlanoNutricao(row){
   if(!row?.name||!(Number(row.grams)>0)||!['kcal','protein','carbs','fat'].every(k=>Number.isFinite(Number(row[k]))&&Number(row[k])>=0))return null;

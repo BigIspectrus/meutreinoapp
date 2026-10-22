@@ -3,13 +3,13 @@ window.TreinoMealBuilder=(()=>{
   let draft=null,sequence=0,persistError=false;
   const clone=value=>JSON.parse(JSON.stringify(value));
   function persist(){
-    if(!draft||!draft.items.length)return;
+    if(!draft||(!draft.items.length&&!String(draft.textInput||'').trim()))return;
     const snapshot=clone({...draft,saving:false,updatedAt:Date.now()});
     try{localStorage.setItem(window.TreinoWorkflowStore.keys.draft,JSON.stringify(snapshot));persistError=false;}
     catch(error){if(!persistError)toast('Não foi possível guardar o rascunho. A montagem continua aberta.','warn');persistError=true;console.warn(error);}
   }
   function begin(date,mode='consumed'){draft={id:gerarId('meal-draft'),date:String(date),mode:mode==='planned'?'planned':'consumed',mealType:'snack',time:horarioNutricao(),items:[],selected:null,saving:false};return draft;}
-  function loadSaved(){const raw=window.TreinoWorkflowStore.read(window.TreinoWorkflowStore.keys.draft,null);if(!raw||!window.TreinoWorkflowStore.validDate(raw.date)||!Array.isArray(raw.items)||!raw.items.length||!raw.id)return null;
+  function loadSaved(){const raw=window.TreinoWorkflowStore.read(window.TreinoWorkflowStore.keys.draft,null);if(!raw||!window.TreinoWorkflowStore.validDate(raw.date)||!Array.isArray(raw.items)||(!raw.items.length&&!String(raw.textInput||'').trim())||!raw.id)return null;
     if(raw.items.some(row=>!row?.key||!row.food?.id||!row.food?.name||!['kcal100','protein100','carbs100','fat100'].every(key=>Number.isFinite(Number(row.food[key]))&&Number(row.food[key])>=0)))return null;
     const saved=clone({...raw,mode:raw.mode==='planned'?'planned':'consumed',saving:false});
     saved.items=saved.items.map(row=>{const unit=String(row.unit||'grams'),index=Number(unit.split(':')[1]),measure=row.food.measures?.[index],validUnit=unit==='grams'||unit==='ml'&&Number(row.food.liquidGramsPerMlSnapshot)>0||unit.startsWith('measure:')&&measure?.name&&Number(measure.grams)>0;
@@ -28,12 +28,18 @@ window.TreinoMealBuilder=(()=>{
   }
   function select(key){const row=items().find(row=>row.key===key);if(row)draft.selected=key;return row||null;}
   function update(amount,unit,grams){const row=selected();if(row){row.amount=Number(amount);row.unit=String(unit);row.grams=Number(grams);persist();}return row;}
-  function remove(key){if(!draft)return;draft.items=draft.items.filter(row=>row.key!==key);if(draft.selected===key)draft.selected=null;if(draft.items.length)persist();else localStorage.removeItem(window.TreinoWorkflowStore.keys.draft);}
-  function refreshFood(food){const row=findFood(food.id);if(row){row.food=clone(food);row.unit='grams';row.amount=row.grams;persist();}return row;}
+  function appendBatch(rows){
+    if(!draft||draft.saving||!rows.length||rows.some(row=>!row.food?.id||!row.food?.name||!Number.isFinite(row.grams)||row.grams<=0||!Number.isFinite(row.amount)||row.amount<=0))throw new Error('Lote alimentar inválido');
+    const added=rows.map(row=>{const item={...clone(row),key:gerarId('draft-item')+'-'+(++sequence)};if(item.unit==='ml')item.food.liquidGramsPerMlSnapshot=item.grams/item.amount;return item;});
+    // Preparar tudo antes de modificar a montagem. Chaves estáveis são usadas no diário.
+    draft.items.push(...added);draft.selected=null;draft.textInput='';draft.textMode=false;persist();return added;
+  }
+  function remove(key){if(!draft)return;draft.items=draft.items.filter(row=>row.key!==key);if(draft.selected===key)draft.selected=null;if(draft.items.length||String(draft.textInput||'').trim())persist();else localStorage.removeItem(window.TreinoWorkflowStore.keys.draft);}
+  function refreshFood(food){const rows=items().filter(row=>row.food.id===food.id);for(const row of rows){row.food=clone(food);row.unit='grams';row.amount=row.grams;}if(rows.length)persist();return rows[0]||null;}
   function valid(){return !!draft&&draft.items.length>0&&draft.items.every(row=>Number.isFinite(row.grams)&&row.grams>0&&row.food?.id&&row.food?.name);}
   function clear(){draft=null;try{localStorage.removeItem(window.TreinoWorkflowStore.keys.draft);persistError=false;}catch(error){console.warn(error);}}
   function data(){return draft;}
-  return {begin,active,items,selected,findFood,add,select,update,remove,refreshFood,valid,clear,data,persist,loadSaved,resume,setContext,storageError:()=>persistError};
+  return {begin,active,items,selected,findFood,add,appendBatch,select,update,remove,refreshFood,valid,clear,data,persist,loadSaved,resume,setContext,storageError:()=>persistError};
 })();
 
 function iniciarMontagemRefeicaoNutricao(date){
@@ -48,7 +54,7 @@ function limparSelecaoMontagemNutricao(){
 }
 function selecionarItemMontagemNutricao(key){
   const row=window.TreinoMealBuilder.select(key);if(!row)return;
-  selecionarAlimentoNutricao(row.food.id);document.getElementById('nutritionAddAmount').focus();
+  selecionarAlimentoNutricao(row.food.id,row.key);document.getElementById('nutritionAddAmount').focus();
 }
 function removerItemMontagemNutricao(key){
   const builder=window.TreinoMealBuilder,wasSelected=builder.selected()?.key===key;builder.remove(key);
@@ -62,11 +68,12 @@ function escolherOutroAlimentoMontagemNutricao(){
 function renderizarMontagemRefeicaoNutricao(){
   const builder=window.TreinoMealBuilder,el=document.getElementById('nutritionMealDraft');if(!el||!builder.active())return;
   const rows=builder.items(),valid=builder.valid(),values=rows.map(row=>calcularPorGramasNutricao(row.food,Number.isFinite(row.grams)&&row.grams>0?row.grams:0)),totals=totaisNutricao(values),date=builder.data().date;
-  el.innerHTML='<div class="meal-draft-heading"><strong>Sua refeição · '+rows.length+' '+(rows.length===1?'alimento':'alimentos')+'</strong><span>'+esc(date.split('-').reverse().join('/'))+'</span></div>'+
-    (rows.length?'<div class="meal-draft-total"><strong>'+formatarNutricao(totals.kcal)+' kcal</strong><span>P '+formatarNutricao(totals.protein,1)+' g · C '+formatarNutricao(totals.carbs,1)+' g · G '+formatarNutricao(totals.fat,1)+' g</span></div><div class="meal-draft-items">'+rows.map(row=>{
+  const expanded=el.querySelector('details')?.open===true;
+  el.innerHTML=rows.length?'<div class="meal-draft-total"><strong>'+formatarNutricao(totals.kcal)+' kcal</strong><span>P '+formatarNutricao(totals.protein,1)+' g · C '+formatarNutricao(totals.carbs,1)+' g · G '+formatarNutricao(totals.fat,1)+' g</span></div><details'+(expanded?' open':'')+'><summary>Ver / editar '+rows.length+' '+(rows.length===1?'alimento':'alimentos')+' da montagem</summary><div class="meal-draft-items">'+rows.map(row=>{
       const ok=Number.isFinite(row.grams)&&row.grams>0,v=calcularPorGramasNutricao(row.food,ok?row.grams:0);
       return '<div class="meal-draft-item'+(builder.selected()?.key===row.key?' editing':'')+'"><button type="button" class="meal-draft-edit" onclick=\'selecionarItemMontagemNutricao('+jsArg(row.key)+')\'><strong>'+esc(row.food.name)+'</strong><span>'+(ok?formatarNutricao(row.grams,1)+' g · '+formatarNutricao(v.kcal)+' kcal':'Ajuste a quantidade antes de salvar')+'</span></button><button type="button" class="meal-draft-remove" aria-label="Remover '+esc(row.food.name)+' da refeição" onclick=\'removerItemMontagemNutricao('+jsArg(row.key)+')\'>×</button></div>';
-    }).join('')+'</div>':'<p class="nutrition-note">Busque e escolha os alimentos. Eles ficam aqui até você salvar a refeição.</p>');
+    }).join('')+'</div></details>':'';
+  el.hidden=!rows.length;
   const save=document.getElementById('nutritionAddSave');save.disabled=!valid||builder.data().saving;
   save.textContent=rows.length?'Salvar refeição ('+rows.length+')':'Salvar refeição';
   const next=document.getElementById('nutritionPickNext');if(next)next.hidden=!builder.selected();
