@@ -26,7 +26,7 @@ Exemplo:
 - Sem candidato, o usuário precisa cadastrar um alimento ou escolher um item existente. Não cria valores nutricionais por estimativa.
 - mL/L só usam conversão de densidade já conhecida pelo catálogo; sem referência, pede medida/peso manual. Equivalências existentes continuam aproximadas e identificadas como tal.
 - Ambiguidade de decimal/milhar com três casas pede confirmação numérica. Não elimina silenciosamente entradas que não entendeu.
-- Limite explícito de 6.000 caracteres e 60 itens; fora dele não registra um subconjunto escondido.
+- Limite de 60 itens. Ao atingir o campo de 6.000 caracteres, bloqueia o registro e pede conferir a colagem/reduzir o texto; não salva automaticamente uma colagem possivelmente truncada.
 
 ## Persistência e proteção
 

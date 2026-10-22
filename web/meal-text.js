@@ -42,7 +42,7 @@ function atualizarAcoesEntradaRefeicao(){
   const draft=window.TreinoMealBuilder.data(),text=modoTextoRefeicao(),save=document.getElementById('nutritionAddSave');
   document.getElementById('mealTextPanel').hidden=!text;document.getElementById('mealManualPanel').hidden=text;
   document.getElementById('mealModeSearch').setAttribute('aria-pressed',String(!text));document.getElementById('mealModeText').setAttribute('aria-pressed',String(text));
-  if(text){const pending=_mealTextRows?.filter(r=>!r.excluded)||[],unresolved=pending.filter(r=>!valorItemTextoRefeicao(r)).length;save.disabled=_mealTextBusy||!String(draft?.textInput||'').trim();save.textContent=_mealTextRows?(unresolved?'Revisar '+unresolved+' pendência(s)':draft?.mode==='planned'?'Guardar planejamento por texto':'Registrar refeição ('+(pending.length+(draft?.items.length||0))+')'):draft?.mode==='planned'?'Preparar planejamento':'Registrar por texto';}
+  if(text){const pending=_mealTextRows?.filter(r=>!r.excluded)||[],unresolved=pending.filter(r=>!valorItemTextoRefeicao(r)).length,source=String(draft?.textInput||'');save.disabled=_mealTextBusy||!source.trim()||source.length>=6000;save.textContent=_mealTextRows?(unresolved?'Revisar '+unresolved+' pendência(s)':draft?.mode==='planned'?'Guardar planejamento por texto':'Registrar refeição ('+(pending.length+(draft?.items.length||0))+')'):draft?.mode==='planned'?'Preparar planejamento':'Registrar por texto';if(source.length>=6000)document.getElementById('mealTextStatus').textContent='Limite de texto atingido. Confira se a colagem ficou completa e reduza para menos de 6.000 caracteres antes de registrar. Nada foi registrado.';}
 }
 function mudarModoEntradaRefeicao(text){
   const builder=window.TreinoMealBuilder;if(!builder.active())return;builder.data().textMode=!!text;builder.persist();renderizarMontagemRefeicaoNutricao();atualizarAcoesEntradaRefeicao();document.querySelector('#modalNutritionAdd .meal-sheet-body').scrollTop=0;
@@ -53,7 +53,7 @@ function alterarTextoRefeicao(){
   if(!builder.items().length&&!builder.data().textInput.trim())localStorage.removeItem(window.TreinoWorkflowStore.keys.draft);
 }
 function prepararTextoRefeicao(){
-  const input=document.getElementById('mealTextInput').value.trim();if(!input)return false;
+  const rawInput=document.getElementById('mealTextInput').value;if(rawInput.length>=6000){atualizarAcoesEntradaRefeicao();return false;}const input=rawInput.trim();if(!input)return false;
   let text=input.replace(/^["'“”]+|["'“”]+$/g,'').trim();const header=text.match(/^(caf[eé]\s+da\s+manh[aã]|almo[cç]o|jantar|lanches?|caf[eé]\s+da\s+tarde|ceia)\s*(?:[-–—:]|\r?\n)\s*/iu);
   if(header){const name=normalizarBuscaNutricao(header[1]),meal=name==='cafe da manha'?'breakfast':name==='almoco'?'lunch':name==='jantar'?'dinner':'snack';document.getElementById('nutritionAddMeal').value=meal;atualizarContextoMontagemPersistente();text=text.slice(header[0].length);}
   // Protege vírgulas decimais sem engolir separadores como "40g,30g".
