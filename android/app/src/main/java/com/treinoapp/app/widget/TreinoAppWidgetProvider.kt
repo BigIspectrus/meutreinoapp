@@ -146,7 +146,9 @@ open class TreinoAppWidgetProvider : AppWidgetProvider() {
             val usableHeight = (height / max(1f, context.resources.configuration.fontScale)).toInt()
             val compact = settings.compact || usableHeight < if (combined) 480 else 270
             val tight = usableHeight < 220
-            val ring = food && !compact && width / max(1f, context.resources.configuration.fontScale) >= 270
+            // A escala já reduz a altura útil. Dividir também a largura do bucket
+            // ocultaria o anel para sempre em fontes > 100%, mesmo ao ampliar.
+            val ring = food && !compact && width >= 270
             fun visible(view: Int, show: Boolean) = views.setViewVisibility(view, if (show) View.VISIBLE else View.GONE)
             visible(R.id.widgetTrainingSection, training && (!combined || usableHeight >= 340)); visible(R.id.widgetNutritionSection, food)
             visible(R.id.widgetMovementSection, movement && (!combined || usableHeight >= 340)); visible(R.id.widgetButton, training)
@@ -215,7 +217,7 @@ open class TreinoAppWidgetProvider : AppWidgetProvider() {
             fun progressOf(value: Float?, target: Float) = if (value != null && target > 0)
                 (value.toDouble() / target * 1000).coerceIn(0.0, 1000.0).toInt() else 0
             views.setTextViewText(R.id.widgetNutritionKcal, if (tight && goal > 0) "${format(kcal)} / ${format(goal)} kcal" else "${format(kcal)} kcal")
-            views.setTextViewText(R.id.widgetNutritionGoal, if (!foodToday) "Abra o app para atualizar" else if (goal > 0) "registradas · meta ${format(goal)} kcal" else "registradas hoje · sem meta")
+            views.setTextViewText(R.id.widgetNutritionGoal, if (!foodToday) "Abra o app para atualizar" else if (goal > 0) "Meta ${format(goal)} kcal" else "Hoje · sem meta de kcal")
             views.setTextViewText(R.id.widgetNutritionBalance, when {
                 kcal == null -> "Sem registros atualizados de hoje"
                 goal <= 0 -> "Defina suas metas no aplicativo"
