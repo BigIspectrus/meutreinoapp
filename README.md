@@ -1,4 +1,4 @@
-# TreinoApp v12.10.1 Beta — Refeição por texto e tela adaptável
+# TreinoApp v12.10.2 Beta — Widget visual e refeição por texto
 
 TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capacitor. A variante Beta pode coexistir com a Stable.
 
@@ -6,10 +6,18 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 
 - Stable: `com.treinoapp.app`
 - Beta: `com.treinoapp.beta`
-- Versão: `12.10.1`
-- versionCode: `121001`
+- Versão: `12.10.2`
+- versionCode: `121002`
 - Android: compile/target API 36, minSdk 26
 - Room: schema 7, somente migrações explícitas
+
+## Melhorias v12.10.2
+
+- widget redesenhado: fundo em degradê, melhor hierarquia, cartões coloridos de macros e ações separadas;
+- anel de kcal e barras de proteína/carboidrato/gordura em relação às metas manuais, sem inventar metas ou descontar exercício;
+- atalho “Por texto” abre a entrada da refeição no app, junto do atalho manual existente;
+- layouts por largura/altura e fonte, com versões compactas para não forçar o gráfico em espaços pequenos;
+- compilação e conferência do APK/assinatura, sem testes funcionais conforme preferência anterior. Detalhes em `NOTAS_v12.10.2_BETA.md`.
 
 ## Melhorias v12.10.1
 

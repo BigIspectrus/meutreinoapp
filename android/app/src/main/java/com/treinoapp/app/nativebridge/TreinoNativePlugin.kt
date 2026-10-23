@@ -324,6 +324,9 @@ class TreinoNativePlugin : Plugin() {
             (call.getDouble("fat", 0.0) ?: 0.0).coerceAtLeast(0.0).toFloat(),
             (call.getDouble("goalKcal", 0.0) ?: 0.0).coerceAtLeast(0.0).toFloat(),
             call.getObject("movement"),
+            goalProtein = (call.getDouble("goalProtein", 0.0) ?: 0.0).coerceAtLeast(0.0).toFloat(),
+            goalCarbs = (call.getDouble("goalCarbs", 0.0) ?: 0.0).coerceAtLeast(0.0).toFloat(),
+            goalFat = (call.getDouble("goalFat", 0.0) ?: 0.0).coerceAtLeast(0.0).toFloat(),
         )
         call.resolve()
     }

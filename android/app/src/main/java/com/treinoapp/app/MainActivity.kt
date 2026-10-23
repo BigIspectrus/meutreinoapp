@@ -143,10 +143,13 @@ class MainActivity : BridgeActivity() {
         val tab = intent?.getStringExtra("openTab") ?: return
         val startNext = intent.getBooleanExtra("startNextWorkout", false)
         val addMeal = intent.getBooleanExtra("addMeal", false)
+        val addMealText = intent.getBooleanExtra("addMealText", false)
         val openActivity = intent.getBooleanExtra("openActivity", false)
         bridge?.webView?.postDelayed({
             val safe = if (tab in setOf("dashboard", "treinar", "nutricao", "historico", "progresso", "config")) tab else "treinar"
-            val js = if (addMeal && safe == "nutricao") {
+            val js = if (addMealText && safe == "nutricao") {
+                "(function openTextMeal(attempt){if(window.abrirRefeicaoTextoWidget){window.abrirRefeicaoTextoWidget();}else if(attempt<40){setTimeout(()=>openTextMeal(attempt+1),250);}})(0);"
+            } else if (addMeal && safe == "nutricao") {
                 "(function openMeal(attempt){if(window.abrirRefeicaoWidget){window.abrirRefeicaoWidget();}else if(attempt<40){setTimeout(()=>openMeal(attempt+1),250);}})(0);"
             } else if (openActivity && safe == "progresso") {
                 "(function openMovement(attempt){if(window.abrirCardioPassos){window.abrirCardioPassos();}else if(attempt<40){setTimeout(()=>openMovement(attempt+1),250);}})(0);"

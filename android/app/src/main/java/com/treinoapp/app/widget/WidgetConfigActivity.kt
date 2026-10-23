@@ -140,17 +140,17 @@ class WidgetConfigActivity : AppCompatActivity() {
         fun updatePreview() {
             macros.visibility = if (selected.mode in setOf(WidgetMode.COMBINED, WidgetMode.NUTRITION)) View.VISIBLE else View.GONE
             preview.text = when (selected.mode) {
-                WidgetMode.NUTRITION -> "Kcal do dia${if (selected.showMacros) " + macros" else ""}\nAtalho para adicionar refeição de hoje"
+                WidgetMode.NUTRITION -> "Anel de kcal do dia${if (selected.showMacros) " + barras de macros" else ""}\nMetas manuais e atalhos: alimento ou refeição por texto"
                 WidgetMode.WORKOUT -> "Próximo treino ou sessão ativa\nAtalho para iniciar ou retomar o treino"
                 WidgetMode.MOVEMENT -> "Passos de hoje e cardio da semana\nMetas manuais e horário das leituras salvas"
-                WidgetMode.COMBINED -> "Treino, alimentação e movimento\nTrês atalhos na mesma área"
+                WidgetMode.COMBINED -> "Treino, alimentação e movimento\nKcal/macros visuais e atalho para refeição por texto\nAmplie o widget para revelar todos os painéis"
             }
         }
         group.setOnCheckedChangeListener { _, checked -> choices[checked]?.let { selected = selected.copy(mode = it); updatePreview() } }
         compact.setOnCheckedChangeListener { _, checked -> selected = selected.copy(compact = checked) }
         macros.setOnCheckedChangeListener { _, checked -> selected = selected.copy(showMacros = checked); updatePreview() }
         updatePreview()
-        label("O modo automático adapta os detalhes ao tamanho. Redimensione o widget na tela inicial para ver mais informações. Toque em ⋮ no widget para editar novamente.")
+        label("O modo automático adapta os detalhes ao tamanho e à fonte do Android. Para ver o anel de kcal, amplie o widget e desative “Sempre compacto”. As barras só comparam com suas metas positivas, sem criar metas automaticamente. Toque em ⋮ para editar novamente.")
         button("Salvar widget") {
             if (!validId(widgetId)) { Toast.makeText(this, "Este widget foi removido. Adicione outro na tela inicial.", Toast.LENGTH_LONG).show(); finish(); return@button }
             if (!WidgetConfiguration.save(this, widgetId, selected)) { Toast.makeText(this, "Não foi possível salvar. Tente novamente.", Toast.LENGTH_LONG).show(); return@button }

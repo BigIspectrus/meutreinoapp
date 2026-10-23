@@ -10,8 +10,8 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <title>TreinoApp v12</title>
-  <meta name="treinoapp-version" content="12.10.1">
-  <meta name="treinoapp-build" content="2026.10.22.2">
+  <meta name="treinoapp-version" content="12.10.2">
+  <meta name="treinoapp-build" content="2026.10.23.3">
   <script defer src="./vendor/chart.umd.js"></script>
   <script defer src="./vendor/jspdf.umd.min.js"></script>
   <script defer src="./vendor/qrcode.min.js"></script>
@@ -2248,14 +2248,14 @@
 <script src="./load-conventions.js"></script>
 <script src="./nutrition-portions.js"></script>
 <script>
-const APP_VERSION = '12.10.1';
-const APP_BUILD = '2026.10.22.2';
+const APP_VERSION = '12.10.2';
+const APP_BUILD = '2026.10.23.3';
 const DATA_SCHEMA_VERSION = 18;
 const GITHUB_REPO='BigIspectrus/meutreinoapp';
 const GITHUB_PAGES_BASE='https://bigispectrus.github.io/meutreinoapp';
 let _latestAndroidReleaseUrl='';
 let _nativeChannel='web';
-const APP_CACHE_VERSION = 'treinoapp-v12.10.1-202610222';
+const APP_CACHE_VERSION = 'treinoapp-v12.10.2-202610233';
 
 const SET_TYPES={workset:'Work set',warmup:'Aquecimento',topset:'Top set',backoff:'Back-off',dropset:'Drop set',cluster:'Cluster set',fst7:'FST-7',restpause:'Rest-pause',myoreps:'Myo-reps',amrap:'AMRAP'};
 function normalizarSetType(v){return SET_TYPES[v]?v:'workset';}
@@ -6288,7 +6288,7 @@ async function sincronizarPesoHealth(){if(!isNativeAndroid())return toast('Dispo
 async function sincronizarBancoNativo(showToast=true){if(!isNativeAndroid())return;try{const hist=getHist(),chunk=250;if(!hist.length){localStorage.setItem('_nativeDbSyncedSchema',String(DATA_SCHEMA_VERSION));return;}for(let i=0;i<hist.length;i+=chunk)await window.TreinoNativeBridge.syncNativeDatabase({records:hist.slice(i,i+chunk).map(r=>({...r,rir:numeroOpcionalAnalise(r.rir),rpe:numeroOpcionalAnalise(r.rpe)})),replace:i===0});const sessions=Object.entries(agruparSessoes(hist)).sort((a,b)=>getSessionTimestamp(b[1])-getSessionTimestamp(a[1])).slice(0,30);for(const [sid,regs] of sessions){const b=boundsSessao(regs),meta=regs.find(r=>numeroOpcionalAnalise(r.sessionRpe)!=null||r.sessionNote||r.sessionContext?.length)||regs[0];if(!b.startMs||!b.endMs||b.endMs<=b.startMs)continue;await window.TreinoNativeBridge.saveWorkoutMirror({sessionId:sid,templateId:regs.find(r=>r.templateId)?.templateId||null,name:regs.find(r=>r.templateNome)?.templateNome||'Treino',startMs:b.startMs,endMs:b.endMs,durationSec:b.durationSec,completedSets:regs.length,totalSets:regs.length,sessionRpe:numeroOpcionalAnalise(meta?.sessionRpe),contextTags:Array.isArray(meta?.sessionContext)?meta.sessionContext:[],sessionNote:meta?.sessionNote||'',sets:regs.map(r=>({id:r.id||gerarId('native'),exercise:r.exercicio||'',setNumber:Number(r.numSerie)||0,weight:Number(r.carga)||0,loadMode:tipoCargaRegistro(r),reps:Number(r.reps)||0,setType:r.setType||'workset',rir:numeroOpcionalAnalise(r.rir),rpe:numeroOpcionalAnalise(r.rpe),startedAt:Number(r.setStartedAt)||null,completedAt:Number(r.completedAt)||b.endMs,restBeforeSec:r.restBeforeSec??null,timingQuality:r.timingQuality||'legacy'}))});}localStorage.setItem('_nativeDbSyncedSchema',String(DATA_SCHEMA_VERSION));if(showToast)toast('Banco Android, contexto e horários das sessões sincronizados','success');}catch(e){if(showToast)toast('Não foi possível sincronizar o banco Android','warn');}}
 function resumoNativoAtual(){if(!treinoAtivoTemplate)return null;const rows=linhasValidasTreino(),done=rows.filter(r=>r.querySelector('.serie-check')?.classList.contains('checked')),active=getExerciseCards().find(c=>c.classList.contains('focus-active'))||getExerciseCards().find(c=>!c.classList.contains('skipped'));const nr=active?[...active.querySelectorAll('.serie-row')].findIndex(r=>!r.querySelector('.serie-check')?.classList.contains('checked'))+1:0;return{sessionId:window._treinoSessionId,name:treinoAtivoTemplate.nome||'Treino',startedAt:window._treinoStartedAt,totalSets:rows.length,completedSets:done.length,currentExercise:active?.dataset.ex||'',currentSet:Math.max(1,nr),paused:!!window._treinoPaused};}
 let _nativeUpdateTimer=null;function agendarUpdateNativo(){if(!isNativeAndroid())return;clearTimeout(_nativeUpdateTimer);_nativeUpdateTimer=setTimeout(()=>{const s=resumoNativoAtual();if(s)window.TreinoNativeBridge.updateWorkout(s).catch(()=>{});atualizarWidgetNativo();},120);}
-function resumoAlimentacaoWidget(){const date=hoje(),tot=totaisNutricao(getRegistrosNutricao().filter(e=>e.date===date));return {nutritionDate:date,kcal:tot.kcal,protein:tot.protein,carbs:tot.carbs,fat:tot.fat,goalKcal:getMetasNutricao()?.kcal||0};}
+function resumoAlimentacaoWidget(){const date=hoje(),tot=totaisNutricao(getRegistrosNutricao().filter(e=>e.date===date)),goal=getMetasNutricao();return {nutritionDate:date,kcal:tot.kcal,protein:tot.protein,carbs:tot.carbs,fat:tot.fat,goalKcal:goal?.kcal||0,goalProtein:goal?.protein||0,goalCarbs:goal?.carbs||0,goalFat:goal?.fat||0};}
 async function atualizarWidgetNativo(){if(!isNativeAndroid())return;try{const hist=getHist(),streak=calcularStreakAtual(hist),d=gerarDesafio(hist),ts=getTreinosSalvos(),draft=getRascunhoValido(),draftT=draft?(ts.find(t=>String(t.id)===String(draft.templateId))||draft.templateSnapshot):null,lastId=obterUltimaSessao(hist)?.[1]?.find(r=>r.templateId)?.templateId,next=(treinoAtivoTemplate||draftT||getTreinoPlanejadoHoje()||ts.find(t=>String(t.id)===String(lastId))||ts[0])?.nome||'Treino';await window.TreinoNativeBridge.updateWidgetState({nextWorkout:next,weeklyDone:d.tipo==='frequencia'?d.prog:new Set(hist.filter(r=>{const x=new Date();x.setDate(x.getDate()-6);return r.data>=localDate(x)}).map(r=>r.data)).size,weeklyTarget:d.tipo==='frequencia'?d.alvo:4,streak,active:resumoNativoAtual(),...resumoAlimentacaoWidget(),movement:resumoMovimentoWidget()});}catch(e){console.warn('Atualização dos widgets',e)}}
 async function gerenciarWidgetsNativos(){if(!isNativeAndroid())return;try{await atualizarWidgetNativo();await window.TreinoNativeBridge.openWidgetSettings();}catch(e){console.warn(e);toast('Não foi possível abrir os widgets. Adicione pela tela inicial → Widgets → TreinoApp.','warn');}}
 function localizarSeriePendenteNativa(st){const rows=linhasValidasTreino(),ordinal=Number(st?.pendingSetOrdinal),matches=row=>{const d=dadosSerieNativa(row);return d.exercise===String(st?.pendingSetExercise||'')&&d.setNumber===Number(st?.pendingSetNumber);};if(Number.isInteger(ordinal)&&ordinal>=0&&rows[ordinal]&&matches(rows[ordinal]))return rows[ordinal];return rows.find(r=>matches(r)&&!r.querySelector('.serie-check.checked'))||rows.find(matches)||null;}

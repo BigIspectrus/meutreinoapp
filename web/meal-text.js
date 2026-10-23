@@ -48,6 +48,11 @@ function mudarModoEntradaRefeicao(text){
   const builder=window.TreinoMealBuilder;if(!builder.active())return;builder.data().textMode=!!text;builder.persist();renderizarMontagemRefeicaoNutricao();atualizarAcoesEntradaRefeicao();document.querySelector('#modalNutritionAdd .meal-sheet-body').scrollTop=0;
 }
 function abrirRefeicaoPorTexto(){abrirRegistroNutricao(refeicaoSugeridaNutricao());if(document.getElementById('modalNutritionAdd').classList.contains('open'))mudarModoEntradaRefeicao(true);}
+function abrirRefeicaoTextoWidget(){
+  if(document.querySelector('.modal-overlay.open:not(#modalNutritionAdd)'))return toast('Feche a janela aberta para registrar a refeição por texto, sem perder sua edição.','info');
+  const pending=rascunhoRefeicaoPendente();_nutritionDate=hoje();irParaAba('nutricao');abrirRefeicaoPorTexto();
+  if(pending&&pending.date!==hoje())document.getElementById('mealTextStatus').textContent='Retomei sua montagem de '+pending.date.split('-').reverse().join('/')+'. Confira a data acima antes de registrar; nenhum item foi descartado.';
+}
 function alterarTextoRefeicao(){
   const builder=window.TreinoMealBuilder;if(!builder.active())return;builder.data().textInput=document.getElementById('mealTextInput').value.slice(0,6000);_mealTextRows=null;_mealTextSource='';builder.persist();document.getElementById('mealTextReview').innerHTML='';document.getElementById('mealTextStatus').textContent='O texto é guardado como rascunho. O consumo só entra no diário ao registrar.';atualizarAcoesEntradaRefeicao();
   if(!builder.items().length&&!builder.data().textInput.trim())localStorage.removeItem(window.TreinoWorkflowStore.keys.draft);
