@@ -2,9 +2,10 @@
 let _mealShortcutCacheRaw='',_mealShortcutCacheMeal='',_mealShortcutCacheDay='',_mealShortcutCache=[];
 function atalhosAlimentaresDaRefeicao(meal){
   const raw=localStorage.getItem(NUTRITION_ENTRIES_KEY)||'[]',day=hoje(),start=dataOffsetNutricao(day,-89);
-  if(raw!==_mealShortcutCacheRaw||meal!==_mealShortcutCacheMeal||day!==_mealShortcutCacheDay){const map=new Map();for(const entry of getRegistrosNutricao()){
+  if(raw!==_mealShortcutCacheRaw||meal!==_mealShortcutCacheMeal||day!==_mealShortcutCacheDay){const map=new Map(),resolved=new Map();for(const entry of getRegistrosNutricao()){
       if(entry.mealType!==meal||entry.date<start||entry.date>hoje()||!entry.foodId||!(entry.grams>0))continue;
-      if(!map.has(entry.foodId))map.set(entry.foodId,{foodId:entry.foodId,days:new Set(),latest:entry});const item=map.get(entry.foodId);item.days.add(entry.date);
+      if(!resolved.has(entry.foodId))resolved.set(entry.foodId,resolverIdAlimentoNutricao(entry.foodId));const foodId=resolved.get(entry.foodId);
+      if(!map.has(foodId))map.set(foodId,{foodId,days:new Set(),latest:entry});const item=map.get(foodId);item.days.add(entry.date);
       if(entry.date+' '+entry.time>item.latest.date+' '+item.latest.time)item.latest=entry;
     }_mealShortcutCache=[...map.values()].sort((a,b)=>b.days.size-a.days.size||b.latest.date.localeCompare(a.latest.date));_mealShortcutCacheRaw=raw;_mealShortcutCacheMeal=meal;_mealShortcutCacheDay=day;}
   const foods=new Map(getItensCatalogoPessoalNutricao().map(f=>[f.id,f]));return _mealShortcutCache.filter(s=>foods.has(s.foodId)).slice(0,6).map(s=>({...s,food:foods.get(s.foodId)}));

@@ -9,7 +9,7 @@ export function buildCommonFoods(){
   const foods=config.taco.map(item=>{
     const original=taco.foods.find(f=>f.id==='taco:'+item.code);
     if(!original)throw new Error('Alimento TACO inexistente: '+item.code);
-    return {...original,name:item.name,brand:'',aliases:[original.name,...(item.aliases||[])],source:'taco',sourceId:original.id,sourceUrl:taco.sourceUrl,measures:measures(item.measures),note:item.note||''};
+    return {...original,name:item.name,brand:'',aliases:[original.name,...(item.aliases||[])],source:'taco',sourceId:original.id,sourceUrl:taco.sourceUrl,sourceEdition:'TACO · 4ª edição, 2011',measures:measures(item.measures),note:item.note||''};
   }).concat(config.supplements.map(f=>({...f,brand:f.brand||'',measures:measures(f.measures)}))).map(f=>({...f,basis:'100',servingName:'100 g',servingGrams:100,favorite:false,barcode:'',createdAt:0,updatedAt:0,lastUsedAt:0,builtIn:true}));
   const seen=new Set();
   for(const food of foods){
@@ -17,7 +17,8 @@ export function buildCommonFoods(){
     if(!(food.kcal100>0)||!['kcal100','protein100','carbs100','fat100','fiber100','sodium100'].every(k=>Number.isFinite(food[k])&&food[k]>=0))throw new Error('Nutrientes inválidos: '+food.name);
     if(!food.measures.every(m=>m.grams>0&&m.name))throw new Error('Medida inválida: '+food.name);
   }
-  return {version:config.version,portionNote:config.portionNote,foods};
+  for(const food of foods){food.checkedAt=config.checkedAt;food.sourceEdition ||= 'TBCA · referência individual';}
+  return {version:config.version,checkedAt:config.checkedAt,sources:config.sources,portionNote:config.portionNote,foods};
 }
 export function writeCommonFoods(){
   const catalog=buildCommonFoods();

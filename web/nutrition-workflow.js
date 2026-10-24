@@ -36,7 +36,7 @@ function atualizarContextoMontagemPersistente(){
   if(draft.mode==='consumed'&&date>hoje()){draft.mode='planned';document.querySelector('#modalNutritionAdd .modal-title').textContent='Planejar refeição';document.getElementById('nutritionDraftPurpose').textContent='Previsão · não contabiliza consumo';renderizarMontagemRefeicaoNutricao();toast('Data futura: esta montagem será planejamento, separado do consumo.','info');}
   window.TreinoMealBuilder.setContext({date,mealType:document.getElementById('nutritionAddMeal').value,time:document.getElementById('nutritionAddTime').value||horarioNutricao()});renderizarRascunhoRefeicaoPendente();return true;
 }
-function getPorcoesHabituais(){const raw=NWF.read(NWF.keys.usual,[]);return Array.isArray(raw)?raw.filter(row=>row?.foodId&&normalizarPorcaoRegistradaNutricao(row.serving,Number(row.grams))):[];}
+function getPorcoesHabituais(){const raw=NWF.read(NWF.keys.usual,[]),unique=new Map();for(const row of Array.isArray(raw)?raw:[]){if(!row?.foodId||!normalizarPorcaoRegistradaNutricao(row.serving,Number(row.grams)))continue;const foodId=resolverIdAlimentoNutricao(row.foodId),prior=unique.get(foodId);if(!prior||Number(row.updatedAt)>Number(prior.updatedAt))unique.set(foodId,{...row,foodId});}return [...unique.values()];}
 function foodMontagemAtual(){return alimentoSelecionadoMontagemNutricao()||getItensCatalogoPessoalNutricao().find(f=>f.id===_nutritionSelectedFoodId);}
 function guardarPorcaoHabitual(){
   const food=foodMontagemAtual();if(!food)return;const grams=quantidadeSelecionadaNutricao(food),serving=capturarPorcaoNutricao(food,document.getElementById('nutritionAddAmount').value,document.getElementById('nutritionAddUnit').value,grams);
@@ -47,8 +47,8 @@ function esquecerPorcaoHabitual(){const food=foodMontagemAtual();if(food&&NWF.sa
 function usarPorcaoHabitual(){
   const food=foodMontagemAtual(),habit=getPorcoesHabituais().find(row=>row.foodId===(food?.originalFoodId||food?.id));if(!food||!habit)return;
   const select=document.getElementById('nutritionAddUnit'),amount=document.getElementById('nutritionAddAmount'),serving=habit.serving;let unit='grams',value=habit.grams;
-  if(serving.unit==='ml'&&[...select.options].some(o=>o.value==='ml')){unit='ml';value=serving.amount;}
-  else if(serving.unit==='measure'){const index=(food.measures||[]).findIndex(m=>normalizarBuscaNutricao(m.name)===normalizarBuscaNutricao(serving.name));if(index>=0){unit='measure:'+index;value=serving.amount;}}
+  if(serving.unit==='ml'&&[...select.options].some(o=>o.value==='ml')&&Math.abs(Number(food.liquidGramsPerMlSnapshot||referenciaComumNutricao(food)?.liquidGramsPerMl)-Number(serving.gramsPerUnit))<=.0001){unit='ml';value=serving.amount;}
+  else if(serving.unit==='measure'){const index=(food.measures||[]).findIndex(m=>normalizarBuscaNutricao(m.name)===normalizarBuscaNutricao(serving.name)&&Math.abs(Number(m.grams)-Number(serving.gramsPerUnit))<=.05);if(index>=0){unit='measure:'+index;value=serving.amount;}}
   select.value=unit;amount.value=value;atualizarPreviaRegistroNutricao();if(unit==='grams'&&serving.unit!=='grams')toast('A medida não está disponível: usei as gramas guardadas. Confira a prévia.','info');
 }
 function renderizarPorcaoHabitualMontagem(){

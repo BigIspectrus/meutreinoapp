@@ -100,7 +100,7 @@ function salvarMontagemRefeicaoNutricao(){
   _nutritionDate=draft.date;builder.clear();limparSelecaoMontagemNutricao();
   try{
     const foods=getAlimentosNutricao(),recipes=getReceitasNutricao();let foodsChanged=false,recipesChanged=false;
-    for(const row of rows){const f=row.food,stored=foods.find(x=>x.id===f.id);
+    for(const row of rows){const f=row.food,stored=foods.find(x=>x.id===resolverIdAlimentoNutricao(f.id));
       if(stored){stored.lastUsedAt=now;stored.updatedAt=Math.max(stored.updatedAt||0,now);foodsChanged=true;}
       else if(f.builtIn){foods.push({...f,builtIn:false,createdAt:now,updatedAt:now,lastUsedAt:now});foodsChanged=true;}
       else if(f.source==='recipe'){const recipe=recipes.find(r=>r.id===f.sourceId);if(recipe){recipe.lastUsedAt=now;recipe.updatedAt=Math.max(recipe.updatedAt||0,now);recipesChanged=true;}}

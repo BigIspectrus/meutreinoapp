@@ -1,0 +1,15 @@
+.food-library-modal{max-width:640px;overflow-wrap:anywhere}
+.food-library-pair{padding:16px 0;border-bottom:1px solid var(--border)}
+.food-library-pair h3{font-size:16px;margin:0 0 8px}
+.food-library-pair .btn{margin:10px 6px 0 0;white-space:normal}
+.food-library-table-wrap{overflow-x:auto;margin:12px 0}
+.food-library-table-wrap table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+.food-library-table-wrap caption{text-align:left;color:var(--text-muted);padding:6px 0}
+.food-library-table-wrap th,.food-library-table-wrap td{padding:8px 4px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+.food-library-table-wrap th:first-child{width:29%}
+.food-library-table-wrap th small{display:block;font-weight:400;color:var(--text-muted);margin-top:6px}
+.food-library-choice{display:block;font-size:13px;margin-top:14px}
+.food-library-choice select{width:100%;max-width:100%;margin-top:6px}
+.food-library-archive{padding:12px 0;border-bottom:1px solid var(--border)}
+.food-library-archive small{display:block;color:var(--text-muted);margin-top:6px}
+.food-library-modal a{color:var(--primary)}
