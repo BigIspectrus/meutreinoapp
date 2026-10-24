@@ -1,0 +1,44 @@
+/* v12.13.0 — controles compactos, sem alterar a paleta do aplicativo. */
+.flow-quick-toggle{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);padding:4px 0 12px}
+#modalNutritionAdd .flow-quick-toggle input{width:20px;min-height:20px;flex:0 0 20px}
+.flow-food-result{display:grid;grid-template-columns:minmax(0,1fr) minmax(130px,42%);gap:6px 10px;padding:12px 0;border-bottom:1px solid var(--border);align-items:center}
+.flow-food-name{border:0;background:none;color:var(--text);font:inherit;min-width:0;padding:4px 0;text-align:left;cursor:pointer}
+.flow-food-name strong{display:block;font-size:13px;line-height:1.45;overflow-wrap:anywhere}.flow-food-name small{display:block;font-size:10px;color:var(--text-muted);line-height:1.5;margin-top:4px;overflow-wrap:anywhere}
+.flow-food-quantity{display:grid;grid-template-columns:minmax(50px,.8fr) minmax(70px,1.2fr);gap:5px;min-width:0}.flow-food-quantity label{min-width:0;margin:0!important}
+.flow-food-quantity .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+#modalNutritionAdd .flow-food-quantity input,#modalNutritionAdd .flow-food-quantity select{padding:8px 5px;min-height:44px;font-size:14px;width:100%}
+.flow-food-added{grid-column:1/-1;color:var(--success);font-size:10px;min-height:12px}.flow-food-multiple{font-size:11px;color:var(--text-muted)}
+.flow-meal-heading{font-size:11px;color:var(--text-muted);margin:10px 0}.flow-meal-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(120px,42%) 28px;gap:5px 7px;align-items:center;padding:10px 0;border-top:1px solid var(--border)}
+.flow-meal-row .meal-draft-remove{width:28px;min-height:44px}.flow-meal-error{grid-column:1/-1;color:var(--danger,#e97575);font-size:11px}.flow-meal-row.invalid [data-flow-amount]{border-color:var(--danger,#e97575)}
+#exerciciosAtivos .ex-header-actions>.ex-skip-btn{display:none!important}
+.flow-ex-menu{min-height:42px;min-width:58px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--text);font:inherit;font-size:12px;padding:8px 10px}
+.flow-action-sheet{max-width:540px}.flow-action-sheet [hidden]{display:none!important}.flow-action-sheet .btn{white-space:normal;margin:7px 0;min-height:44px}.flow-action-sheet input{width:100%;min-height:46px}
+.flow-action-sheet .modal-footer{display:flex;gap:8px}.flow-action-sheet .modal-footer .btn{flex:1;min-width:0;width:auto;margin:0;font-size:12px}
+.flow-view-switch{display:flex;gap:6px;align-items:center;margin:12px 0 18px;font-size:12px}.flow-view-switch>span{flex:1}.flow-view-switch button{min-height:42px;border:1px solid var(--border);border-radius:11px;background:var(--surface2);color:var(--text);padding:8px 12px}.flow-view-switch button[aria-pressed=true]{border-color:var(--primary);background:var(--primary-dim)}
+.flow-set-list>div{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}.flow-set-list .btn{width:auto!important}.flow-set-detail{flex:1;text-align:left;border:0;background:none;color:var(--text);min-height:48px;font:inherit;font-size:13px;padding:10px 2px}.flow-ex-secondary{display:flex;gap:10px;justify-content:space-between;margin-top:12px}.flow-ex-secondary .btn{width:auto!important}
+.flow-swap-result{display:block;text-align:left;width:100%;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--text);margin:8px 0;min-height:48px}.flow-swap-result strong,.flow-swap-result small{display:block;overflow-wrap:anywhere}.flow-swap-result small{color:var(--text-muted);margin-top:5px;font-size:11px}.flow-swap-result[aria-pressed=true]{border-color:var(--primary);background:var(--primary-dim)}
+.flow-new-exercise{padding:12px;border:1px solid var(--border);border-radius:14px;margin:10px 0}.flow-new-exercise label{display:block;font-size:12px;margin:12px 0 6px}.flow-new-exercise select{width:100%;min-height:44px}
+.flow-row-restore,.flow-table-start,.flow-table-head,.flow-table-help{display:none}
+body.workout-mode #exerciciosAtivos .serie-row.flow-set-skipped{display:flex!important;flex-direction:row!important;align-items:center;gap:6px!important;background:var(--surface2)!important;border:1px dashed var(--border)!important;padding:6px 9px!important;border-radius:12px;min-height:46px}
+body.workout-mode #exerciciosAtivos .serie-row.flow-set-skipped>*{display:none!important}
+body.workout-mode #exerciciosAtivos .serie-row.flow-set-skipped>.serie-compact-trigger{display:flex!important;flex:1;min-width:0;padding:5px!important;pointer-events:none}
+body.workout-mode #exerciciosAtivos .serie-row.flow-set-skipped .compact-values{display:none!important}
+body.workout-mode #exerciciosAtivos .serie-row.flow-set-skipped>.flow-row-restore{display:block!important;border:0;border-radius:9px;background:var(--surface);color:var(--text-muted);padding:8px;font-size:11px;min-height:40px}
+body.workout-mode.flow-table-mode #oneHandWorkout,body.workout-mode.flow-table-mode #quickInputBar{display:none!important}
+body.workout-mode.flow-table-mode #aba-treinar{padding-bottom:100px!important}
+body.workout-mode.flow-table-mode #exerciciosAtivos .flow-table-head{display:grid;grid-template-columns:42px minmax(0,1fr) minmax(0,.9fr) 64px 42px;gap:5px;padding:8px 5px;font-size:10px;color:var(--text-muted);align-items:center;text-align:center}
+body.workout-mode.flow-table-mode #exerciciosAtivos .flow-table-help{display:block;color:var(--text-muted);font-size:10px;line-height:1.5;margin:10px 0}
+body.workout-mode.flow-table-mode #exerciciosAtivos .serie-row:not(.flow-set-skipped){display:grid!important;grid-template-columns:42px minmax(0,1fr) minmax(0,.9fr) 64px 42px!important;grid-template-areas:none!important;gap:5px!important;padding:8px 5px!important;border:1px solid var(--border)!important;border-radius:12px!important;background:var(--surface2)!important;align-items:center;min-width:0}
+body.workout-mode.flow-table-mode #exerciciosAtivos .serie-row:not(.flow-set-skipped)>*{display:none!important;grid-area:auto!important}
+body.workout-mode.flow-table-mode #exerciciosAtivos .serie-row:not(.flow-set-skipped)>.ativo-carga{display:block!important;grid-column:2!important;grid-row:1!important}
+body.workout-mode.flow-table-mode #exerciciosAtivos .serie-row:not(.flow-set-skipped)>.ativo-reps{display:block!important;grid-column:3!important;grid-row:1!important}
+body.workout-mode.flow-table-mode #exerciciosAtivos .serie-row:not(.flow-set-skipped)>.set-effort-tools{display:flex!important;flex-direction:column;grid-column:4!important;grid-row:1!important;gap:4px!important;padding:0!important}
+body.workout-mode.flow-table-mode #exerciciosAtivos .serie-row .effort-label{display:none!important}
+body.workout-mode.flow-table-mode #exerciciosAtivos .serie-row .set-effort-tools select{min-width:0;width:100%;padding:4px 2px!important;min-height:40px!important;font-size:11px!important}
+body.workout-mode.flow-table-mode #exerciciosAtivos .serie-row:not(.flow-set-skipped)>.serie-check{display:block!important;grid-column:5!important;grid-row:1!important;width:42px!important;min-width:0!important;min-height:44px!important;height:44px!important;font-size:20px!important;padding:0!important}
+body.workout-mode.flow-table-mode #exerciciosAtivos .serie-row>.serie-check::after{display:none!important}
+body.workout-mode.flow-table-mode #exerciciosAtivos .serie-row:not(.flow-set-skipped)>.flow-table-start{display:block!important;grid-column:1!important;grid-row:1!important;border:0;background:none;color:var(--primary);font-size:11px;padding:0;min-height:44px;width:42px}
+body.workout-mode.flow-table-mode #exerciciosAtivos .serie-row>.ativo-carga,body.workout-mode.flow-table-mode #exerciciosAtivos .serie-row>.ativo-reps{min-width:0!important;width:100%!important;min-height:46px!important;padding:6px 2px!important;font-size:16px!important}
+body.workout-mode.flow-table-mode[data-effort-mode=none] #exerciciosAtivos .serie-row>.set-effort-tools{visibility:hidden}
+#flowWorkoutReview{padding:12px;background:var(--surface2);border-radius:14px;margin:14px 0}#flowWorkoutReview>strong{font-size:14px}.flow-review-issues button{display:block;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--border);color:var(--text);padding:12px 0;min-height:48px}.flow-review-issues strong,.flow-review-issues small{display:block;font-size:12px}.flow-review-issues small{font-size:11px;color:var(--text-muted);margin-top:4px}
+@media(max-width:360px){.flow-food-result{grid-template-columns:minmax(0,1fr) minmax(115px,44%)}.flow-meal-row{grid-template-columns:minmax(0,1fr) minmax(105px,43%) 26px;gap:4px}.flow-meal-row .flow-food-name strong{font-size:12px}}

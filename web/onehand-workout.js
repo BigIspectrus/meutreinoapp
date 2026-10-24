@@ -3,7 +3,7 @@ let _oneHandState=null,_oneHandFrame=0,_oneHandKeyboardGap=0;
 function modoUmaMaoAtivo(){return localStorage.getItem(window.TreinoWorkflowStore.keys.oneHand)!=='0';}
 function definirModoUmaMao(value){try{localStorage.setItem(window.TreinoWorkflowStore.keys.oneHand,value==='0'?'0':'1');renderizarTreinoUmaMao();}catch(_){toast('Não foi possível guardar a preferência.','error');}}
 function estadoTreinoUmaMao(){
-  if(!treinoAtivoTemplate)return null;const cards=getExerciseCards().filter(c=>!c.classList.contains('skipped')),pending=row=>!row.querySelector('.serie-check.checked');
+  if(!treinoAtivoTemplate)return null;const cards=getExerciseCards().filter(c=>!c.classList.contains('skipped')),pending=seriePendenteSessao;
   const rest=Math.max(0,Math.ceil((_timerEndTime-Date.now())/1000)),active=cardExercicioAtivoSessao(),activePending=[...active?.querySelectorAll('.serie-row')||[]].some(pending),suggested=_proximaSerieDescanso?.isConnected&&pending(_proximaSerieDescanso)?_proximaSerieDescanso:null,restRow=rest&&suggested&&(suggested.closest('.exercicio-card')===active||!activePending)?suggested:null;
   const card=restRow?.closest('.exercicio-card')||active,rows=[...card?.querySelectorAll('.serie-row')||[]],row=restRow||rows.find(r=>r.classList.contains('serie-current')&&pending(r))||rows.find(pending)||null;
   const other=cards.find(c=>c!==card&&[...c.querySelectorAll('.serie-row')].some(pending)),action=window._treinoPaused?'resume':row?(Number(row.dataset.setStartedAt)>0?'complete':'start'):other?'next':'finish';

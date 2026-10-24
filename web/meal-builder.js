@@ -28,6 +28,7 @@ window.TreinoMealBuilder=(()=>{
   }
   function select(key){const row=items().find(row=>row.key===key);if(row)draft.selected=key;return row||null;}
   function update(amount,unit,grams){const row=selected();if(row){row.amount=Number(amount);row.unit=String(unit);row.grams=Number(grams);persist();}return row;}
+  function setQuantity(key,amount,unit,grams){if(!draft||draft.saving)return null;const row=items().find(item=>item.key===key);if(!row)return null;row.amount=Number(amount);row.unit=String(unit);row.grams=Number(grams);if(unit==='ml'&&Number(amount)>0&&Number(grams)>0)row.food.liquidGramsPerMlSnapshot=Number(grams)/Number(amount);persist();return row;}
   function appendBatch(rows){
     if(!draft||draft.saving||!rows.length||rows.some(row=>!row.food?.id||!row.food?.name||!Number.isFinite(row.grams)||row.grams<=0||!Number.isFinite(row.amount)||row.amount<=0))throw new Error('Lote alimentar inválido');
     const added=rows.map(row=>{const item={...clone(row),key:gerarId('draft-item')+'-'+(++sequence)};if(item.unit==='ml')item.food.liquidGramsPerMlSnapshot=item.grams/item.amount;return item;});
@@ -39,7 +40,7 @@ window.TreinoMealBuilder=(()=>{
   function valid(){return !!draft&&draft.items.length>0&&draft.items.every(row=>Number.isFinite(row.grams)&&row.grams>0&&row.food?.id&&row.food?.name);}
   function clear(){draft=null;try{localStorage.removeItem(window.TreinoWorkflowStore.keys.draft);persistError=false;}catch(error){console.warn(error);}}
   function data(){return draft;}
-  return {begin,active,items,selected,findFood,add,appendBatch,select,update,remove,refreshFood,valid,clear,data,persist,loadSaved,resume,setContext,storageError:()=>persistError};
+  return {begin,active,items,selected,findFood,add,appendBatch,select,update,setQuantity,remove,refreshFood,valid,clear,data,persist,loadSaved,resume,setContext,storageError:()=>persistError};
 })();
 
 function iniciarMontagemRefeicaoNutricao(date){
@@ -69,7 +70,8 @@ function renderizarMontagemRefeicaoNutricao(){
   const builder=window.TreinoMealBuilder,el=document.getElementById('nutritionMealDraft');if(!el||!builder.active())return;
   const rows=builder.items(),valid=builder.valid(),values=rows.map(row=>calcularPorGramasNutricao(row.food,Number.isFinite(row.grams)&&row.grams>0?row.grams:0)),totals=totaisNutricao(values),date=builder.data().date;
   const expanded=el.querySelector('details')?.open===true;
-  el.innerHTML=rows.length?'<div class="meal-draft-total"><strong>'+formatarNutricao(totals.kcal)+' kcal</strong><span>P '+formatarNutricao(totals.protein,1)+' g · C '+formatarNutricao(totals.carbs,1)+' g · G '+formatarNutricao(totals.fat,1)+' g</span></div><details'+(expanded?' open':'')+'><summary>Ver / editar '+rows.length+' '+(rows.length===1?'alimento':'alimentos')+' da montagem</summary><div class="meal-draft-items">'+rows.map(row=>{
+  if(window.TreinoQuickNutrition)window.TreinoQuickNutrition.renderDraft();
+  else el.innerHTML=rows.length?'<div class="meal-draft-total"><strong>'+formatarNutricao(totals.kcal)+' kcal</strong><span>P '+formatarNutricao(totals.protein,1)+' g · C '+formatarNutricao(totals.carbs,1)+' g · G '+formatarNutricao(totals.fat,1)+' g</span></div><details'+(expanded?' open':'')+'><summary>Ver / editar '+rows.length+' '+(rows.length===1?'alimento':'alimentos')+' da montagem</summary><div class="meal-draft-items">'+rows.map(row=>{
       const ok=Number.isFinite(row.grams)&&row.grams>0,v=calcularPorGramasNutricao(row.food,ok?row.grams:0);
       return '<div class="meal-draft-item'+(builder.selected()?.key===row.key?' editing':'')+'"><button type="button" class="meal-draft-edit" onclick=\'selecionarItemMontagemNutricao('+jsArg(row.key)+')\'><strong>'+esc(row.food.name)+'</strong><span>'+(ok?formatarNutricao(row.grams,1)+' g · '+formatarNutricao(v.kcal)+' kcal':'Ajuste a quantidade antes de salvar')+'</span></button><button type="button" class="meal-draft-remove" aria-label="Remover '+esc(row.food.name)+' da refeição" onclick=\'removerItemMontagemNutricao('+jsArg(row.key)+')\'>×</button></div>';
     }).join('')+'</div></details>':'';

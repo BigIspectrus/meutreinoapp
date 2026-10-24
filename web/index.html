@@ -10,8 +10,8 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <title>TreinoApp v12</title>
-  <meta name="treinoapp-version" content="12.12.1">
-  <meta name="treinoapp-build" content="2026.10.24.2">
+  <meta name="treinoapp-version" content="12.13.0">
+  <meta name="treinoapp-build" content="2026.10.24.1">
   <script defer src="./vendor/chart.umd.js"></script>
   <script defer src="./vendor/jspdf.umd.min.js"></script>
   <script defer src="./vendor/qrcode.min.js"></script>
@@ -803,6 +803,7 @@
   <link rel="stylesheet" href="./meal-entry.css">
   <link rel="stylesheet" href="./usability.css">
   <link rel="stylesheet" href="./food-library.css">
+  <link rel="stylesheet" href="./quick-flow.css">
 </head>
 <body>
 
@@ -2254,14 +2255,14 @@
 <script src="./load-conventions.js"></script>
 <script src="./nutrition-portions.js"></script>
 <script>
-const APP_VERSION = '12.12.1';
-const APP_BUILD = '2026.10.24.2';
+const APP_VERSION = '12.13.0';
+const APP_BUILD = '2026.10.24.1';
 const DATA_SCHEMA_VERSION = 18;
 const GITHUB_REPO='BigIspectrus/meutreinoapp';
 const GITHUB_PAGES_BASE='https://bigispectrus.github.io/meutreinoapp';
 let _latestAndroidReleaseUrl='';
 let _nativeChannel='web';
-const APP_CACHE_VERSION = 'treinoapp-v12.12.1-202610242';
+const APP_CACHE_VERSION = 'treinoapp-v12.13.0-202610241';
 
 const SET_TYPES={workset:'Work set',warmup:'Aquecimento',topset:'Top set',backoff:'Back-off',dropset:'Drop set',cluster:'Cluster set',fst7:'FST-7',restpause:'Rest-pause',myoreps:'Myo-reps',amrap:'AMRAP'};
 function normalizarSetType(v){return SET_TYPES[v]?v:'workset';}
@@ -2880,12 +2881,14 @@ function salvarRascunho() {
   document.querySelectorAll('#exerciciosAtivos .serie-row').forEach(row=>{
     const carga=row.querySelector('.ativo-carga'), reps=row.querySelector('.ativo-reps'), chk=row.querySelector('.serie-check');
     if(!carga) return;
-    if(carga.value || reps?.value || chk?.classList.contains('checked') || row.dataset.setStartedAt) valores.push({exercicio:carga.dataset.ex,serie:parseInt(carga.dataset.serie),carga:carga.value,loadSnapshot:capturarTipoCargaSerie(row),reps:reps?.value||'',rir:effortInt(row.querySelector('.ativo-rir')?.value),rpe:effortFloat(row.querySelector('.ativo-rpe')?.value),concluida:!!chk?.classList.contains('checked'),completedAt:Number(row.dataset.completedAt)||null,setStartedAt:Number(row.dataset.setStartedAt)||null,restBeforeSec:row.dataset.restBeforeSec!==undefined?Number(row.dataset.restBeforeSec):null,timingQuality:row.dataset.timingQuality||'completion_only',setType:normalizarSetType(row.querySelector('.ativo-tipo')?.value)});
+    if(carga.value || reps?.value || chk?.classList.contains('checked') || row.dataset.setStartedAt || row.dataset.skipped==='1') valores.push({exercicio:carga.dataset.ex,serie:parseInt(carga.dataset.serie),pulada:row.dataset.skipped==='1',carga:carga.value,loadSnapshot:capturarTipoCargaSerie(row),reps:reps?.value||'',rir:effortInt(row.querySelector('.ativo-rir')?.value),rpe:effortFloat(row.querySelector('.ativo-rpe')?.value),concluida:!!chk?.classList.contains('checked'),completedAt:Number(row.dataset.completedAt)||null,setStartedAt:Number(row.dataset.setStartedAt)||null,restBeforeSec:row.dataset.restBeforeSec!==undefined?Number(row.dataset.restBeforeSec):null,timingQuality:row.dataset.timingQuality||'completion_only',setType:normalizarSetType(row.querySelector('.ativo-tipo')?.value)});
   });
   const cards=[...document.querySelectorAll('#exerciciosAtivos .exercicio-card')],skippedExs=cards.filter(c=>c.classList.contains('skipped')).map(c=>c.dataset.ex).filter(Boolean);
   const extraExs=cards.filter(c=>c.dataset.sessionOrigin&&c.dataset.sessionOrigin!=='planned').map(c=>({ex:c.dataset.ex,series:c.querySelectorAll('.serie-row').length,group:c.dataset.group||grupoDoExercicio(c.dataset.ex),rest:Number(c.dataset.rest)||getDescansoPadrao(),increment:Number(c.dataset.increment)||2.5,repRange:c.dataset.repRange||'livre',origin:c.dataset.sessionOrigin,replacedEx:c.dataset.replacedEx||'',changeId:c.dataset.changeId||''}));
   const payload={schemaVersion:DATA_SCHEMA_VERSION,cardLoadModes:cards.map(c=>({exercise:c.dataset.ex,mode:capturarTipoCargaSerie(c.querySelector('.serie-row')).mode})),sessionId:window._treinoSessionId||gerarId('sessao'),templateId:treinoAtivoTemplate.id||null,templateSnapshot:treinoAtivoTemplate?.isAdHoc?treinoAtivoTemplate:null,data:document.getElementById('dataTreinoAtivo')?.value||hoje(),valores,skippedExs,extraExs,exerciseOrder:cards.map(c=>c.dataset.ex).filter(Boolean),sessionExerciseChanges:_sessionExerciseChanges,sessionOrderChanged:_sessionOrderChanged,startedAt:window._treinoStartedAt||Date.now(),paused:!!window._treinoPaused,pauseStartedAt:window._treinoPauseStartedAt||null,totalPausedMs:Number(window._treinoTotalPausedMs)||0,timestamp:Date.now()};
   window._treinoSessionId=payload.sessionId;
+  payload.cardSeriesCounts=cards.map(c=>({exercise:c.dataset.ex,count:c.querySelectorAll('.serie-row').length}));
+  payload.tableMode=!!window.TreinoQuickFlow?.tableMode();
   try{localStorage.setItem('_rascunhoTreino',JSON.stringify(payload));return true;}catch(e){console.warn('Falha ao salvar rascunho',e);return false;}
 }
 function restaurarRascunho() {
@@ -2898,6 +2901,7 @@ function restaurarRascunho() {
       window._treinoSessionId=rasc.sessionId||window._treinoSessionId; window._treinoStartedAt=Number(rasc.startedAt)||window._treinoStartedAt; window._treinoTotalPausedMs=Number(rasc.totalPausedMs)||0; window._treinoPaused=!!rasc.paused; window._treinoPauseStartedAt=rasc.pauseStartedAt||null;
       _sessionExerciseChanges=Array.isArray(rasc.sessionExerciseChanges)?rasc.sessionExerciseChanges:[];_sessionOrderChanged=!!rasc.sessionOrderChanged;
       (rasc.extraExs||[]).forEach(x=>{if(x?.ex&&!getExerciseCards().some(c=>c.dataset.ex===x.ex))criarCardExercicioSessao(x.ex,Number(x.series)||3,true,{group:x.group,rest:x.rest,increment:x.increment,repRange:x.repRange,origin:x.origin||'added',replacedEx:x.replacedEx,changeId:x.changeId});});
+      window.TreinoQuickFlow?.restoreCounts(rasc);
       _sessionExerciseChanges.filter(x=>x.type==='replace').forEach(x=>{const old=getExerciseCards().find(c=>c.dataset.ex===x.replacedEx),novo=getExerciseCards().find(c=>c.dataset.ex===x.ex);if(old&&novo){old.dataset.replacedBy=x.ex;novo.dataset.replacedEx=x.replacedEx;novo.dataset.changeId=x.id;novo.dataset.sessionOrigin='replacement';}});
       if(Array.isArray(rasc.exerciseOrder)){const container=document.getElementById('exerciciosAtivos');rasc.exerciseOrder.forEach(ex=>{const card=getExerciseCards().find(c=>c.dataset.ex===ex);if(card)container.appendChild(card);});}
       restaurarTiposCargaRascunho(rasc);
@@ -2907,6 +2911,7 @@ function restaurarRascunho() {
         const reps=[...document.querySelectorAll('.ativo-reps')].find(i=>i.dataset.ex===v.exercicio && parseInt(i.dataset.serie)===v.serie);
         if(carga){ carga.value=v.carga||''; if(reps) reps.value=v.reps||''; const row=carga.closest('.serie-row');atualizarTipoCargaSerie(row,v.loadSnapshot?.mode??capturarTipoCargaSerie(row).mode); const tipo=row?.querySelector('.ativo-tipo'); if(tipo){tipo.value=normalizarSetType(v.setType);atualizarSetTypeVisual(tipo);} const rir=row?.querySelector('.ativo-rir'),rpe=row?.querySelector('.ativo-rpe'); if(rir&&v.rir!==undefined&&v.rir!==null)rir.value=String(v.rir); if(rpe&&v.rpe!==undefined&&v.rpe!==null)rpe.value=String(v.rpe); if(v.setStartedAt)row.dataset.setStartedAt=String(v.setStartedAt);if(v.restBeforeSec!==undefined&&v.restBeforeSec!==null)row.dataset.restBeforeSec=String(v.restBeforeSec);if(v.timingQuality)row.dataset.timingQuality=v.timingQuality; const chk=row?.querySelector('.serie-check'); if(v.concluida&&chk){chk.classList.add('checked');row.classList.add('done');if(v.completedAt)row.dataset.completedAt=String(v.completedAt);} atualizarEstadoTimingSerie(row); restaurados++; }
       });
+      window.TreinoQuickFlow?.restoreSkipped(rasc);
       if(rasc.data) document.getElementById('dataTreinoAtivo').value=rasc.data; if(rasc.startedAt) window._treinoStartedAt=rasc.startedAt;
       atualizarProgressoTreino();
       (rasc.skippedExs||[]).forEach(ex=>{const card=getExerciseCards().find(c=>c.dataset.ex===ex);if(card)definirExercicioPulado(card,true,{save:false});});
@@ -2934,7 +2939,7 @@ function debouncedHistorico(){clearTimeout(_histDebounceTimer);_histDebounceTime
 function selecionarSessionRpe(btn){document.querySelectorAll('#sessionRpeGrid .session-rpe-btn').forEach(x=>x.classList.toggle('active',x===btn));}
 function toggleSessionContext(btn){btn?.classList.toggle('active');}
 function abrirEncerramentoTreino(){
-  const concluidas=[...document.querySelectorAll('#exerciciosAtivos .serie-row')].filter(r=>!r.closest('.exercicio-card')?.classList.contains('skipped')&&r.querySelector('.ativo-carga')?.value&&r.querySelector('.serie-check')?.classList.contains('checked'));
+  const concluidas=linhasValidasTreino().filter(r=>r.querySelector('.serie-check')?.classList.contains('checked'));
   if(!concluidas.length)return toast('Marque pelo menos uma série como concluída antes de finalizar o treino','warn');
   document.querySelectorAll('#sessionRpeGrid .session-rpe-btn,#sessionContextChips .context-chip').forEach(x=>x.classList.remove('active'));
   const note=document.getElementById('sessionDayNote');if(note)note.value='';
@@ -2970,7 +2975,7 @@ function salvarTreinoAtivo(sessionContext={sessionRpe:null,contextTags:[],sessio
   if(!treinoAtivoTemplate||window._uxCancelling||window._uxSavingSession)return;
   const data=document.getElementById('dataTreinoAtivo').value;
   if(!data) return toast('Preencha a data','error');
-  const rows=[...document.querySelectorAll('#exerciciosAtivos .serie-row')].filter(r=>!r.closest('.exercicio-card')?.classList.contains('skipped'));
+  const rows=linhasValidasTreino();
   const preenchidas=rows.filter(r=>r.querySelector('.ativo-carga')?.value);
   const concluidas=preenchidas.filter(r=>r.querySelector('.serie-check')?.classList.contains('checked'));
   if(!concluidas.length) return toast('Marque pelo menos uma série como concluída antes de finalizar o treino','warn');
@@ -5793,7 +5798,7 @@ function definirExercicioPulado(card,pulando,{save=true}={}){
   card.classList.toggle('skipped',!!pulando);
   const btn=card.querySelector('.ex-skip-toggle')||[...card.querySelectorAll('.ex-skip-btn')].find(b=>(b.getAttribute('onclick')||'').includes('togglePularExercicio'));
   if(btn){btn.classList.add('ex-skip-toggle');btn.textContent=pulando?(card.dataset.replacedBy?'Substituído':'Reativar'):'Pular';}
-  card.querySelectorAll('input,select,button.serie-check,button.inc-btn,button.set-mini-btn').forEach(el=>el.disabled=!!pulando);
+  card.querySelectorAll('input,select,button.serie-check,button.inc-btn,button.set-mini-btn').forEach(el=>el.disabled=!!pulando||el.closest('.serie-row')?.dataset.skipped==='1');
   atualizarMarcadorOrigemSessao(card);
   atualizarEstadoCardExercicio(card);
   atualizarProgressoTreino();
@@ -5952,10 +5957,11 @@ function atualizarEstadoTimingSerie(row){
   btn.disabled=done;
   btn.textContent=done?'Horários registrados':started?`Série iniciada · ${new Date(started).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}`:'Iniciar série · medir descanso';
 }
-function linhasValidasTreino(){return [...document.querySelectorAll('#exerciciosAtivos .serie-row')].filter(r=>!r.closest('.exercicio-card')?.classList.contains('skipped'));}
+function seriePendenteSessao(row){return !!row&&row.dataset.skipped!=='1'&&!row.querySelector('.serie-check.checked');}
+function linhasValidasTreino(){return [...document.querySelectorAll('#exerciciosAtivos .serie-row')].filter(r=>r.dataset.skipped!=='1'&&!r.closest('.exercicio-card')?.classList.contains('skipped'));}
 function dadosSerieNativa(row){const input=row?.querySelector('.ativo-carga'),rows=linhasValidasTreino();return{exercise:input?.dataset.ex||row?.closest('.exercicio-card')?.dataset.ex||'',setNumber:Number(input?.dataset.serie)||0,ordinal:rows.indexOf(row)};}
 function aplicarInicioSeriePrecisao(row,startedAt=Date.now(),source='phone'){
-  if(!row||(row.querySelector('.serie-check.checked')&&source!=='watch'))return false;
+  if(!row?.isConnected||row.dataset.skipped==='1'||row.closest('.exercicio-card')?.classList.contains('skipped')||(row.querySelector('.serie-check.checked')&&source!=='watch'))return false;
   const nativeData=dadosSerieNativa(row),confirmarNoNativo=()=>{if(source==='phone'&&isNativeAndroid()&&window.TreinoNativeBridge?.acknowledgeSetStart)window.TreinoNativeBridge.acknowledgeSetStart(nativeData).catch(()=>{});};
   if(Number(row.dataset.setStartedAt)>0){atualizarEstadoTimingSerie(row);confirmarNoNativo();return false;}
   const now=Number(startedAt)>0?Number(startedAt):Date.now(),rows=linhasValidasTreino(),idx=rows.indexOf(row),prev=rows.slice(0,Math.max(0,idx)).reverse().find(r=>Number(r.dataset.completedAt)>0);
@@ -5982,7 +5988,7 @@ function prepararAcoesDescanso(row){
 }
 function iniciarProximaSerieDescanso(){
   const row=_proximaSerieDescanso;
-  if(!row||row.querySelector('.serie-check.checked'))return toast('Não há outra série pendente.','info');
+  if(!row?.isConnected||!seriePendenteSessao(row))return toast('Não há outra série pendente.','info');
   pararTimer();
   const card=row.closest('.exercicio-card');
   if(card)focarExercicioCard(card,false);
@@ -6001,25 +6007,25 @@ function desfazerUltimaSerie(){
 
 function toggleSerieCheck(el){
   const row=el.closest('.serie-row'),card=row?.closest('.exercicio-card'),carga=parseFloat(row?.querySelector('.ativo-carga')?.value)||0,reps=parseInt(row?.querySelector('.ativo-reps')?.value)||0;
-  if(!el.classList.contains('checked')&&(carga<=0||reps<=0)){toast('Preencha carga e repetições antes de concluir a série','warn');return;}
+  if(row?.dataset.skipped==='1')return;
+  if(!el.classList.contains('checked')&&(!row?.querySelector('.ativo-carga')?.value||carga<0||reps<=0)){toast('Preencha carga e repetições antes de concluir a série','warn');return;}
   el.classList.toggle('checked');const checked=el.classList.contains('checked');
   if(row){row.classList.toggle('done',checked);row.classList.toggle('pending',!checked&&!!row.querySelector('.ativo-carga')?.value);if(checked){row.dataset.completedAt=String(Date.now());if(!row.dataset.setStartedAt)row.dataset.timingQuality='completion_only';row.classList.remove('serie-manual');}else{delete row.dataset.completedAt;row.classList.add('serie-manual');}atualizarEstadoTimingSerie(row);}
   atualizarFocoSeries(card);marcarDadosNaoSalvos();salvarRascunho();haptic(20);atualizarProgressoTreino();atualizarEstadoCardExercicio(card);
   if(checked){prepararAcoesDescanso(row);const descanso=Number(row?.dataset.rest)||getDescansoPadrao();if(descanso>0)iniciarTimer(descanso,{completedRow:row});setTimeout(()=>focarProximaSerie(row),180);}
 }
 function focarProximaSerie(atual){
-  const card=atual?.closest('.exercicio-card'),dentro=[...card?.querySelectorAll('.serie-row')||[]],idxDentro=dentro.indexOf(atual),proxDentro=dentro.slice(idxDentro+1).find(r=>!r.querySelector('.serie-check')?.classList.contains('checked'));
+  const card=atual?.closest('.exercicio-card'),dentro=[...card?.querySelectorAll('.serie-row')||[]],idxDentro=dentro.indexOf(atual),proxDentro=dentro.slice(idxDentro+1).find(seriePendenteSessao);
   if(proxDentro){const cargaAtual=atual.querySelector('.ativo-carga')?.value,cargaProx=proxDentro.querySelector('.ativo-carga');if(cargaAtual&&cargaProx&&!cargaProx.value){cargaProx.value=cargaAtual;cargaProx.dispatchEvent(new Event('input',{bubbles:true}));}dentro.forEach(r=>r.classList.remove('serie-manual'));atualizarFocoSeries(card);proxDentro.scrollIntoView({behavior:'smooth',block:'center'});return;}
   atualizarFocoSeries(card);atualizarEstadoCardExercicio(card);
-  if(getAcademiaModeEnabled())setTimeout(()=>focarPrimeiroExercicioPendente(true),260);else{const rows=[...document.querySelectorAll('#exerciciosAtivos .serie-row')].filter(r=>!r.closest('.exercicio-card')?.classList.contains('skipped'));const idx=rows.indexOf(atual),prox=rows.slice(idx+1).find(r=>!r.querySelector('.serie-check')?.classList.contains('checked'));if(prox){atualizarFocoSeries(prox.closest('.exercicio-card'));prox.scrollIntoView({behavior:'smooth',block:'center'});}}
+  if(getAcademiaModeEnabled())setTimeout(()=>focarPrimeiroExercicioPendente(true),260);else{const rows=linhasValidasTreino();const idx=rows.indexOf(atual),prox=rows.slice(idx+1).find(seriePendenteSessao);if(prox){atualizarFocoSeries(prox.closest('.exercicio-card'));prox.scrollIntoView({behavior:'smooth',block:'center'});}}
 }
 
 function atualizarProgressoTreino() {
-  const validRows=[...document.querySelectorAll('#exerciciosAtivos .serie-row')].filter(r=>!r.closest('.exercicio-card')?.classList.contains('skipped'));
+  const validRows=linhasValidasTreino();
   const total = validRows.length;
-  if(total === 0) return;
   const feitas = validRows.filter(r=>r.querySelector('.serie-check.checked')).length;
-  const pct = Math.round(feitas/total*100);
+  const pct = total?Math.round(feitas/total*100):0;
   const bar = document.getElementById('treinoProgressBar');
   const fill = document.getElementById('treinoProgressFill');
   const text = document.getElementById('treinoProgressText');
@@ -6056,7 +6062,7 @@ function salvarAcademiaModeConfig(v){localStorage.setItem('academiaModeEnabled',
 function carregarAcademiaModeConfig(){const s=document.getElementById('selAcademiaMode');if(s)s.value=getAcademiaModeEnabled()?'1':'0';}
 function getExerciseCards(){return [...document.querySelectorAll('#exerciciosAtivos .exercicio-card')];}
 function atualizarResumoCompactoSerie(row){if(!row)return;const trigger=row.querySelector('.serie-compact-trigger'),state=trigger?.querySelector('.compact-state'),values=trigger?.querySelector('.compact-values'),done=!!row.querySelector('.serie-check.checked'),running=Number(row.dataset.setStartedAt)>0&&!done,carga=row.querySelector('.ativo-carga')?.value,reps=row.querySelector('.ativo-reps')?.value;if(state)state.textContent=done?'Concluída':running?'Em andamento':row.classList.contains('serie-current')?'Série atual':'Próxima série';if(values)values.textContent=[carga?textoCargaRegistro({carga,loadSnapshot:capturarTipoCargaSerie(row)}):'',reps?`${reps} reps`:''].filter(Boolean).join(' · ')||'A preencher';row.classList.toggle('serie-completed',done);atualizarEstadoTimingSerie(row);}
-function atualizarFocoSeries(targetCard=null){const cards=targetCard?[targetCard]:getExerciseCards();cards.forEach(card=>{const rows=[...card.querySelectorAll('.serie-row')];if(!rows.length)return;const manual=rows.find(r=>r.classList.contains('serie-manual'));const current=manual||rows.find(r=>!r.querySelector('.serie-check')?.classList.contains('checked'))||rows.at(-1);rows.forEach(row=>{const isCurrent=row===current;row.classList.toggle('serie-current',isCurrent);row.classList.toggle('serie-collapsed',!isCurrent);const trigger=row.querySelector('.serie-compact-trigger');if(trigger)trigger.setAttribute('aria-expanded',String(isCurrent));const sel=row.querySelector('.ativo-tipo'),toggle=row.querySelector('.set-type-toggle');if(sel&&toggle)toggle.textContent=`Tipo de série · ${setTypeLabel(sel.value)}`;atualizarResumoCompactoSerie(row);});});}
+function atualizarFocoSeries(targetCard=null){const cards=targetCard?[targetCard]:getExerciseCards();cards.forEach(card=>{const rows=[...card.querySelectorAll('.serie-row')];if(!rows.length)return;const eligible=rows.filter(r=>r.dataset.skipped!=='1'),manual=eligible.find(r=>r.classList.contains('serie-manual'));const current=manual||eligible.find(seriePendenteSessao)||eligible.at(-1);rows.forEach(row=>{const isCurrent=row===current;row.classList.toggle('serie-current',isCurrent);row.classList.toggle('serie-collapsed',!isCurrent);const trigger=row.querySelector('.serie-compact-trigger');if(trigger)trigger.setAttribute('aria-expanded',String(isCurrent));const sel=row.querySelector('.ativo-tipo'),toggle=row.querySelector('.set-type-toggle');if(sel&&toggle)toggle.textContent=`Tipo de série · ${setTypeLabel(sel.value)}`;atualizarResumoCompactoSerie(row);});});}
 function abrirSerieFocada(btn){const row=btn?.closest('.serie-row'),card=row?.closest('.exercicio-card');if(!row||!card)return;card.querySelectorAll('.serie-row').forEach(r=>r.classList.toggle('serie-manual',r===row));atualizarFocoSeries(card);setTimeout(()=>row.scrollIntoView({behavior:'smooth',block:'center'}),30);}
 function toggleDetalhesSerie(btn){const row=btn?.closest('.serie-row');if(!row)return;const open=row.classList.toggle('advanced-open');btn.setAttribute('aria-expanded',String(open));}
 function atualizarMarcadorOrigemSessao(card){
@@ -6080,13 +6086,13 @@ function prepararModoAcademiaCards(){
     atualizarMarcadorOrigemSessao(card);atualizarEstadoCardExercicio(card);
   });atualizarFocoSeries();
 }
-function atualizarEstadoCardExercicio(card){if(!card)return;const rows=[...card.querySelectorAll('.serie-row')],all=rows.length>0&&rows.every(r=>r.querySelector('.serie-check')?.classList.contains('checked'));card.classList.toggle('focus-complete',all);if(card.classList.contains('focus-active'))atualizarRotulosFoco();}
+function atualizarEstadoCardExercicio(card){if(!card)return;const rows=[...card.querySelectorAll('.serie-row')],all=rows.length>0&&rows.every(r=>!seriePendenteSessao(r));card.classList.toggle('focus-complete',all);const mark=card.querySelector('.focus-done-mark');if(mark)mark.textContent=rows.some(r=>r.dataset.skipped==='1')?'Sem séries pendentes':'Concluído';if(card.classList.contains('focus-active'))atualizarRotulosFoco();}
 function aplicarModoAcademia(){const enabled=!!treinoAtivoTemplate&&getAcademiaModeEnabled();document.body.classList.toggle('academia-mode',enabled);prepararModoAcademiaCards();const cards=getExerciseCards();if(!enabled){cards.forEach(c=>c.classList.remove('focus-active','focus-inactive'));return;}if(!cards.some(c=>c.classList.contains('focus-active')))focarPrimeiroExercicioPendente(false);else{atualizarFocoSeries(cards.find(c=>c.classList.contains('focus-active')));atualizarRotulosFoco();}}
 function toggleVisaoGeralTreino(){const open=document.body.classList.toggle('workout-overview'),label=document.getElementById('workoutFocusLabel');if(label)label.setAttribute('aria-expanded',String(open));if(open)setTimeout(()=>document.getElementById('exerciciosAtivos')?.scrollIntoView({behavior:'smooth',block:'start'}),30);else{const active=getExerciseCards().find(c=>c.classList.contains('focus-active'));if(active)focarExercicioCard(active,true);}}
 function focarExercicioCard(card,scroll=true){const cards=getExerciseCards();const idx=cards.indexOf(card);if(idx<0)return;_focusExerciseIndex=idx;document.body.classList.remove('workout-overview');document.getElementById('workoutFocusLabel')?.setAttribute('aria-expanded','false');cards.forEach((c,i)=>{c.classList.toggle('focus-active',i===idx);c.classList.toggle('focus-inactive',i!==idx);});atualizarFocoSeries(card);atualizarRotulosFoco();if(scroll)card.scrollIntoView({behavior:'smooth',block:'start'});}
 function focarPrimeiroExercicioPendente(scroll=true){const cards=getExerciseCards();if(!cards.length)return;let target=cards.find(c=>!c.classList.contains('skipped')&&!c.classList.contains('focus-complete'));if(!target)target=cards.find(c=>!c.classList.contains('skipped'))||cards[0];focarExercicioCard(target,scroll);}
 function navegarExercicioFoco(dir){const cards=getExerciseCards().filter(c=>!c.classList.contains('skipped'));if(!cards.length)return;let cur=cards.findIndex(c=>c.classList.contains('focus-active'));if(cur<0)cur=0;cur=(cur+Number(dir)+cards.length)%cards.length;focarExercicioCard(cards[cur],true);}
-function atualizarRotulosFoco(){const all=getExerciseCards(),visible=all.filter(c=>!c.classList.contains('skipped')),active=all.find(c=>c.classList.contains('focus-active'));const idx=Math.max(0,visible.indexOf(active)),label=document.getElementById('workoutFocusLabel'),title=document.getElementById('workoutStickyTitle');if(label&&active){const rows=[...active.querySelectorAll('.serie-row')],feitas=rows.filter(r=>r.querySelector('.serie-check')?.classList.contains('checked')).length;label.textContent=`Exercício ${idx+1} de ${visible.length} · ${feitas}/${rows.length} séries`;if(title)title.textContent=active.dataset.ex||'Exercício atual';}else{if(label)label.textContent=`${visible.length} exercícios`;if(title)title.textContent=treinoAtivoTemplate?.nome||'Treino em andamento';}}
+function atualizarRotulosFoco(){const all=getExerciseCards(),visible=all.filter(c=>!c.classList.contains('skipped')),active=all.find(c=>c.classList.contains('focus-active'));const idx=Math.max(0,visible.indexOf(active)),label=document.getElementById('workoutFocusLabel'),title=document.getElementById('workoutStickyTitle');if(label&&active){const allRows=[...active.querySelectorAll('.serie-row')],rows=allRows.filter(r=>r.dataset.skipped!=='1'),feitas=rows.filter(r=>r.querySelector('.serie-check')?.classList.contains('checked')).length,skipped=allRows.length-rows.length;label.textContent=`Exercício ${idx+1} de ${visible.length} · ${feitas}/${rows.length} séries${skipped?' · '+skipped+' pulada(s)':''}`;if(title)title.textContent=active.dataset.ex||'Exercício atual';}else{if(label)label.textContent=`${visible.length} exercícios`;if(title)title.textContent=treinoAtivoTemplate?.nome||'Treino em andamento';}}
 
 // ════════════════════════════════════════════════
 // V11 — ENTRADA RÁPIDA DE CARGA E REPETIÇÕES
@@ -6302,7 +6308,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&isNativeA
 window.addEventListener('focus',()=>{if(isNativeAndroid()&&getHealthAuto())setTimeout(()=>reconciliarHealthPendentes(false),600);});
 async function sincronizarPesoHealth(){if(!isNativeAndroid())return toast('Disponível no APK Android','info');try{const peso=getPeso(),entries=Object.entries(peso).sort((a,b)=>b[0].localeCompare(a[0]));const r=await window.TreinoNativeBridge.syncWeight({localWeights:entries.slice(0,50).map(([date,kg])=>({date,kg:Number(kg)}))});if(r?.latestKg&&r?.latestDate){const p=getPeso();p[r.latestDate]=Number(r.latestKg);localStorage.setItem('pesoCorporal',JSON.stringify(p));invalidarCache();}toast(`Peso sincronizado${r?.latestKg?' · '+r.latestKg+' kg':''}`,'success');}catch(e){toast('Falha ao sincronizar peso','warn');}}
 async function sincronizarBancoNativo(showToast=true){if(!isNativeAndroid())return;try{const hist=getHist(),chunk=250;if(!hist.length){localStorage.setItem('_nativeDbSyncedSchema',String(DATA_SCHEMA_VERSION));return;}for(let i=0;i<hist.length;i+=chunk)await window.TreinoNativeBridge.syncNativeDatabase({records:hist.slice(i,i+chunk).map(r=>({...r,rir:numeroOpcionalAnalise(r.rir),rpe:numeroOpcionalAnalise(r.rpe)})),replace:i===0});const sessions=Object.entries(agruparSessoes(hist)).sort((a,b)=>getSessionTimestamp(b[1])-getSessionTimestamp(a[1])).slice(0,30);for(const [sid,regs] of sessions){const b=boundsSessao(regs),meta=regs.find(r=>numeroOpcionalAnalise(r.sessionRpe)!=null||r.sessionNote||r.sessionContext?.length)||regs[0];if(!b.startMs||!b.endMs||b.endMs<=b.startMs)continue;await window.TreinoNativeBridge.saveWorkoutMirror({sessionId:sid,templateId:regs.find(r=>r.templateId)?.templateId||null,name:regs.find(r=>r.templateNome)?.templateNome||'Treino',startMs:b.startMs,endMs:b.endMs,durationSec:b.durationSec,completedSets:regs.length,totalSets:regs.length,sessionRpe:numeroOpcionalAnalise(meta?.sessionRpe),contextTags:Array.isArray(meta?.sessionContext)?meta.sessionContext:[],sessionNote:meta?.sessionNote||'',sets:regs.map(r=>({id:r.id||gerarId('native'),exercise:r.exercicio||'',setNumber:Number(r.numSerie)||0,weight:Number(r.carga)||0,loadMode:tipoCargaRegistro(r),reps:Number(r.reps)||0,setType:r.setType||'workset',rir:numeroOpcionalAnalise(r.rir),rpe:numeroOpcionalAnalise(r.rpe),startedAt:Number(r.setStartedAt)||null,completedAt:Number(r.completedAt)||b.endMs,restBeforeSec:r.restBeforeSec??null,timingQuality:r.timingQuality||'legacy'}))});}localStorage.setItem('_nativeDbSyncedSchema',String(DATA_SCHEMA_VERSION));if(showToast)toast('Banco Android, contexto e horários das sessões sincronizados','success');}catch(e){if(showToast)toast('Não foi possível sincronizar o banco Android','warn');}}
-function resumoNativoAtual(){if(!treinoAtivoTemplate)return null;const rows=linhasValidasTreino(),done=rows.filter(r=>r.querySelector('.serie-check')?.classList.contains('checked')),active=getExerciseCards().find(c=>c.classList.contains('focus-active'))||getExerciseCards().find(c=>!c.classList.contains('skipped'));const nr=active?[...active.querySelectorAll('.serie-row')].findIndex(r=>!r.querySelector('.serie-check')?.classList.contains('checked'))+1:0;return{sessionId:window._treinoSessionId,name:treinoAtivoTemplate.nome||'Treino',startedAt:window._treinoStartedAt,totalSets:rows.length,completedSets:done.length,currentExercise:active?.dataset.ex||'',currentSet:Math.max(1,nr),paused:!!window._treinoPaused};}
+function resumoNativoAtual(){if(!treinoAtivoTemplate)return null;const rows=linhasValidasTreino(),done=rows.filter(r=>r.querySelector('.serie-check')?.classList.contains('checked')),active=getExerciseCards().find(c=>c.classList.contains('focus-active')&&!c.classList.contains('skipped'))||getExerciseCards().find(c=>!c.classList.contains('skipped')),next=active?[...active.querySelectorAll('.serie-row')].find(seriePendenteSessao):null;return{sessionId:window._treinoSessionId,name:treinoAtivoTemplate.nome||'Treino',startedAt:window._treinoStartedAt,totalSets:rows.length,completedSets:done.length,currentExercise:active?.dataset.ex||'',currentSet:Number(next?.querySelector('.ativo-carga')?.dataset.serie)||1,paused:!!window._treinoPaused};}
 let _nativeUpdateTimer=null;function agendarUpdateNativo(){if(!isNativeAndroid())return;clearTimeout(_nativeUpdateTimer);_nativeUpdateTimer=setTimeout(()=>{const s=resumoNativoAtual();if(s)window.TreinoNativeBridge.updateWorkout(s).catch(()=>{});atualizarWidgetNativo();},120);}
 function resumoAlimentacaoWidget(){const date=hoje(),tot=totaisNutricao(getRegistrosNutricao().filter(e=>e.date===date)),goal=getMetasNutricao();return {nutritionDate:date,kcal:tot.kcal,protein:tot.protein,carbs:tot.carbs,fat:tot.fat,goalKcal:goal?.kcal||0,goalProtein:goal?.protein||0,goalCarbs:goal?.carbs||0,goalFat:goal?.fat||0};}
 async function atualizarWidgetNativo(){if(!isNativeAndroid())return;try{const hist=getHist(),streak=calcularStreakAtual(hist),d=gerarDesafio(hist),ts=getTreinosSalvos(),draft=getRascunhoValido(),draftT=draft?(ts.find(t=>String(t.id)===String(draft.templateId))||draft.templateSnapshot):null,lastId=obterUltimaSessao(hist)?.[1]?.find(r=>r.templateId)?.templateId,next=(treinoAtivoTemplate||draftT||getTreinoPlanejadoHoje()||ts.find(t=>String(t.id)===String(lastId))||ts[0])?.nome||'Treino';await window.TreinoNativeBridge.updateWidgetState({nextWorkout:next,weeklyDone:d.tipo==='frequencia'?d.prog:new Set(hist.filter(r=>{const x=new Date();x.setDate(x.getDate()-6);return r.data>=localDate(x)}).map(r=>r.data)).size,weeklyTarget:d.tipo==='frequencia'?d.alvo:4,streak,active:resumoNativoAtual(),...resumoAlimentacaoWidget(),movement:resumoMovimentoWidget()});}catch(e){console.warn('Atualização dos widgets',e)}}
@@ -7068,5 +7074,7 @@ setInterval(()=>{if(isNativeAndroid()&&treinoAtivoTemplate&&!document.hidden)rec
 <script src="./meal-text.js"></script>
 <script src="./usability.js"></script>
 <script src="./food-library.js"></script>
+<script src="./quick-nutrition.js"></script>
+<script src="./workout-flow.js"></script>
 </body>
 </html>
