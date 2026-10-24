@@ -1,4 +1,4 @@
-# TreinoApp v12.10.2 Beta — Widget visual e refeição por texto
+# TreinoApp v12.11.0 Beta — Registro mais simples, voltar e cancelar treino
 
 TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capacitor. A variante Beta pode coexistir com a Stable.
 
@@ -6,10 +6,19 @@ TreinoApp funciona como PWA no GitHub Pages e como aplicativo Android via Capaci
 
 - Stable: `com.treinoapp.app`
 - Beta: `com.treinoapp.beta`
-- Versão: `12.10.2`
-- versionCode: `121002`
+- Versão: `12.11.0`
+- versionCode: `121100`
 - Android: compile/target API 36, minSdk 26
 - Room: schema 7, somente migrações explícitas
+
+## Melhorias v12.11.0
+
+- voltar na interface e pelo Android, com teclado/janelas/histórico de navegação e preservação do treino;
+- cancelar sessão com confirmação, alternativa de registrar treino parcial, snapshot antes de descartar séries e parada do serviço/timer sem criar histórico/Health;
+- ação principal contextual com menos duplicação de botões, data/estado explícitos e ferramentas secundárias recolhidas;
+- alimentação com busca e quantidade no mesmo fluxo, edição rápida no diário e revisão de texto sem reconstruir campos a cada digitação;
+- correções do texto entram no rascunho, proteção de edição nas janelas principais, feedback local e gráficos de evolução/atividade sob demanda;
+- paleta preservada: não implementada a padronização de cores (item 9 recusado). Compilar e conferir assinatura, sem testes funcionais, mantendo a preferência anterior. Ver `NOTAS_v12.11.0_BETA.md`.
 
 ## Melhorias v12.10.2
 

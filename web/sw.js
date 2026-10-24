@@ -1,8 +1,8 @@
-const APP_VERSION = '12.10.2';
-const BUILD = '2026.10.23.3';
+const APP_VERSION = '12.11.0';
+const BUILD = '2026.10.24.1';
 const CACHE_PREFIX = 'treinoapp-';
 const CACHE_NAME = `${CACHE_PREFIX}v${APP_VERSION}-${BUILD}`;
-const APP_SHELL = ['./', './index.html', './mobile-ui.css', './mobile-fixes.css', './mobile-fixes.js', './nutrition-portions.js', './workflow-features.css', './workflow-store.js', './nutrition-workflow.js', './exercise-toolkit.js', './load-conventions.js', './muscle-goals.js', './progress-quality.js', './meal-shortcuts.js', './food-label.js', './onehand-workout.js', './recycle-bin.js', './release12100.css', './meal-entry.css', './meal-text.js', './activity.css', './personalization.css', './personalization.js', './activity.js', './meal-builder.js', './nutrition-days.js', './movement.js', './manifest.json', './VERSION', './BUILD.json', './icon-192.png', './icon-512.png', './data/taco-v4.json', './data/common-foods.js'];
+const APP_SHELL = ['./', './index.html', './mobile-ui.css', './mobile-fixes.css', './mobile-fixes.js', './nutrition-portions.js', './workflow-features.css', './workflow-store.js', './nutrition-workflow.js', './exercise-toolkit.js', './load-conventions.js', './muscle-goals.js', './progress-quality.js', './meal-shortcuts.js', './food-label.js', './onehand-workout.js', './recycle-bin.js', './release12100.css', './meal-entry.css', './usability.css', './usability.js', './meal-text.js', './activity.css', './personalization.css', './personalization.js', './activity.js', './meal-builder.js', './nutrition-days.js', './movement.js', './manifest.json', './VERSION', './BUILD.json', './icon-192.png', './icon-512.png', './data/taco-v4.json', './data/common-foods.js'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));

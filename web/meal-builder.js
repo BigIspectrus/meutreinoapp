@@ -32,7 +32,7 @@ window.TreinoMealBuilder=(()=>{
     if(!draft||draft.saving||!rows.length||rows.some(row=>!row.food?.id||!row.food?.name||!Number.isFinite(row.grams)||row.grams<=0||!Number.isFinite(row.amount)||row.amount<=0))throw new Error('Lote alimentar inválido');
     const added=rows.map(row=>{const item={...clone(row),key:gerarId('draft-item')+'-'+(++sequence)};if(item.unit==='ml')item.food.liquidGramsPerMlSnapshot=item.grams/item.amount;return item;});
     // Preparar tudo antes de modificar a montagem. Chaves estáveis são usadas no diário.
-    draft.items.push(...added);draft.selected=null;draft.textInput='';draft.textMode=false;persist();return added;
+    draft.items.push(...added);draft.selected=null;draft.textInput='';draft.textReview=null;draft.textMode=false;persist();return added;
   }
   function remove(key){if(!draft)return;draft.items=draft.items.filter(row=>row.key!==key);if(draft.selected===key)draft.selected=null;if(draft.items.length||String(draft.textInput||'').trim())persist();else localStorage.removeItem(window.TreinoWorkflowStore.keys.draft);}
   function refreshFood(food){const rows=items().filter(row=>row.food.id===food.id);for(const row of rows){row.food=clone(food);row.unit='grams';row.amount=row.grams;}if(rows.length)persist();return rows[0]||null;}

@@ -31,6 +31,8 @@ Autorização após a v12.8.6: implementar o tópico 10 na v12.8.7, gerar APK e 
 
 ## Regras de entrega
 
+Autorização em 24/10/2026: implementar os itens 1–8 e 10–14 da lista de USABILIDADE (não a lista anterior de 30 features), sem padronização de cores (item 9). Priorizar registro de treino; acrescentar cancelar treino iniciado por engano e botão/gesto voltar funcional. Entregar v12.11.0 Beta com APK, preservando sessões, histórico, metas, pacote e assinatura. Cancelar não equivale a finalizar nem apagar histórico; oferecer salvar parcial e proteger rascunho. Manter a preferência anterior de não executar testes funcionais/automáticos; compilação e conferência do pacote/assinatura somente.
+
 Autorização após a v12.10.1: melhorar estética do widget Android, adicionar visualização de kcal/macros do dia e atalho direto para refeição por texto. Entregar v12.10.2 com APK assinado, mantendo widgets/atalhos existentes, metas manuais e preferências por instância. Preservar dados e Health; não executar testes funcionais/automáticos, mantendo a preferência anterior. Sem acrescentar outros tópicos da lista antiga.
 
 Autorização em 22/10/2026: corrigir a adaptação da montagem de alimentos ao Android e adicionar registro de uma refeição por texto. Implementar na v12.10.1, preservando cadastro manual, rascunhos, metas e sincronização. Texto reconhecido com certeza pode ser registrado em conjunto; qualquer alimento/medida/quantidade pendente precisa de resolução explícita, sem registro parcial. Busca local, sem assumir nutrientes ou densidade de líquidos. Preservar assinatura/pacote e gerar APK sem testes funcionais, mantendo a preferência anterior.

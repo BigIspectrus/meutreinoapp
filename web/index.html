@@ -10,8 +10,8 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <title>TreinoApp v12</title>
-  <meta name="treinoapp-version" content="12.10.2">
-  <meta name="treinoapp-build" content="2026.10.23.3">
+  <meta name="treinoapp-version" content="12.11.0">
+  <meta name="treinoapp-build" content="2026.10.24.1">
   <script defer src="./vendor/chart.umd.js"></script>
   <script defer src="./vendor/jspdf.umd.min.js"></script>
   <script defer src="./vendor/qrcode.min.js"></script>
@@ -801,6 +801,7 @@
   <link rel="stylesheet" href="./workflow-features.css">
   <link rel="stylesheet" href="./release12100.css">
   <link rel="stylesheet" href="./meal-entry.css">
+  <link rel="stylesheet" href="./usability.css">
 </head>
 <body>
 
@@ -1374,6 +1375,8 @@
       <button class="btn btn-ghost" onclick="fecharModal('modalWorkoutToolsUI');abrirAddExSessao()"><span data-ui-icon="plus" aria-hidden="true"></span><span>Adicionar ou trocar exercício<small>Inclusive criar um novo nesta sessão</small></span></button>
       <button class="btn btn-ghost" onclick="fecharModal('modalWorkoutToolsUI');toggleVisaoGeralTreino()"><span data-ui-icon="history" aria-hidden="true"></span><span>Ver todos os exercícios<small>Consultar a sequência e reordenar</small></span></button>
       <button class="btn btn-ghost" onclick="fecharModal('modalWorkoutToolsUI');abrirModalAnilhas()"><span data-ui-icon="train" aria-hidden="true"></span><span>Calculadora de anilhas<small>Conferir a carga de cada lado</small></span></button>
+      <button class="btn btn-ghost" onclick="fecharModal('modalWorkoutToolsUI');voltarDoTreinoUX()"><span>Voltar ao início<small>Mantém a sessão e preserva o rascunho</small></span></button>
+      <button class="btn btn-danger" onclick="fecharModal('modalWorkoutToolsUI');abrirCancelamentoTreinoUX()"><span>Cancelar este treino<small>Para uma sessão iniciada por engano; não apaga o histórico</small></span></button>
     </div>
   </div>
 </div>
@@ -1500,7 +1503,7 @@
   <!-- treino ativo -->
   <div class="card" id="treinoAtivoCard" style="display:none;">
     <div class="card-title" style="justify-content:space-between;">
-      <button class="workout-back" type="button" onclick="irParaAba('dashboard')" aria-label="Voltar ao início sem encerrar treino">‹</button>
+      <button class="workout-back" type="button" onclick="voltarDoTreinoUX()" aria-label="Voltar mantendo o treino em andamento">‹ <span>Voltar</span></button>
       <span id="treinoAtivoNome">—</span>
       <button type="button" class="workout-rest-chip" id="workoutRestChipUI" onclick="abrirDescansoUI()" aria-label="Ver descanso e ajustar tempo" hidden>00:00</button>
       <input type="date" id="dataTreinoAtivo" aria-label="Data do treino" style="width:auto;padding:6px 10px;font-size:.83em;">
@@ -1513,6 +1516,7 @@
       <button type="button" class="btn btn-ghost btn-sm" onclick="abrirFerramentasTreinoUI()" aria-label="Opções do treino">•••</button>
     </div>
     <div class="session-change-bar" id="sessionChangeBar"></div>
+    <div id="workoutContextUX" class="ux-workout-context" role="status"></div>
     <div id="exerciciosAtivos"></div>
     <div class="session-add-wrap"><button class="btn btn-outline btn-sm" onclick="abrirAddExSessao()">Adicionar exercício à sessão</button></div>
     <div class="row" style="margin-top:8px;gap:8px;">
@@ -2248,14 +2252,14 @@
 <script src="./load-conventions.js"></script>
 <script src="./nutrition-portions.js"></script>
 <script>
-const APP_VERSION = '12.10.2';
-const APP_BUILD = '2026.10.23.3';
+const APP_VERSION = '12.11.0';
+const APP_BUILD = '2026.10.24.1';
 const DATA_SCHEMA_VERSION = 18;
 const GITHUB_REPO='BigIspectrus/meutreinoapp';
 const GITHUB_PAGES_BASE='https://bigispectrus.github.io/meutreinoapp';
 let _latestAndroidReleaseUrl='';
 let _nativeChannel='web';
-const APP_CACHE_VERSION = 'treinoapp-v12.10.2-202610233';
+const APP_CACHE_VERSION = 'treinoapp-v12.11.0-202610241';
 
 const SET_TYPES={workset:'Work set',warmup:'Aquecimento',topset:'Top set',backoff:'Back-off',dropset:'Drop set',cluster:'Cluster set',fst7:'FST-7',restpause:'Rest-pause',myoreps:'Myo-reps',amrap:'AMRAP'};
 function normalizarSetType(v){return SET_TYPES[v]?v:'workset';}
@@ -2773,12 +2777,15 @@ function ultimoTreinoDoTemplate(template) {
 
 let treinoAtivoTemplate = null;
 function selecionarTreino(template, btnEl) {
+  if(window._uxCancelling)return;
+  if(treinoAtivoTemplate){irParaAba('treinar');return toast('Seu treino já está aberto. Finalize ou cancele antes de iniciar outro.','info');}
   const draftAny=getRascunhoValido();
   if(draftAny && String(draftAny.templateId)!==String(template.id)){
     if(!confirm('Existe outro treino em andamento. Iniciar este treino vai substituir o rascunho atual. Continuar?')) return;
     limparRascunho();
   }
   const draft=getRascunhoValido(template.id);
+  document.getElementById('dataTreinoAtivo').value=draft?.data||hoje();
   mostrarFABTimer(true);
   window._treinoSessionId = draft?.sessionId || gerarId('sessao');
   window._treinoStartedAt = Number(draft?.startedAt)||Date.now();
@@ -2860,7 +2867,8 @@ function selecionarTreino(template, btnEl) {
   solicitarWakeLock();
   aplicarModoAcademia();
   setTimeout(()=>focarPrimeiroExercicioPendente(false),120);
-  setTimeout(()=>iniciarServicoNativoTreino({sessionId:window._treinoSessionId,name:template.nome||'Treino',startedAt:window._treinoStartedAt,totalSets:[...document.querySelectorAll('#exerciciosAtivos .serie-row')].length,completedSets:0,currentExercise:template.exercicios?.[0]||'',currentSet:1}),80);
+  const openingSessionId=window._treinoSessionId;
+  setTimeout(()=>{if(treinoAtivoTemplate&&window._treinoSessionId===openingSessionId&&!window._uxCancelling)iniciarServicoNativoTreino({sessionId:openingSessionId,name:template.nome||'Treino',startedAt:window._treinoStartedAt,totalSets:[...document.querySelectorAll('#exerciciosAtivos .serie-row')].length,completedSets:0,currentExercise:template.exercicios?.[0]||'',currentSet:1});},80);
 }
 
 // ── FEATURE 4: Rascunho automático ──
@@ -2876,7 +2884,7 @@ function salvarRascunho() {
   const extraExs=cards.filter(c=>c.dataset.sessionOrigin&&c.dataset.sessionOrigin!=='planned').map(c=>({ex:c.dataset.ex,series:c.querySelectorAll('.serie-row').length,group:c.dataset.group||grupoDoExercicio(c.dataset.ex),rest:Number(c.dataset.rest)||getDescansoPadrao(),increment:Number(c.dataset.increment)||2.5,repRange:c.dataset.repRange||'livre',origin:c.dataset.sessionOrigin,replacedEx:c.dataset.replacedEx||'',changeId:c.dataset.changeId||''}));
   const payload={schemaVersion:DATA_SCHEMA_VERSION,cardLoadModes:cards.map(c=>({exercise:c.dataset.ex,mode:capturarTipoCargaSerie(c.querySelector('.serie-row')).mode})),sessionId:window._treinoSessionId||gerarId('sessao'),templateId:treinoAtivoTemplate.id||null,templateSnapshot:treinoAtivoTemplate?.isAdHoc?treinoAtivoTemplate:null,data:document.getElementById('dataTreinoAtivo')?.value||hoje(),valores,skippedExs,extraExs,exerciseOrder:cards.map(c=>c.dataset.ex).filter(Boolean),sessionExerciseChanges:_sessionExerciseChanges,sessionOrderChanged:_sessionOrderChanged,startedAt:window._treinoStartedAt||Date.now(),paused:!!window._treinoPaused,pauseStartedAt:window._treinoPauseStartedAt||null,totalPausedMs:Number(window._treinoTotalPausedMs)||0,timestamp:Date.now()};
   window._treinoSessionId=payload.sessionId;
-  try{localStorage.setItem('_rascunhoTreino',JSON.stringify(payload))}catch(e){console.warn('Falha ao salvar rascunho',e)}
+  try{localStorage.setItem('_rascunhoTreino',JSON.stringify(payload));return true;}catch(e){console.warn('Falha ao salvar rascunho',e);return false;}
 }
 function restaurarRascunho() {
   try {
@@ -2957,6 +2965,7 @@ function oferecerAtualizacaoTemplateSessao(proposta){
 }
 
 function salvarTreinoAtivo(sessionContext={sessionRpe:null,contextTags:[],sessionNote:''},partialConfirmed=false) {
+  if(!treinoAtivoTemplate||window._uxCancelling||window._uxSavingSession)return;
   const data=document.getElementById('dataTreinoAtivo').value;
   if(!data) return toast('Preencha a data','error');
   const rows=[...document.querySelectorAll('#exerciciosAtivos .serie-row')].filter(r=>!r.closest('.exercicio-card')?.classList.contains('skipped'));
@@ -2964,6 +2973,7 @@ function salvarTreinoAtivo(sessionContext={sessionRpe:null,contextTags:[],sessio
   const concluidas=preenchidas.filter(r=>r.querySelector('.serie-check')?.classList.contains('checked'));
   if(!concluidas.length) return toast('Marque pelo menos uma série como concluída antes de finalizar o treino','warn');
   const usar=concluidas;
+  if(usar.some(row=>{const weight=Number(row.querySelector('.ativo-carga')?.value),reps=Number(row.querySelector('.ativo-reps')?.value);return !Number.isFinite(weight)||weight<0||!Number.isInteger(reps)||reps<=0;}))return toast('Confira carga e repetições das séries concluídas antes de registrar.','warn');
   const faltamTotal=rows.length-concluidas.length;
   if(faltamTotal>0&&!partialConfirmed){
     confirmarAcao('Concluir treino parcial?',`${faltamTotal} série(s) ainda não foram concluídas. Salvar somente as ${concluidas.length} série(s) concluídas?`,()=>salvarTreinoAtivo(sessionContext,true));
@@ -2977,6 +2987,7 @@ function salvarTreinoAtivo(sessionContext={sessionRpe:null,contextTags:[],sessio
   const startedAt=window._treinoStartedAt || agora.getTime();
   const finishedAt=Date.now();
   const sessionId=window._treinoSessionId || gerarId('sessao');
+  if(historico.some(r=>String(r.sessionId||'')===String(sessionId)))return toast('Esta sessão já consta no histórico. Confira antes de tentar registrá-la outra vez.','warn');
   window._lastFinishedSessionId=sessionId;
   const pausedExtra=window._treinoPaused&&window._treinoPauseStartedAt?Math.max(0,finishedAt-Number(window._treinoPauseStartedAt)):0;
   const totalPausedMs=(Number(window._treinoTotalPausedMs)||0)+pausedExtra;
@@ -2986,7 +2997,8 @@ function salvarTreinoAtivo(sessionContext={sessionRpe:null,contextTags:[],sessio
     const ex=inp.dataset.ex, serie=parseInt(inp.dataset.serie), carga=parseFloat(inp.value), reps=parseInt(repsEl?.value)||0;
     historico.push({id:gerarId('serie'),sessionId,templateId:treinoAtivoTemplate?.id||null,templateNome:treinoAtivoTemplate?.nome||'',data,exercicio:ex,muscleSnapshot:capturarMapaMuscularSerie(ex),loadSnapshot:capturarTipoCargaSerie(row),numSerie:serie,carga,reps,rir:effortInt(row.querySelector('.ativo-rir')?.value),rpe:effortFloat(row.querySelector('.ativo-rpe')?.value),setType:normalizarSetType(row.querySelector('.ativo-tipo')?.value),grupo:grupoDoExercicio(ex),hora,startedAt,finishedAt,durationSec,completedAt:Number(row.dataset.completedAt)||finishedAt,setStartedAt:Number(row.dataset.setStartedAt)||null,restBeforeSec:row.dataset.restBeforeSec!==undefined?Number(row.dataset.restBeforeSec):null,timingQuality:row.dataset.timingQuality||'completion_only',sessionRpe:sessionContext.sessionRpe??null,sessionContext:Array.isArray(sessionContext.contextTags)?sessionContext.contextTags:[],sessionNote:sessionContext.sessionNote||''});
   });
-  try { localStorage.setItem('historicoTreinoV3',JSON.stringify(historico)); } catch(e){ return toast('Não foi possível salvar. Faça um backup e libere espaço de armazenamento.','error'); }
+  window._uxSavingSession=true;
+  try { localStorage.setItem('historicoTreinoV3',JSON.stringify(historico)); } catch(e){window._uxSavingSession=false;return toast('Não foi possível salvar. Faça um backup e libere espaço de armazenamento.','error'); }
   invalidarCache();
   const novos=[...new Set(historico.filter(r=>getSessionKey(r)===sessionId&&setContaParaPR(r)).filter(r=>{const prev=historico.filter(p=>getSessionKey(p)!==sessionId&&p.exercicio===r.exercicio&&setContaParaPR(p)&&tiposCargaCompativeis(p,r));return prev.length&&Number(r.carga)>Math.max(...prev.map(p=>Number(p.carga)||0));}).map(r=>r.exercicio))];
   limparRascunho(); limparDadosNaoSalvos(); pararTimer(); mostrarFABTimer(false); setModoTreinoAtivo(false);
@@ -3002,6 +3014,7 @@ function salvarTreinoAtivo(sessionContext={sessionRpe:null,contextTags:[],sessio
   try{window.TreinoNativeBridge?.onWorkoutFinished?.({sessionId,templateId:treinoAtivoTemplate?.id||null,name:treinoAtivoTemplate?.nome||'Treino',startMs:startedAt,endMs:finishedAt,durationSec,completedSets:usar.length,totalSets:rows.length,skippedExercises:skippedExs,sessionRpe:sessionContext.sessionRpe??null,contextTags:sessionContext.contextTags||[],sessionNote:sessionContext.sessionNote||'',sets:nativeSets});}catch(e){console.warn('Integração nativa ao finalizar',e)}
   if(treinoAtivoTemplate?.isAdHoc) localStorage.removeItem('_adhocTemplateV12');
   treinoAtivoTemplate=null;_sessionExerciseChanges=[];_sessionOrderChanged=false;atualizarBarraAlteracoesSessao(); window._treinoSessionId=null; window._treinoStartedAt=null; window._treinoTotalPausedMs=0; window._treinoPaused=false; window._treinoPauseStartedAt=null; pararRelogioTreino(); liberarWakeLock(); atualizarDiagnosticoUI();
+  window._uxSavingSession=false;
   atualizarGrafico(); renderizarHistorico(); renderizarDashboard(); salvarSnapshotSeguro('treino_concluido'); haptic(100);
   if(propostaTemplate)setTimeout(()=>oferecerAtualizacaoTemplateSessao(propostaTemplate),450);
 }
@@ -6137,6 +6150,7 @@ async function iniciarServicoNativoTreino(payload){
   if(!isNativeAndroid())return;
   try{
     const perms=await window.TreinoNativeBridge.requestCorePermissions();
+    if(window._uxCancelling||!treinoAtivoTemplate||String(payload.sessionId)!==String(window._treinoSessionId))return;
     if(perms?.activityRecognition===false){toast('Permita atividade física para manter o treino ativo em segundo plano','warn');return;}
     await window.TreinoNativeBridge.startWorkout(payload);
   }catch(e){console.warn('Serviço nativo indisponível; o treino continua no app',e);toast('O treino continua, mas a notificação em segundo plano não pôde ser iniciada','warn');}
@@ -6293,7 +6307,7 @@ async function atualizarWidgetNativo(){if(!isNativeAndroid())return;try{const hi
 async function gerenciarWidgetsNativos(){if(!isNativeAndroid())return;try{await atualizarWidgetNativo();await window.TreinoNativeBridge.openWidgetSettings();}catch(e){console.warn(e);toast('Não foi possível abrir os widgets. Adicione pela tela inicial → Widgets → TreinoApp.','warn');}}
 function localizarSeriePendenteNativa(st){const rows=linhasValidasTreino(),ordinal=Number(st?.pendingSetOrdinal),matches=row=>{const d=dadosSerieNativa(row);return d.exercise===String(st?.pendingSetExercise||'')&&d.setNumber===Number(st?.pendingSetNumber);};if(Number.isInteger(ordinal)&&ordinal>=0&&rows[ordinal]&&matches(rows[ordinal]))return rows[ordinal];return rows.find(r=>matches(r)&&!r.querySelector('.serie-check.checked'))||rows.find(matches)||null;}
 let _nativeReconciling=false;
-async function reconciliarEstadoNativo(){if(!isNativeAndroid()||_nativeReconciling)return;_nativeReconciling=true;try{const st=await window.TreinoNativeBridge.getWorkoutState();if(treinoAtivoTemplate&&typeof st?.paused==='boolean'&&st.paused!==!!window._treinoPaused){if(st.paused){window._treinoPaused=true;window._treinoPauseStartedAt=window._treinoPauseStartedAt||Date.now();}else{if(window._treinoPaused&&window._treinoPauseStartedAt)window._treinoTotalPausedMs=(Number(window._treinoTotalPausedMs)||0)+Math.max(0,Date.now()-Number(window._treinoPauseStartedAt));window._treinoPaused=false;window._treinoPauseStartedAt=null;}atualizarEstadoPausaUI();salvarRascunho();}if(treinoAtivoTemplate&&Number(st?.pendingSetStartedAt)>0&&String(st?.pendingSetSession||'')===String(window._treinoSessionId||'')){const row=localizarSeriePendenteNativa(st);if(row){const applied=aplicarInicioSeriePrecisao(row,Number(st.pendingSetStartedAt),'watch');await window.TreinoNativeBridge.acknowledgeSetStart({requestId:st.pendingSetRequestId||'',exercise:st.pendingSetExercise||'',setNumber:Number(st.pendingSetNumber)||0,ordinal:Number(st.pendingSetOrdinal)});if(applied){const d=dadosSerieNativa(row);toast(`Série iniciada pelo relógio · ${d.exercise} ${d.setNumber}`,'success');}}}if(st?.restEndAt&&Number(st.restEndAt)>Date.now()){_timerEndTime=Number(st.restEndAt);_timerFired=false;const restante=Math.max(0,Math.ceil((_timerEndTime-Date.now())/1000));timerRestante=restante;atualizarTimerUI(restante);}else if(st?.restEndAt&&Number(st.restEndAt)<=Date.now()&&timerRestante>0){_v12OriginalStopTimer.call(window);}}catch(e){}finally{_nativeReconciling=false;}}
+async function reconciliarEstadoNativo(){if(!isNativeAndroid()||_nativeReconciling||window._uxCancelling)return;const expectedSession=window._treinoSessionId;_nativeReconciling=true;try{const st=await window.TreinoNativeBridge.getWorkoutState();if(window._uxCancelling||String(window._treinoSessionId||'')!==String(expectedSession||''))return;if(treinoAtivoTemplate&&typeof st?.paused==='boolean'&&st.paused!==!!window._treinoPaused){if(st.paused){window._treinoPaused=true;window._treinoPauseStartedAt=window._treinoPauseStartedAt||Date.now();}else{if(window._treinoPaused&&window._treinoPauseStartedAt)window._treinoTotalPausedMs=(Number(window._treinoTotalPausedMs)||0)+Math.max(0,Date.now()-Number(window._treinoPauseStartedAt));window._treinoPaused=false;window._treinoPauseStartedAt=null;}atualizarEstadoPausaUI();salvarRascunho();}if(treinoAtivoTemplate&&Number(st?.pendingSetStartedAt)>0&&String(st?.pendingSetSession||'')===String(window._treinoSessionId||'')){const row=localizarSeriePendenteNativa(st);if(row){const applied=aplicarInicioSeriePrecisao(row,Number(st.pendingSetStartedAt),'watch');await window.TreinoNativeBridge.acknowledgeSetStart({requestId:st.pendingSetRequestId||'',exercise:st.pendingSetExercise||'',setNumber:Number(st.pendingSetNumber)||0,ordinal:Number(st.pendingSetOrdinal)});if(applied){const d=dadosSerieNativa(row);toast(`Série iniciada pelo relógio · ${d.exercise} ${d.setNumber}`,'success');}}}if(st?.restEndAt&&Number(st.restEndAt)>Date.now()){_timerEndTime=Number(st.restEndAt);_timerFired=false;const restante=Math.max(0,Math.ceil((_timerEndTime-Date.now())/1000));timerRestante=restante;atualizarTimerUI(restante);}else if(st?.restEndAt&&Number(st.restEndAt)<=Date.now()&&timerRestante>0){_v12OriginalStopTimer.call(window);}}catch(e){}finally{_nativeReconciling=false;}}
 async function nativeWorkoutFinishedImpl(summary){try{await window.TreinoNativeBridge.finishWorkout(summary);await window.TreinoNativeBridge.saveWorkoutMirror(summary);setHealthPendente(summary);const match=await processarHealthParaSessao(summary,false,false);if(match?.found&&Number(match.confidence)>=.78)atualizarResumoPosTreinoHealth(summary.sessionId,match);await atualizarWidgetNativo();renderHealthPerformance();}catch(e){console.warn('Finalização nativa',e);}}
 const _v12OriginalProgress=atualizarProgressoTreino;atualizarProgressoTreino=function(){const r=_v12OriginalProgress.apply(this,arguments);agendarUpdateNativo();return r;};
 function proximaSeriePendenteNativa(completedRow){const rows=linhasValidasTreino(),idx=completedRow?rows.indexOf(completedRow):-1,target=rows.slice(Math.max(0,idx+1)).find(r=>!r.querySelector('.serie-check.checked'))||rows.find(r=>!r.querySelector('.serie-check.checked'));return target?{row:target,...dadosSerieNativa(target)}:null;}
@@ -6708,7 +6722,7 @@ function renderizarRefeicoesNutricao(entries){
   el.innerHTML=NUTRITION_MEALS.map(meal=>{
     const list=entries.filter(e=>e.mealType===meal.id).sort((a,b)=>(a.time||'').localeCompare(b.time||'')),tot=totaisNutricao(list);
     const previous=all.filter(e=>e.date===yesterday&&e.mealType===meal.id).length;
-    const rows=list.length?list.map(e=>'<button type="button" class="nutrition-entry" onclick=\'abrirEdicaoRegistroNutricao('+jsArg(e.id)+')\'><span><span class="nutrition-entry-name">'+esc(e.name)+'</span><span class="nutrition-entry-quantity">'+esc(textoQuantidadeRegistroNutricao(e,quantityFoods.get(e.foodId)))+(e.time?' · '+esc(e.time):'')+'</span><span class="nutrition-entry-sub">Prot '+formatarNutricao(e.protein,1)+' g · Carb '+formatarNutricao(e.carbs,1)+' g · Gord '+formatarNutricao(e.fat,1)+' g</span></span><span class="nutrition-entry-kcal">'+formatarNutricao(e.kcal,0)+' kcal<small>Editar ›</small></span></button>').join(''):'<div class="nutrition-meal-empty">Ainda não há alimentos aqui. Registre o primeiro abaixo.</div>';
+    const rows=list.length?list.map(e=>'<div class="nutrition-entry" data-entry-id="'+esc(e.id)+'"><button type="button" class="ux-entry-main" onclick=\'abrirQuantidadeInlineUX('+jsArg(e.id)+',this)\'><span class="nutrition-entry-name">'+esc(e.name)+'</span><span class="nutrition-entry-quantity">'+esc(textoQuantidadeRegistroNutricao(e,quantityFoods.get(e.foodId)))+(e.time?' · '+esc(e.time):'')+'</span><span class="nutrition-entry-sub">Prot '+formatarNutricao(e.protein,1)+' g · Carb '+formatarNutricao(e.carbs,1)+' g · Gord '+formatarNutricao(e.fat,1)+' g</span><span class="ux-inline-edit-hint">Toque para ajustar quantidade</span></button><button type="button" class="nutrition-entry-kcal ux-entry-full" onclick=\'abrirEdicaoRegistroNutricao('+jsArg(e.id)+')\'>'+formatarNutricao(e.kcal,0)+' kcal<small>Mais opções ›</small></button></div>').join(''):'<div class="nutrition-meal-empty">Ainda não há alimentos aqui. Registre o primeiro abaixo.</div>';
     return '<details class="nutrition-meal" data-meal="'+meal.id+'"'+(_uiMealsOpen.get(date).has(meal.id)?' open':'')+'><summary><span class="nutrition-meal-icon" aria-hidden="true">'+meal.icon+'</span><span class="nutrition-meal-title">'+meal.label+'</span><span class="nutrition-meal-total"><strong>'+formatarNutricao(tot.kcal,0)+' kcal</strong>'+list.length+' '+(list.length===1?'item':'itens')+'</span>'+(list.length?'<span class="nutrition-meal-macros"><span><b>Prot</b> '+formatarNutricao(tot.protein,1)+' g</span><span><b>Carb</b> '+formatarNutricao(tot.carbs,1)+' g</span><span><b>Gord</b> '+formatarNutricao(tot.fat,1)+' g</span></span>':'')+'<span class="nutrition-meal-chevron" aria-hidden="true">⌄</span></summary><div class="nutrition-meal-content">'+rows+'<div class="nutrition-meal-footer"><button class="btn btn-outline btn-sm" onclick=\'abrirRegistroNutricao('+jsArg(meal.id)+')\'>+ Adicionar alimento</button><span class="nutrition-inline-actions">'+(previous?'<button class="btn btn-ghost btn-sm" onclick=\'copiarRefeicaoAnteriorNutricao('+jsArg(meal.id)+')\'>Copiar ontem</button>':'')+(list.length?'<button class="btn btn-ghost btn-sm" onclick=\'abrirSalvarRefeicaoProntaNutricao('+jsArg(meal.id)+')\'>Salvar pronta</button>':'')+'</span></div></div></details>';
   }).join('');
   el.querySelectorAll('details[data-meal]').forEach(details=>details.addEventListener('toggle',()=>{if(!details.isConnected||date!==_nutritionDate)return;const open=_uiMealsOpen.get(date);if(details.open)open.add(details.dataset.meal);else open.delete(details.dataset.meal);}));
@@ -7010,7 +7024,7 @@ function inicializarInterfaceMovelUI(){
     const panel=overlay.querySelector('.modal');if(!panel)return;
     const title=panel.querySelector('.modal-title');overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');
     if(title){if(!title.id)title.id=overlay.id+'-title-ui';overlay.setAttribute('aria-labelledby',title.id);}
-    const existingClose=panel.querySelector('.modal-close-ui'),close=existingClose||document.createElement('button');close.type='button';close.className='modal-close-ui';close.setAttribute('aria-label','Fechar janela');close.textContent='×';close.onclick=()=>fecharModal(overlay.id);if(!existingClose)panel.prepend(close);
+    const existingClose=panel.querySelector('.modal-close-ui'),close=existingClose||document.createElement('button');close.type='button';close.className='modal-close-ui';close.setAttribute('aria-label','Fechar janela');close.textContent='×';close.onclick=()=>solicitarFecharJanelaUX(overlay.id);if(!existingClose)panel.prepend(close);
     new MutationObserver(()=>{
       const open=overlay.classList.contains('open');document.body.classList.toggle('ui-modal-open',!!topModal());
       if(open){returns.set(overlay,document.activeElement);requestAnimationFrame(()=>{if(topModal()===overlay)close.focus({preventScroll:true});});}
@@ -7049,5 +7063,6 @@ setInterval(()=>{if(isNativeAndroid()&&treinoAtivoTemplate&&!document.hidden)rec
 <script src="./onehand-workout.js"></script>
 <script src="./recycle-bin.js"></script>
 <script src="./meal-text.js"></script>
+<script src="./usability.js"></script>
 </body>
 </html>

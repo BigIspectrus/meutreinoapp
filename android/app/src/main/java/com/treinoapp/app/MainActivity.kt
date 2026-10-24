@@ -5,6 +5,10 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import androidx.activity.OnBackPressedCallback
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.health.connect.client.PermissionController
 import com.getcapacitor.BridgeActivity
@@ -83,6 +87,22 @@ class MainActivity : BridgeActivity() {
         registerPlugin(TreinoNativePlugin::class.java)
         registerPlugin(FoodLabelPlugin::class.java)
         super.onCreate(savedInstanceState)
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            private var handling = false
+            override fun handleOnBackPressed() {
+                if (handling) return
+                val view = bridge?.webView ?: run { moveTaskToBack(true); return }
+                if (ViewCompat.getRootWindowInsets(view)?.isVisible(WindowInsetsCompat.Type.ime()) == true) {
+                    WindowInsetsControllerCompat(window, view).hide(WindowInsetsCompat.Type.ime())
+                    return
+                }
+                handling = true
+                view.evaluateJavascript("Boolean(window.tratarVoltarApp && window.tratarVoltarApp('android'))") { result ->
+                    handling = false
+                    if (result != "true" && !isFinishing && !isDestroyed) moveTaskToBack(true)
+                }
+            }
+        })
         HealthSyncScheduler.ensurePeriodic(this)
         ExternalBackupScheduler.ensure(this)
         routeIntent(intent)
