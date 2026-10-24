@@ -119,7 +119,23 @@
     food.barcode=winner.barcode||a.barcode||b.barcode||'';
     food.library.resultSignature=signature(food);return food;
   }
-  function activeDraft(){return !!(window.TreinoMealBuilder?.active()||window.TreinoMealBuilder?.loadSaved());}
+  function activeDraft(){
+    const builder=window.TreinoMealBuilder,live=builder?.data();
+    if(live?.saving)return true;
+    let recordedIds=null,plans=null;
+    function pending(draft){
+      if(!draft)return false;
+      if(String(draft.textInput||'').trim())return true;
+      if(!Array.isArray(draft.items)||!draft.items.length)return false;
+      // Um rascunho já registrado não é uma montagem pendente (mesma regra do aviso na alimentação).
+      if(draft.mode==='planned'){plans??=getPlanosAlimentares();return !!draft.editPlanId||!plans.some(plan=>plan.id===draft.id);}
+      recordedIds??=new Set(getRegistrosNutricao().map(entry=>entry.id));
+      return !idsConsumoRascunho(draft).every(id=>recordedIds.has(id));
+    }
+    // "active" indica somente que a tela foi iniciada, mesmo que continue completamente vazia.
+    // Conferir memória e armazenamento separadamente, sem apagar ou substituir nenhum rascunho.
+    return pending(live)||pending(builder?.loadSaved());
+  }
   function refresh(message){
     _mealShortcutCacheRaw='';renderizarGerenciadorAlimentosNutricao();renderizarBuscaAlimentosNutricao();atualizarStorageStatus();localStorage.removeItem('_nativeNutritionSyncV1252');agendarSincronizacaoNutricaoNativa();
     if(message)toast(message,'success');
