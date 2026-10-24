@@ -115,6 +115,8 @@
     }
     const food={...snapshot(winner),id:a.id,builtIn:false,favorite:!!(a.favorite||b.favorite),lastUsedAt:Math.max(a.lastUsedAt||0,b.lastUsedAt||0),createdAt:a.createdAt||now,updatedAt:now,measures,aliases:strings([a.name,b.name,...(a.aliases||[]),...(b.aliases||[])]),library:{version:1,mergedIds:strings([a.id,b.id,...(a.library?.mergedIds||[]),...(b.library?.mergedIds||[])]),catalogIds:strings([...(a.builtIn?[a.id]:[]),...(b.builtIn?[b.id]:[]),...(a.library?.catalogIds||[]),...(b.library?.catalogIds||[])]),originals,mergedAt:now}};
     // Valores da tabela escolhida, sem médias e sem preencher micros de uma fonte diferente.
+    // A referência genérica pode não ter código de barras; preservar o identificador já cadastrado.
+    food.barcode=winner.barcode||a.barcode||b.barcode||'';
     food.library.resultSignature=signature(food);return food;
   }
   function activeDraft(){return !!(window.TreinoMealBuilder?.active()||window.TreinoMealBuilder?.loadSaved());}
