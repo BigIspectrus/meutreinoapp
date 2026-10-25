@@ -10,8 +10,8 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <title>TreinoApp v12</title>
-  <meta name="treinoapp-version" content="12.13.1">
-  <meta name="treinoapp-build" content="2026.10.25.2">
+  <meta name="treinoapp-version" content="12.13.2">
+  <meta name="treinoapp-build" content="2026.10.25.3">
   <script defer src="./vendor/chart.umd.js"></script>
   <script defer src="./vendor/jspdf.umd.min.js"></script>
   <script defer src="./vendor/qrcode.min.js"></script>
@@ -796,6 +796,7 @@
 </style>
   <link rel="stylesheet" href="./mobile-ui.css">
   <link rel="stylesheet" href="./activity.css">
+  <link rel="stylesheet" href="./weight-projection.css">
   <link rel="stylesheet" href="./personalization.css">
   <link rel="stylesheet" href="./mobile-fixes.css">
   <link rel="stylesheet" href="./workflow-features.css">
@@ -2255,14 +2256,14 @@
 <script src="./load-conventions.js"></script>
 <script src="./nutrition-portions.js"></script>
 <script>
-const APP_VERSION = '12.13.1';
-const APP_BUILD = '2026.10.25.2';
+const APP_VERSION = '12.13.2';
+const APP_BUILD = '2026.10.25.3';
 const DATA_SCHEMA_VERSION = 18;
 const GITHUB_REPO='BigIspectrus/meutreinoapp';
 const GITHUB_PAGES_BASE='https://bigispectrus.github.io/meutreinoapp';
 let _latestAndroidReleaseUrl='';
 let _nativeChannel='web';
-const APP_CACHE_VERSION = 'treinoapp-v12.13.1-202610252';
+const APP_CACHE_VERSION = 'treinoapp-v12.13.2-202610253';
 
 const SET_TYPES={workset:'Work set',warmup:'Aquecimento',topset:'Top set',backoff:'Back-off',dropset:'Drop set',cluster:'Cluster set',fst7:'FST-7',restpause:'Rest-pause',myoreps:'Myo-reps',amrap:'AMRAP'};
 function normalizarSetType(v){return SET_TYPES[v]?v:'workset';}
@@ -7062,6 +7063,7 @@ setInterval(()=>{if(isNativeAndroid()&&treinoAtivoTemplate&&!document.hidden)rec
 </script>
 <script src="./nutrition-days.js"></script>
 <script src="./movement.js"></script>
+<script src="./weight-projection.js"></script>
 <script src="./activity.js"></script>
 <script src="./meal-builder.js"></script>
 <script src="./personalization.js"></script>

@@ -29,9 +29,11 @@ window.TreinoMovementData=(()=>{
 })();
 function getPesosParaTendencia(){return window.TreinoMovementData.weights(getPeso(),parseJSONSeguro(localStorage.getItem('healthRecoveryCacheV12')||'{}',{},'healthRecoveryCacheV12'),hoje());}
 function renderizarTendenciaPeso(){
+  window.TreinoWeightProjection?.destroyChart();
   const el=document.getElementById('weightInsights');if(!el)return;const visible=document.getElementById('routineMetric')?.value==='weight';el.hidden=!visible;if(!visible)return;
   const s=window.TreinoMovementData.weightSummary(hoje(),getPesosParaTendencia()),fmt=v=>formatarAtividade(v,' kg',2),dates=r=>r.start.slice(8)+'/'+r.start.slice(5,7)+' – '+r.end.slice(8)+'/'+r.end.slice(5,7);
   el.innerHTML='<div class="weight-week-grid"><div><span>Últimos 7 dias</span><strong>'+fmt(s.current.value)+'</strong><small>'+dates(s.current)+' · '+s.current.count+'/7 dias com medida</small></div><div><span>7 dias anteriores</span><strong>'+fmt(s.previous.value)+'</strong><small>'+dates(s.previous)+' · '+s.previous.count+'/7 dias com medida</small></div></div><p class="activity-note">'+(s.delta==null?'Comparação disponível com pelo menos duas pesagens em cada janela.':'Diferença entre médias: '+(s.delta>0?'+':'')+fmt(s.delta)+'.')+(s.latest?' Última medida: '+fmt(s.latest.kg)+' em '+s.latest.date.split('-').reverse().join('/')+' · '+s.latest.source+'.':'')+'</p><details class="activity-disclosure"><summary>Como ler a tendência</summary><p>A linha tracejada é a média das medidas disponíveis nos últimos 7 dias, com no mínimo duas pesagens. Dias sem medida não viram zero nem pesagens inventadas. As janelas comparadas têm 7 dias corridos; confira a quantidade de medidas. O registro local válido tem prioridade sobre o cache Health no mesmo dia. O histórico local legado pode conter pesos importados e não identifica a origem.</p></details>';
+  window.TreinoWeightProjection?.mount(el);
 }
 function getMetasMovimento(){const d=window.TreinoMovementData;return d.goals(parseJSONSeguro(localStorage.getItem(d.goalsKey)||'{}',{},d.goalsKey));}
 function abrirMetasMovimento(){const g=getMetasMovimento();for(const key of Object.keys(g))document.getElementById('movementGoal-'+key).value=g[key]??'';document.getElementById('modalMovementGoals').classList.add('open');}
