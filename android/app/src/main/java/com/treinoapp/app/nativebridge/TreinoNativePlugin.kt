@@ -806,6 +806,7 @@ class TreinoNativePlugin : Plugin() {
                         startedAt = if (o.has("startedAt") && !o.isNull("startedAt")) o.optLong("startedAt") else null,
                         restBeforeSec = if (o.has("restBeforeSec") && !o.isNull("restBeforeSec")) o.optInt("restBeforeSec") else null,
                         timingQuality = o.optString("timingQuality", "legacy").ifBlank { "legacy" },
+                        loadMode = o.optString("loadMode", o.optJSONObject("loadSnapshot")?.optString("mode") ?: "legacy").ifBlank { "legacy" },
                     )
                 }
                 db.workoutDao().upsertSession(session)
@@ -961,6 +962,7 @@ class TreinoNativePlugin : Plugin() {
                         startedAt = if (o.has("setStartedAt") && !o.isNull("setStartedAt")) o.optLong("setStartedAt") else null,
                         restBeforeSec = if (o.has("restBeforeSec") && !o.isNull("restBeforeSec")) o.optInt("restBeforeSec") else null,
                         timingQuality = o.optString("timingQuality", "legacy").ifBlank { "legacy" },
+                        loadMode = o.optString("loadMode", o.optJSONObject("loadSnapshot")?.optString("mode") ?: "legacy").ifBlank { "legacy" },
                     )
                 }
                 if (replace) db.workoutDao().replaceAllLegacy(sets) else db.workoutDao().upsertLegacySets(sets)

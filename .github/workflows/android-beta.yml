@@ -76,3 +76,4 @@ jobs:
           path: |
             android/app/build/outputs/apk/beta/release/*.apk
             android/app/build/outputs/bundle/betaRelease/*.aab
+            android/app/schemas/**/*.json

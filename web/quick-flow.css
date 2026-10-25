@@ -1,4 +1,5 @@
 /* v12.13.0 — controles compactos, sem alterar a paleta do aplicativo. */
+.flow-load-choice{max-width:100%;white-space:normal;min-height:44px;margin:8px 0;text-align:left}
 .flow-quick-toggle{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);padding:4px 0 12px}
 #modalNutritionAdd .flow-quick-toggle input{width:20px;min-height:20px;flex:0 0 20px}
 .flow-food-result{display:grid;grid-template-columns:minmax(0,1fr) minmax(130px,42%);gap:6px 10px;padding:12px 0;border-bottom:1px solid var(--border);align-items:center}

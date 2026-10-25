@@ -51,6 +51,8 @@ data class WorkoutSetEntity(
     val startedAt: Long? = null,
     val restBeforeSec: Int? = null,
     val timingQuality: String = "legacy",
+    @androidx.room.ColumnInfo(defaultValue = "'legacy'")
+    val loadMode: String = "legacy",
 )
 
 @Entity(tableName = "nutrition_goals")
