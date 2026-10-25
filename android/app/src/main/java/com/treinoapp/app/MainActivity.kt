@@ -170,11 +170,11 @@ class MainActivity : BridgeActivity() {
                 return android.content.pm.ShortcutInfo.Builder(this, id).setShortLabel(label).setLongLabel(label)
                     .setIcon(android.graphics.drawable.Icon.createWithResource(this, com.treinoapp.app.R.mipmap.ic_launcher)).setIntent(launch).build()
             }
-            getSystemService(android.content.pm.ShortcutManager::class.java)?.dynamicShortcuts = listOf(
+            getSystemService(android.content.pm.ShortcutManager::class.java)?.setDynamicShortcuts(listOf(
                 shortcut("workout", "Meus treinos", "treinar"),
                 shortcut("meal-text", "Refeição por texto", "nutricao", "addMealText"),
                 shortcut("weight", "Registrar peso", "progresso", "recordWeight")
-            )
+            ))
         } catch (_: Exception) { /* Launcher sem suporte: manter o acesso normal pelo aplicativo. */ }
     }
 
