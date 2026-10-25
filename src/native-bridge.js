@@ -3,6 +3,7 @@ import { Capacitor, registerPlugin, SystemBars } from '@capacitor/core';
 const Native = registerPlugin('TreinoNative');
 const BarcodeScanner = registerPlugin('CapacitorBarcodeScanner');
 const FoodLabel = registerPlugin('FoodLabel');
+const LocalNetwork = registerPlugin('LocalNetwork');
 const native = () => Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
 
 function call(method, payload = {}) {
@@ -12,6 +13,8 @@ function call(method, payload = {}) {
 
 window.TreinoNativeBridge = {
   isNative: native,
+  localNetwork: (method,data={}) => native() ? LocalNetwork[method](data) : Promise.resolve({connected:false}),
+  scanLocalPair: () => native() ? BarcodeScanner.scanBarcode({hint:17,scanInstructions:'Leia o QR Code do TreinoApp PC',scanButton:false,cameraDirection:1,scanOrientation:1,cancelButtonAccessibilityLabel:'Cancelar pareamento',android:{scanningLibrary:'mlkit'}}) : Promise.resolve({}),
   readFoodLabel: source => native() ? FoodLabel.readLabel({source:source||'camera'}) : Promise.resolve({native:false,available:false}),
   setSystemBarsStyle: style => native() ? SystemBars.setStyle({ style }).then(() => call('setWindowBackground', {light:style==='LIGHT'})) : Promise.resolve({native:false}),
   getNativeInfo: () => call('getNativeInfo'),

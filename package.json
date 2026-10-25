@@ -1,6 +1,6 @@
 {
   "name": "treinoapp-android",
-  "version": "12.13.2",
+  "version": "12.14.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -22,6 +22,7 @@
   },
   "devDependencies": {
     "@capacitor/cli": "8.5.0",
-    "esbuild": "0.25.9"
+    "esbuild": "0.25.9",
+    "selfsigned": "^5.5.0"
   }
 }

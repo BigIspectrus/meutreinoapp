@@ -1,0 +1,27 @@
+TREINOAPP PC — SINCRONIZAÇÃO PELA REDE LOCAL
+
+1. Extraia o ZIP inteiro para uma pasta do seu computador.
+2. Abra TreinoApp-PC.exe. O programa abre a interface no navegador e continua em segundo plano, sem janela de terminal.
+3. No primeiro uso, o PC aguarda os dados do celular. Ele mostra o QR Code de pareamento.
+4. No APK: Configurações > Dados > Sincronizar com meu PC > Ler QR Code.
+5. Depois de parear, toque em Sincronizar agora no celular. O PC carrega os dados enviados.
+6. Celular e PC precisam estar na mesma rede. O PC pode estar conectado por cabo ao mesmo roteador.
+
+Se o Windows pedir autorização de rede, permita para a sua rede privada. Se houver mais de um IP no painel, escolha o endereço da sua rede doméstica. O QR Code vence em 10 minutos; gere outro se necessário.
+
+O Windows pode avisar que o executável não tem assinatura digital de fornecedor. Este pacote pessoal não possui certificado comercial Windows. Verifique o arquivo/hash recebido antes de autorizar sua execução.
+
+Abra novamente TreinoApp-PC.exe para reabrir a interface. Fechar a aba do navegador mantém o servidor local funcionando. Para encerrar o programa, use Sincronização > Encerrar programa do PC.
+
+Os dados e as últimas 20 cópias anteriores ficam em %LOCALAPPDATA%\TreinoAppPC. Não apague essa pasta ao atualizar o programa. Mantenha uma cópia externa dessa pasta com o programa encerrado. A pasta contém também as credenciais privadas do pareamento; não a compartilhe.
+
+Após a primeira conexão, o app tenta sincronizar ao abrir/retomar e a cada 45 segundos enquanto estiver visível. Sem o PC ligado ou sem rede, os registros locais permanecem aguardando. Sincronização fica adiada durante treino, formulários e edição de refeições. Rascunhos e sessões em andamento não são enviados.
+
+Alterações concorrentes do mesmo registro exigem escolha no painel de sincronização. Exclusões são conciliadas e os identificadores excluídos são lembrados pelo PC para evitar restauração silenciosa por cópias antigas. Dados do Health Connect são importados pelo Android e apenas consultados no PC; não há leitura do relógio em tempo real.
+
+O programa inclui o runtime Node e não exige instalar Node, Supabase ou criar conta. A interface do PC depende do servidor local em execução. Não é necessário abrir portas no roteador nem publicar o aplicativo na internet.
+
+Porta da interface: 127.0.0.1:43127 (somente este PC).
+Porta do celular: 43128 (TLS com certificado conferido pelo APK).
+
+Esta versão foi compilada e teve seus arquivos de entrega conferidos. Não foram executados testes funcionais ou de rede, conforme preferência do usuário. A validação real do pareamento e da sincronização deve ser feita no celular e PC.

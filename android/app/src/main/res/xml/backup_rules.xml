@@ -5,4 +5,5 @@
     <include domain="sharedpref" path="." />
     <include domain="file" path="." />
     <exclude domain="file" path="temporary/" />
+    <exclude domain="sharedpref" path="treino_local_pc.xml" />
 </full-backup-content>

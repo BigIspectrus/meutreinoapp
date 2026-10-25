@@ -48,7 +48,7 @@ window.TreinoWeightProjection=(()=>{
     const today=hoje(),targetInput=document.getElementById('weightProjectionDate'),daysInput=document.getElementById('weightProjectionDays');
     state.target=targetInput.value;state.days=Number(daysInput.value);try{localStorage.setItem(preferencesKey,JSON.stringify(state));}catch(_){}
     const fit=model(getPesosParaTendencia(),today,state.days),result=estimate(fit,state.target,today),output=document.getElementById('weightProjectionResult'),wrap=document.getElementById('weightProjectionChartWrap');
-    destroyChart();wrap.hidden=!result.ready;
+    destroyChart();wrap.hidden=!result.ready;window.TreinoCompanionFeatures?.renderWeightRhythm(section);
     if(!result.ready){output.innerHTML='<p class="activity-note">'+esc(result.reason)+'</p>'+(fit.rows.length?'<p class="activity-note">Base disponível: '+fit.rows.length+' pesagens · '+fit.weeks.length+' semanas · '+fit.span+' dias entre a primeira e a última.</p>':'');return;}
     const direction=Math.abs(fit.weekly)<.01?'Peso praticamente estável':fit.weekly<0?'Tendência de perda':'Tendência de ganho',signed=value=>(value>0?'+':value<0?'−':'')+format(Math.abs(value),2);
     const warnings=[];if(fit.count<8||fit.weeks.length<4)warnings.push('Base curta: a projeção pode mudar bastante com novas pesagens.');if(fit.age>14)warnings.push('Última pesagem há '+fit.age+' dias; registre um peso recente para atualizar o ritmo.');if(result.horizon>fit.span)warnings.push('A data está além do tempo observado no histórico. Quanto mais distante, mais incerta a estimativa.');

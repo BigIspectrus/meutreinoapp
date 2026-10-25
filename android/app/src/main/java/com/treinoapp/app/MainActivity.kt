@@ -86,7 +86,9 @@ class MainActivity : BridgeActivity() {
         healthRepository = HealthConnectRepository(this)
         registerPlugin(TreinoNativePlugin::class.java)
         registerPlugin(FoodLabelPlugin::class.java)
+        registerPlugin(com.treinoapp.app.nativebridge.LocalNetworkPlugin::class.java)
         super.onCreate(savedInstanceState)
+        installLauncherShortcuts()
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             private var handling = false
             override fun handleOnBackPressed() {
@@ -159,6 +161,23 @@ class MainActivity : BridgeActivity() {
         }
     }
 
+    private fun installLauncherShortcuts() {
+        if (Build.VERSION.SDK_INT < 25) return
+        try {
+            fun shortcut(id: String, label: String, tab: String, extra: String? = null): android.content.pm.ShortcutInfo {
+                val launch = Intent(this, MainActivity::class.java).setAction(Intent.ACTION_VIEW).putExtra("openTab", tab)
+                if (extra != null) launch.putExtra(extra, true)
+                return android.content.pm.ShortcutInfo.Builder(this, id).setShortLabel(label).setLongLabel(label)
+                    .setIcon(android.graphics.drawable.Icon.createWithResource(this, com.treinoapp.app.R.mipmap.ic_launcher)).setIntent(launch).build()
+            }
+            getSystemService(android.content.pm.ShortcutManager::class.java)?.dynamicShortcuts = listOf(
+                shortcut("workout", "Meus treinos", "treinar"),
+                shortcut("meal-text", "Refeição por texto", "nutricao", "addMealText"),
+                shortcut("weight", "Registrar peso", "progresso", "recordWeight")
+            )
+        } catch (_: Exception) { /* Launcher sem suporte: manter o acesso normal pelo aplicativo. */ }
+    }
+
     private fun routeIntent(intent: Intent?) {
         val tab = intent?.getStringExtra("openTab") ?: return
         val startNext = intent.getBooleanExtra("startNextWorkout", false)
@@ -167,7 +186,9 @@ class MainActivity : BridgeActivity() {
         val openActivity = intent.getBooleanExtra("openActivity", false)
         bridge?.webView?.postDelayed({
             val safe = if (tab in setOf("dashboard", "treinar", "nutricao", "historico", "progresso", "config")) tab else "treinar"
-            val js = if (addMealText && safe == "nutricao") {
+            val js = if (intent.getBooleanExtra("recordWeight", false) && safe == "progresso") {
+                "(function openWeight(attempt){if(window.TreinoCompanionFeatures){window.TreinoCompanionFeatures.openWeight();}else if(attempt<40){setTimeout(()=>openWeight(attempt+1),250);}})(0);"
+            } else if (addMealText && safe == "nutricao") {
                 "(function openTextMeal(attempt){if(window.abrirRefeicaoTextoWidget){window.abrirRefeicaoTextoWidget();}else if(attempt<40){setTimeout(()=>openTextMeal(attempt+1),250);}})(0);"
             } else if (addMeal && safe == "nutricao") {
                 "(function openMeal(attempt){if(window.abrirRefeicaoWidget){window.abrirRefeicaoWidget();}else if(attempt<40){setTimeout(()=>openMeal(attempt+1),250);}})(0);"
@@ -176,7 +197,7 @@ class MainActivity : BridgeActivity() {
             } else if (startNext) {
                 "(function openWorkout(attempt){if(window.iniciarTreinoWidget){window.iniciarTreinoWidget();}else if(attempt<40){setTimeout(()=>openWorkout(attempt+1),250);}})(0);"
             } else {
-                "window.irParaAba && window.irParaAba('$safe');"
+                "(function openTab(attempt){if(window.irParaAba){window.irParaAba('$safe');}else if(attempt<40){setTimeout(()=>openTab(attempt+1),250);}})(0);"
             }
             bridge.webView.evaluateJavascript(js, null)
         }, 350)
