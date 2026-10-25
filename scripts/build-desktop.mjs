@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {execFileSync} from 'node:child_process';
-import {buildSync} from 'esbuild';
+import {buildSync,transformSync} from 'esbuild';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),version=fs.readFileSync(path.join(root,'VERSION'),'utf8').trim(),revisionFile=path.join(root,'desktop','VERSION'),desktopVersion=fs.existsSync(revisionFile)?fs.readFileSync(revisionFile,'utf8').trim():version,out=path.join(root,'dist','TreinoApp-PC-v'+desktopVersion);
 if(!/^\d+\.\d+\.\d+(?:-r\d+)?$/.test(desktopVersion)||desktopVersion!==version&&!desktopVersion.startsWith(version+'-'))throw Error('Atualize desktop/VERSION para a versão Android atual ou sua revisão PC.');
 if(process.platform!=='win32')throw Error('Empacote o programa no Windows.');
@@ -10,9 +10,21 @@ if(Number(process.versions.node.split('.')[0])<24)throw Error('O runtime do prog
 fs.mkdirSync(out,{recursive:true});fs.mkdirSync(path.join(out,'runtime'),{recursive:true});fs.mkdirSync(path.join(out,'licenses'),{recursive:true});
 fs.copyFileSync(process.execPath,path.join(out,'runtime','node.exe'));
 fs.cpSync(path.join(root,'web'),path.join(out,'web'),{recursive:true});
+// No PC a navegação é vinculada antes dos gráficos, sem alterar os assets do APK.
+const htmlFile=path.join(out,'web','index.html');let desktopHtml=fs.readFileSync(htmlFile,'utf8').replaceAll('\r\n','\n');
+const navStart=desktopHtml.indexOf('  // Navegação pronta antes de aguardar o registro Web do service worker.');
+const navEnd=desktopHtml.indexOf('\n\n',navStart),onload='window.onload = async function() {';
+if(navStart<0||navEnd<navStart||!desktopHtml.includes(onload))throw Error('Inicialização web mudou; revise a adaptação PC antes de empacotar.');
+const navigation=desktopHtml.slice(navStart,navEnd);desktopHtml=desktopHtml.slice(0,navStart)+desktopHtml.slice(navEnd);
+desktopHtml=desktopHtml.replace(onload,onload+'\n'+navigation);
+const bodyEnd=desktopHtml.lastIndexOf('</body>');if(bodyEnd<0)throw Error('Fechamento do documento PC não encontrado.');
+desktopHtml=desktopHtml.slice(0,bodyEnd)+'<script src="./desktop-startup.js"></script>\n'+desktopHtml.slice(bodyEnd);
+for(const [i,script] of [...desktopHtml.matchAll(/<script>([\s\S]*?)<\/script>/g)].entries())transformSync(script[1],{loader:'js',target:'es2020',sourcefile:'desktop-inline-'+i+'.js'});
+fs.writeFileSync(htmlFile,desktopHtml);
+const startup=fs.readFileSync(path.join(root,'desktop','startup.js'),'utf8');transformSync(startup,{loader:'js',target:'es2020'});fs.writeFileSync(path.join(out,'web','desktop-startup.js'),startup);
 const bundle=buildSync({entryPoints:[path.join(root,'desktop','server.mjs')],outfile:path.join(out,'server.mjs'),bundle:true,platform:'node',format:'esm',target:'node24',metafile:true,banner:{js:"import {createRequire as _createRequire} from 'node:module';const require=_createRequire(import.meta.url);"}});
 const compiler=path.join(process.env.WINDIR||'C:/Windows','Microsoft.NET/Framework64/v4.0.30319/csc.exe');
-execFileSync(compiler,['/nologo','/target:winexe','/optimize+','/reference:System.Windows.Forms.dll','/out:'+path.join(out,'TreinoApp-PC.exe'),path.join(root,'desktop','Launcher.cs')],{stdio:'inherit',windowsHide:true});
+execFileSync(compiler,['/nologo','/target:winexe','/optimize+','/reference:System.Windows.Forms.dll','/reference:System.Web.Extensions.dll','/out:'+path.join(out,'TreinoApp-PC.exe'),path.join(root,'desktop','Launcher.cs')],{stdio:'inherit',windowsHide:true});
 const packages=new Set(Object.keys(bundle.metafile.inputs).filter(p=>p.includes('node_modules/')).map(p=>{const tail=p.split('node_modules/').at(-1).split('/');return tail[0].startsWith('@')?tail.slice(0,2).join('/'):tail[0];}));
 const notices=['TreinoApp PC '+desktopVersion,'Runtime Node.js '+process.version,'A licença do runtime está em NODE-LICENSE.txt.'];
 for(const name of packages){const folder=path.join(root,'node_modules',name),pkg=JSON.parse(fs.readFileSync(path.join(folder,'package.json'),'utf8'));notices.push(name+' '+pkg.version+' — '+JSON.stringify(pkg.license||'Ver arquivo de licença'));for(const file of fs.readdirSync(folder).filter(f=>/^(licen[sc]e|copying|notice)(\.|$)/i.test(f)&&fs.statSync(path.join(folder,f)).isFile()))fs.copyFileSync(path.join(folder,file),path.join(out,'licenses',name.replaceAll('/','_')+'-'+file));}

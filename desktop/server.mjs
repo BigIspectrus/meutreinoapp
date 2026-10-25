@@ -17,7 +17,7 @@ process.on('uncaughtException',error=>{fs.appendFileSync(path.join(folder,'erro.
 function read(file,fallback){const target=path.join(folder,file);return fs.existsSync(target)?JSON.parse(fs.readFileSync(target,'utf8')):fallback;}
 function write(file,data){writeJsonAtomic(path.join(folder,file),data);}
 const secret=()=>crypto.randomBytes(32).toString('base64url');
-let config=read('config.json',null),store=read('dados.json',{revision:0,snapshot:{}}),pairing=null,queue=Promise.resolve();
+let config=read('config.json',null),store=read('dados.json',{revision:0,snapshot:{}}),pairing=null,queue=Promise.resolve(),networkReady=false;
 if(!config){const cert=await selfsigned.generate([{name:'commonName',value:'TreinoApp PC local'}],{keySize:2048,notBeforeDate:new Date(Date.now()-86400000),notAfterDate:new Date(Date.now()+3650*86400000),algorithm:'sha256'});config={id:crypto.randomUUID(),desktopToken:secret(),cert:cert.cert,key:cert.private,devices:[]};try{fs.writeFileSync(path.join(folder,'config.json'),JSON.stringify(config),{flag:'wx',mode:0o600});}catch(error){if(error.code==='EEXIST')config=read('config.json',null);else throw error;}}
 P.validate(store.snapshot);
 const fingerprint=new crypto.X509Certificate(config.cert).fingerprint256.replaceAll(':','').toLowerCase();
@@ -53,7 +53,7 @@ const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=u
 const login='<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TreinoApp PC</title><body style="background:#0f1117;color:#e8eaf6;font-family:system-ui;padding:32px"><h1>TreinoApp PC</h1><p id="status">Conectando ao programa local…</p><script>const token=location.hash.slice(1);history.replaceState(null,"","/connect");if(token)fetch("/api/session",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token})}).then(r=>{if(!r.ok)throw Error();location.replace("/")}).catch(()=>document.getElementById("status").textContent="Não foi possível entrar. Abra novamente o TreinoApp-PC.exe.");else document.getElementById("status").textContent="Abra o TreinoApp-PC.exe para entrar.";</script></body></html>';
 const ui=http.createServer(async(req,res)=>{try{
   if(req.headers.host!=='127.0.0.1:'+uiPort)return json(res,403,{error:'Endereço inválido.'});
-  const url=new URL(req.url,origin);if(url.pathname==='/health')return json(res,200,{app:'TreinoAppPC',id:config.id});
+  const url=new URL(req.url,origin);if(url.pathname==='/health')return json(res,200,{app:'TreinoAppPC',id:config.id,ready:networkReady});
   if(url.pathname.startsWith('/api/'))return await api(req,res,true);
   if(url.pathname==='/connect'){res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','Referrer-Policy':'no-referrer','X-Frame-Options':'DENY'});return res.end(login);}
   if(!desktopAuth(req)){res.writeHead(302,{Location:'/connect'});return res.end();}
@@ -65,7 +65,7 @@ const ui=http.createServer(async(req,res)=>{try{
 }catch(error){if(!res.headersSent)json(res,400,{error:error.message||'Não foi possível processar os dados.'});else res.end();}});
 const lan=https.createServer({key:config.key,cert:config.cert,minVersion:'TLSv1.2'},async(req,res)=>{try{if(!(privateIP(req.socket.remoteAddress?.replace('::ffff:','')||'')||req.socket.remoteAddress==='127.0.0.1'))return json(res,403,{error:'Somente rede local.'});await api(req,res,false);}catch(error){if(!res.headersSent)json(res,400,{error:error.message||'Falha na sincronização.'});else res.end();}});
 ui.maxConnections=lan.maxConnections=32;ui.requestTimeout=lan.requestTimeout=60000;ui.headersTimeout=lan.headersTimeout=15000;
-ui.on('error',error=>{if(error.code==='EADDRINUSE'){http.get(origin+'/health',r=>{let text='';r.on('data',c=>text+=c);r.on('end',()=>{try{if(JSON.parse(text).id===config.id){launch();return process.exit(0);}}catch(_){}fs.appendFileSync(path.join(folder,'erro.log'),'Porta 43127 ocupada por outro programa.\n');process.exit(1);});}).on('error',()=>process.exit(1));}else throw error;});
+ui.on('error',error=>{if(error.code==='EADDRINUSE'){http.get(origin+'/health',r=>{let text='';r.on('data',c=>text+=c);r.on('end',()=>{try{if(JSON.parse(text).id===config.id){if(process.argv.includes('--open'))launch();return process.exit(0);}}catch(_){}fs.appendFileSync(path.join(folder,'erro.log'),'Porta 43127 ocupada por outro programa.\n');process.exit(1);});}).on('error',()=>process.exit(1));}else throw error;});
 lan.on('error',error=>{fs.appendFileSync(path.join(folder,'erro.log'),new Date().toISOString()+' '+error.message+'\n');ui.close();process.exit(1);});
-ui.listen(uiPort,'127.0.0.1',()=>lan.listen(lanPort,'0.0.0.0',()=>{if(process.argv.includes('--open'))launch();}));
+ui.listen(uiPort,'127.0.0.1',()=>lan.listen(lanPort,'0.0.0.0',()=>{networkReady=true;if(process.argv.includes('--open'))launch();}));
 
