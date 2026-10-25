@@ -24,4 +24,4 @@ O programa inclui o runtime Node e não exige instalar Node, Supabase ou criar c
 Porta da interface: 127.0.0.1:43127 (somente este PC).
 Porta do celular: 43128 (TLS com certificado conferido pelo APK).
 
-Esta versão foi compilada e teve seus arquivos de entrega conferidos. Não foram executados testes funcionais ou de rede, conforme preferência do usuário. A validação real do pareamento e da sincronização deve ser feita no celular e PC.
+Na revisão PC 12.14.0-r1, a gravação e substituição com fsync foram verificadas em um arquivo temporário isolado no Windows, sem acessar dados do usuário. O programa completo e a sincronização de rede não foram executados nesta verificação. A validação real do pareamento e da sincronização deve ser feita no celular e PC. Para atualizar, encerre o programa antigo pelo painel de sincronização; fechar a aba do navegador não encerra o servidor. Depois, extraia o ZIP corrigido inteiro e abra TreinoApp-PC.exe. Não apague a pasta de dados em LocalAppData.

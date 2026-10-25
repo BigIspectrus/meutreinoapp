@@ -7,6 +7,7 @@ import crypto from 'node:crypto';
 import {execFile} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import selfsigned from 'selfsigned';
+import {writeJsonAtomic} from './atomic-file.mjs';
 import '../web/lan-protocol.js';
 
 const P=globalThis.TreinoLanProtocol,uiPort=43127,lanPort=43128,origin='http://127.0.0.1:'+uiPort;
@@ -14,7 +15,7 @@ const folder=path.join(process.env.LOCALAPPDATA||os.homedir(),'TreinoAppPC'),web
 fs.mkdirSync(folder,{recursive:true});
 process.on('uncaughtException',error=>{fs.appendFileSync(path.join(folder,'erro.log'),new Date().toISOString()+' '+error.message+'\n');process.exit(1);});
 function read(file,fallback){const target=path.join(folder,file);return fs.existsSync(target)?JSON.parse(fs.readFileSync(target,'utf8')):fallback;}
-function write(file,data){const target=path.join(folder,file),temp=target+'.tmp';fs.writeFileSync(temp,JSON.stringify(data),{mode:0o600});const fd=fs.openSync(temp,'r');try{fs.fsyncSync(fd);}finally{fs.closeSync(fd);}fs.renameSync(temp,target);}
+function write(file,data){writeJsonAtomic(path.join(folder,file),data);}
 const secret=()=>crypto.randomBytes(32).toString('base64url');
 let config=read('config.json',null),store=read('dados.json',{revision:0,snapshot:{}}),pairing=null,queue=Promise.resolve();
 if(!config){const cert=await selfsigned.generate([{name:'commonName',value:'TreinoApp PC local'}],{keySize:2048,notBeforeDate:new Date(Date.now()-86400000),notAfterDate:new Date(Date.now()+3650*86400000),algorithm:'sha256'});config={id:crypto.randomUUID(),desktopToken:secret(),cert:cert.cert,key:cert.private,devices:[]};try{fs.writeFileSync(path.join(folder,'config.json'),JSON.stringify(config),{flag:'wx',mode:0o600});}catch(error){if(error.code==='EEXIST')config=read('config.json',null);else throw error;}}

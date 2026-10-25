@@ -3,7 +3,8 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {execFileSync} from 'node:child_process';
 import {buildSync} from 'esbuild';
-const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),version=fs.readFileSync(path.join(root,'VERSION'),'utf8').trim(),out=path.join(root,'dist','TreinoApp-PC-v'+version);
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),version=fs.readFileSync(path.join(root,'VERSION'),'utf8').trim(),revisionFile=path.join(root,'desktop','VERSION'),desktopVersion=fs.existsSync(revisionFile)?fs.readFileSync(revisionFile,'utf8').trim():version,out=path.join(root,'dist','TreinoApp-PC-v'+desktopVersion);
+if(!/^\d+\.\d+\.\d+(?:-r\d+)?$/.test(desktopVersion)||desktopVersion!==version&&!desktopVersion.startsWith(version+'-'))throw Error('Atualize desktop/VERSION para a versão Android atual ou sua revisão PC.');
 if(process.platform!=='win32')throw Error('Empacote o programa no Windows.');
 if(Number(process.versions.node.split('.')[0])<24)throw Error('O runtime do programa exige Node 24 ou superior.');
 fs.mkdirSync(out,{recursive:true});fs.mkdirSync(path.join(out,'runtime'),{recursive:true});fs.mkdirSync(path.join(out,'licenses'),{recursive:true});
@@ -13,10 +14,10 @@ const bundle=buildSync({entryPoints:[path.join(root,'desktop','server.mjs')],out
 const compiler=path.join(process.env.WINDIR||'C:/Windows','Microsoft.NET/Framework64/v4.0.30319/csc.exe');
 execFileSync(compiler,['/nologo','/target:winexe','/optimize+','/reference:System.Windows.Forms.dll','/out:'+path.join(out,'TreinoApp-PC.exe'),path.join(root,'desktop','Launcher.cs')],{stdio:'inherit',windowsHide:true});
 const packages=new Set(Object.keys(bundle.metafile.inputs).filter(p=>p.includes('node_modules/')).map(p=>{const tail=p.split('node_modules/').at(-1).split('/');return tail[0].startsWith('@')?tail.slice(0,2).join('/'):tail[0];}));
-const notices=['TreinoApp PC '+version,'Runtime Node.js '+process.version,'A licença do runtime está em NODE-LICENSE.txt.'];
+const notices=['TreinoApp PC '+desktopVersion,'Runtime Node.js '+process.version,'A licença do runtime está em NODE-LICENSE.txt.'];
 for(const name of packages){const folder=path.join(root,'node_modules',name),pkg=JSON.parse(fs.readFileSync(path.join(folder,'package.json'),'utf8'));notices.push(name+' '+pkg.version+' — '+JSON.stringify(pkg.license||'Ver arquivo de licença'));for(const file of fs.readdirSync(folder).filter(f=>/^(licen[sc]e|copying|notice)(\.|$)/i.test(f)&&fs.statSync(path.join(folder,f)).isFile()))fs.copyFileSync(path.join(folder,file),path.join(out,'licenses',name.replaceAll('/','_')+'-'+file));}
 fs.writeFileSync(path.join(out,'licenses','THIRD-PARTY.txt'),notices.join('\n'));
 const license=await fetch('https://raw.githubusercontent.com/nodejs/node/'+process.version+'/LICENSE');if(!license.ok)throw Error('Não foi possível obter a licença oficial do Node.');fs.writeFileSync(path.join(out,'licenses','NODE-LICENSE.txt'),await license.text());
 fs.copyFileSync(path.join(root,'desktop','LEIA-ME.txt'),path.join(out,'LEIA-ME.txt'));
-fs.writeFileSync(path.join(out,'VERSAO.txt'),version+'\n'+process.version+'\n');
+fs.writeFileSync(path.join(out,'VERSAO.txt'),desktopVersion+'\nAPK compatível: '+version+'\n'+process.version+'\n');
 console.log('Programa compilado em '+out+' (não executado).');
