@@ -58,3 +58,18 @@
 .meal-text-groups { margin: 8px 0 12px; }
 .meal-text-groups small { margin-top: 4px; }
 .widget-ready-meals .nutrition-library-recipes { display: none; }
+.hydration-card{margin:12px 0;padding:13px;min-width:0}
+.hydration-heading,.hydration-footer{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.hydration-heading h2{margin:0;color:var(--text);font-size:.84rem;font-weight:750}
+.hydration-heading p{margin:2px 0 0;font-size:1.15rem;font-weight:850;color:var(--text);line-height:1.2}
+.hydration-heading .btn,.hydration-footer .btn{width:auto;min-height:42px;padding:5px 9px;font-size:.75rem}
+.hydration-card progress{display:block;width:100%;height:6px;margin:9px 0 4px;border:none;border-radius:6px;background:var(--surface2);accent-color:var(--primary)}
+.hydration-card progress::-webkit-progress-bar{background:var(--surface2);border-radius:6px}
+.hydration-card progress::-webkit-progress-value{background:var(--primary);border-radius:6px}
+.hydration-actions,.hydration-goal{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:end;gap:8px;margin-top:8px}
+.hydration-actions label,.hydration-goal label{min-width:0;margin:0;color:var(--text-muted);font-size:.75rem}
+.hydration-actions label span,.hydration-goal label span{display:block;margin-bottom:3px}
+.hydration-actions select,.hydration-goal input,.hydration-actions .btn,.hydration-goal .btn{min-height:44px;min-width:0;width:100%}
+.hydration-footer{min-height:24px;margin-top:5px;color:var(--text-muted);font-size:.75rem}
+.hydration-goal{padding-top:9px;border-top:1px solid var(--border)}
+.hydration-card [hidden]{display:none!important}

@@ -10,7 +10,7 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <title>TreinoApp v12</title>
-  <meta name="treinoapp-version" content="12.18.0">
+  <meta name="treinoapp-version" content="12.19.0">
   <meta name="treinoapp-build" content="2026.11.26.1">
   <script defer src="./vendor/chart.umd.js"></script>
   <script defer src="./vendor/jspdf.umd.min.js"></script>
@@ -1085,8 +1085,8 @@
   <div class="modal" style="max-width:500px;">
     <div class="modal-title">Novidades da versão</div>
     <div style="font-size:.88em;line-height:1.6;color:var(--text-muted);">
-      <p><strong>Monitor no Galaxy Watch</strong> · Abra o TreinoApp Monitor no relógio para ver o exercício, a série atual, o tempo de treino e o descanso enquanto registra pelo celular.</p>
-      <p style="margin-top:8px;"><strong>Sensores do relógio</strong> · Autorize a frequência cardíaca no relógio. Toque em Medir FC e kcal para medir a sessão pelo TreinoApp quando não houver outro treino ativo no relógio.</p>
+      <p><strong>Água no diário</strong> · Escolha o tamanho da garrafa e configure sua meta diária. Use o botão de volume para registrar com um toque.</p>
+      <p style="margin-top:8px;"><strong>Widget de Alimentação</strong> · Acompanhe a água do dia junto com kcal e macros. No tamanho maior, veja uma barra para a meta de água.</p>
     </div>
     <div class="modal-footer"><button class="btn btn-primary" onclick="fecharNovidades()">Entendi</button></div>
   </div>
@@ -1674,6 +1674,30 @@
   </div>
   <button class="btn btn-outline meal-text-shortcut" type="button" onclick="abrirRefeicaoPorTexto()">✎ Registrar refeição por texto</button>
   <div id="nutritionQuickFoods"></div>
+  <section id="hydrationCard" class="card hydration-card" aria-labelledby="hydrationTitle" tabindex="-1">
+    <header class="hydration-heading">
+      <div><h2 id="hydrationTitle">Água</h2><p id="hydrationTotal" role="status">0 mL</p></div>
+      <button id="hydrationGoalToggle" type="button" class="btn btn-ghost" aria-controls="hydrationGoalForm" aria-expanded="false">Meta</button>
+    </header>
+    <progress id="hydrationProgress" max="100" value="0" aria-label="Progresso da meta de água" hidden></progress>
+    <div class="hydration-actions">
+      <label for="hydrationBottle"><span>Garrafa</span>
+        <select id="hydrationBottle">
+          <option value="250">250 mL</option>
+          <option value="500" selected>500 mL</option>
+          <option value="1000">1 L</option>
+          <option value="1500">1,5 L</option>
+          <option value="2000">2 L</option>
+        </select>
+      </label>
+      <button id="hydrationAdd" type="button" class="btn btn-outline">+ 500 mL</button>
+    </div>
+    <div class="hydration-footer"><span id="hydrationNote"></span><button id="hydrationUndo" type="button" class="btn btn-ghost" hidden>Desfazer</button></div>
+    <form id="hydrationGoalForm" class="hydration-goal" hidden>
+      <label for="hydrationGoal"><span>Meta diária (mL)</span><input id="hydrationGoal" type="number" min="0" step="1" max="2147483647" inputmode="numeric" placeholder="Ex. 2000"></label>
+      <button type="submit" class="btn btn-primary">Salvar meta</button>
+    </form>
+  </section>
   <button class="btn btn-outline workflow-planning-button" type="button" onclick="abrirPlanejamentoAlimentar()">Planejar alimentação · separado do consumo</button>
   <details class="nutrition-more-tools">
     <summary>Mais atalhos e análises</summary>
@@ -2348,14 +2372,14 @@
 <script src="./load-conventions.js"></script>
 <script src="./nutrition-portions.js"></script>
 <script>
-const APP_VERSION = '12.18.0';
+const APP_VERSION = '12.19.0';
 const APP_BUILD = '2026.11.26.1';
 const DATA_SCHEMA_VERSION = 18;
 const GITHUB_REPO='BigIspectrus/meutreinoapp';
 const GITHUB_PAGES_BASE='https://bigispectrus.github.io/meutreinoapp';
 let _latestAndroidReleaseUrl='';
 let _nativeChannel='web';
-const APP_CACHE_VERSION = 'treinoapp-v12.18.0-202611261';
+const APP_CACHE_VERSION = 'treinoapp-v12.19.0-202611261';
 
 const SET_TYPES={workset:'Work set',warmup:'Aquecimento',topset:'Top set',backoff:'Back-off',dropset:'Drop set',cluster:'Cluster set',fst7:'FST-7',restpause:'Rest-pause',myoreps:'Myo-reps',amrap:'AMRAP'};
 function normalizarSetType(v){return SET_TYPES[v]?v:'workset';}
@@ -4048,6 +4072,7 @@ function importarBackup(event) {
       if(d.nutritionGoalsV125) localStorage.setItem('nutritionGoalsV125',d.nutritionGoalsV125);
       if(d.nutritionFoodsV125) localStorage.setItem('nutritionFoodsV125',d.nutritionFoodsV125);
       if(d.nutritionEntriesV125) localStorage.setItem('nutritionEntriesV125',d.nutritionEntriesV125);
+      if(typeof d.hydrationV1219==='string') localStorage.setItem('hydrationV1219',d.hydrationV1219);
       restaurarEstadoDiasBackupNutricao(d);
       if(d.nutritionRecipesV1251) localStorage.setItem('nutritionRecipesV1251',d.nutritionRecipesV1251);
       if(d.nutritionMealTemplatesV1251) localStorage.setItem('nutritionMealTemplatesV1251',d.nutritionMealTemplatesV1251);
@@ -4061,7 +4086,7 @@ function importarBackup(event) {
   };
   reader.readAsText(file);
 }
-function resetarDados() { const keys=['nutritionMealDraftV1290','nutritionUsualPortionsV1290','nutritionPlansV1290','exerciseProfilesV1290','muscleGoalsV1291','recycleBinV12100','oneHandModeV12100','homeLayoutV1288','historicoTreinoV3','pesoCorporal','exerciciosCustomizadosV3','treinosTemplates','temaPreferido','userProfile','treinoMetas','conquistasDesbloqueadas','perfilPublico','treinoScores','timerSom','restVibration','restNotificationSound','backupConfig','descansoPadrao','effortMode','settingsCategory','_rascunhoTreino','_onboardingV9','_onboardingV10','_onboardingV11','_lastSeenVersion','_lastSnapshotDay','_restTimerEndAt','wakeLockEnabled','academiaModeEnabled','plateBarWeight','platePreset','healthLinksV12','healthPendingV12','healthHrMax','healthAutoSync','healthWriteEnabled','weeklyPlanV12','healthRecoveryCacheV12','healthActivityCacheV128','activityPreferencesV1283','movementGoalsV1286','nutritionGoalsV125','nutritionFoodsV125','nutritionEntriesV125','nutritionDayStatusV1285','nutritionRecipesV1251','nutritionMealTemplatesV1251','nutritionCatalogCacheV1251','nutritionCatalogCacheV1252','nutritionUsdaKeyV1251','nutritionHealthEnabledV1252','nutritionHealthSyncV1252','_nativeNutritionSyncV125','_nativeNutritionSyncV1251','_nativeNutritionSyncV1252','_appErrors']; keys.forEach(k=>localStorage.removeItem(k)); invalidarCache(); toast('Dados do TreinoApp apagados. Recarregando...','info'); setTimeout(()=>location.reload(),1000); }
+function resetarDados() { const keys=['nutritionMealDraftV1290','nutritionUsualPortionsV1290','nutritionPlansV1290','exerciseProfilesV1290','muscleGoalsV1291','recycleBinV12100','oneHandModeV12100','homeLayoutV1288','historicoTreinoV3','pesoCorporal','exerciciosCustomizadosV3','treinosTemplates','temaPreferido','userProfile','treinoMetas','conquistasDesbloqueadas','perfilPublico','treinoScores','timerSom','restVibration','restNotificationSound','backupConfig','descansoPadrao','effortMode','settingsCategory','_rascunhoTreino','_onboardingV9','_onboardingV10','_onboardingV11','_lastSeenVersion','_lastSnapshotDay','_restTimerEndAt','wakeLockEnabled','academiaModeEnabled','plateBarWeight','platePreset','healthLinksV12','healthPendingV12','healthHrMax','healthAutoSync','healthWriteEnabled','weeklyPlanV12','healthRecoveryCacheV12','healthActivityCacheV128','activityPreferencesV1283','movementGoalsV1286','nutritionGoalsV125','nutritionFoodsV125','nutritionEntriesV125','hydrationV1219','nutritionDayStatusV1285','nutritionRecipesV1251','nutritionMealTemplatesV1251','nutritionCatalogCacheV1251','nutritionCatalogCacheV1252','nutritionUsdaKeyV1251','nutritionHealthEnabledV1252','nutritionHealthSyncV1252','_nativeNutritionSyncV125','_nativeNutritionSyncV1251','_nativeNutritionSyncV1252','_appErrors']; keys.forEach(k=>localStorage.removeItem(k)); invalidarCache(); toast('Dados do TreinoApp apagados. Recarregando...','info'); setTimeout(()=>location.reload(),1000); }
 
 
 // ════════════════════════════════════════════════
@@ -5303,7 +5328,7 @@ function verificarBackupAuto() {
   }
 }
 
-function gerarObjetoBackup(){return {app:'TreinoApp',appVersion:APP_VERSION,build:APP_BUILD,schemaVersion:DATA_SCHEMA_VERSION,nutritionMealDraftV1290:localStorage.getItem('nutritionMealDraftV1290'),nutritionUsualPortionsV1290:localStorage.getItem('nutritionUsualPortionsV1290'),nutritionPlansV1290:localStorage.getItem('nutritionPlansV1290'),exerciseProfilesV1290:localStorage.getItem('exerciseProfilesV1290'),muscleGoalsV1291:localStorage.getItem('muscleGoalsV1291'),recycleBinV12100:localStorage.getItem('recycleBinV12100'),oneHandModeV12100:localStorage.getItem('oneHandModeV12100'),homeLayoutV1288:localStorage.getItem('homeLayoutV1288'),_rascunhoTreino:localStorage.getItem('_rascunhoTreino'),healthPendingV12:localStorage.getItem('healthPendingV12'),exportedAt:new Date().toISOString(),pesoCorporal:localStorage.getItem('pesoCorporal'),historicoTreinoV3:localStorage.getItem('historicoTreinoV3'),exerciciosCustomizadosV3:localStorage.getItem('exerciciosCustomizadosV3'),treinosTemplates:localStorage.getItem('treinosTemplates'),temaPreferido:localStorage.getItem('temaPreferido'),userProfile:localStorage.getItem('userProfile'),treinoMetas:localStorage.getItem('treinoMetas'),conquistasDesbloqueadas:localStorage.getItem('conquistasDesbloqueadas'),perfilPublico:localStorage.getItem('perfilPublico'),treinoScores:localStorage.getItem('treinoScores'),timerSom:localStorage.getItem('timerSom'),restVibration:localStorage.getItem('restVibration'),restNotificationSound:localStorage.getItem('restNotificationSound'),backupConfig:localStorage.getItem('backupConfig'),descansoPadrao:localStorage.getItem('descansoPadrao'),effortMode:localStorage.getItem('effortMode'),wakeLockEnabled:localStorage.getItem('wakeLockEnabled'),academiaModeEnabled:localStorage.getItem('academiaModeEnabled'),plateBarWeight:localStorage.getItem('plateBarWeight'),platePreset:localStorage.getItem('platePreset'),healthLinksV12:localStorage.getItem('healthLinksV12'),healthHrMax:localStorage.getItem('healthHrMax'),healthAutoSync:localStorage.getItem('healthAutoSync'),healthWriteEnabled:localStorage.getItem('healthWriteEnabled'),weeklyPlanV12:localStorage.getItem('weeklyPlanV12'),healthRecoveryCacheV12:localStorage.getItem('healthRecoveryCacheV12'),healthActivityCacheV128:localStorage.getItem('healthActivityCacheV128'),activityPreferencesV1283:localStorage.getItem('activityPreferencesV1283'),movementGoalsV1286:localStorage.getItem('movementGoalsV1286'),nutritionGoalsV125:localStorage.getItem('nutritionGoalsV125'),nutritionFoodsV125:localStorage.getItem('nutritionFoodsV125'),nutritionEntriesV125:localStorage.getItem('nutritionEntriesV125'),nutritionDayStatusV1285:localStorage.getItem('nutritionDayStatusV1285'),nutritionRecipesV1251:localStorage.getItem('nutritionRecipesV1251'),nutritionMealTemplatesV1251:localStorage.getItem('nutritionMealTemplatesV1251'),nutritionHealthEnabledV1252:localStorage.getItem('nutritionHealthEnabledV1252')};}
+function gerarObjetoBackup(){return {app:'TreinoApp',appVersion:APP_VERSION,build:APP_BUILD,schemaVersion:DATA_SCHEMA_VERSION,nutritionMealDraftV1290:localStorage.getItem('nutritionMealDraftV1290'),nutritionUsualPortionsV1290:localStorage.getItem('nutritionUsualPortionsV1290'),nutritionPlansV1290:localStorage.getItem('nutritionPlansV1290'),exerciseProfilesV1290:localStorage.getItem('exerciseProfilesV1290'),muscleGoalsV1291:localStorage.getItem('muscleGoalsV1291'),recycleBinV12100:localStorage.getItem('recycleBinV12100'),oneHandModeV12100:localStorage.getItem('oneHandModeV12100'),homeLayoutV1288:localStorage.getItem('homeLayoutV1288'),_rascunhoTreino:localStorage.getItem('_rascunhoTreino'),healthPendingV12:localStorage.getItem('healthPendingV12'),exportedAt:new Date().toISOString(),pesoCorporal:localStorage.getItem('pesoCorporal'),historicoTreinoV3:localStorage.getItem('historicoTreinoV3'),exerciciosCustomizadosV3:localStorage.getItem('exerciciosCustomizadosV3'),treinosTemplates:localStorage.getItem('treinosTemplates'),temaPreferido:localStorage.getItem('temaPreferido'),userProfile:localStorage.getItem('userProfile'),treinoMetas:localStorage.getItem('treinoMetas'),conquistasDesbloqueadas:localStorage.getItem('conquistasDesbloqueadas'),perfilPublico:localStorage.getItem('perfilPublico'),treinoScores:localStorage.getItem('treinoScores'),timerSom:localStorage.getItem('timerSom'),restVibration:localStorage.getItem('restVibration'),restNotificationSound:localStorage.getItem('restNotificationSound'),backupConfig:localStorage.getItem('backupConfig'),descansoPadrao:localStorage.getItem('descansoPadrao'),effortMode:localStorage.getItem('effortMode'),wakeLockEnabled:localStorage.getItem('wakeLockEnabled'),academiaModeEnabled:localStorage.getItem('academiaModeEnabled'),plateBarWeight:localStorage.getItem('plateBarWeight'),platePreset:localStorage.getItem('platePreset'),healthLinksV12:localStorage.getItem('healthLinksV12'),healthHrMax:localStorage.getItem('healthHrMax'),healthAutoSync:localStorage.getItem('healthAutoSync'),healthWriteEnabled:localStorage.getItem('healthWriteEnabled'),weeklyPlanV12:localStorage.getItem('weeklyPlanV12'),healthRecoveryCacheV12:localStorage.getItem('healthRecoveryCacheV12'),healthActivityCacheV128:localStorage.getItem('healthActivityCacheV128'),activityPreferencesV1283:localStorage.getItem('activityPreferencesV1283'),movementGoalsV1286:localStorage.getItem('movementGoalsV1286'),nutritionGoalsV125:localStorage.getItem('nutritionGoalsV125'),nutritionFoodsV125:localStorage.getItem('nutritionFoodsV125'),nutritionEntriesV125:localStorage.getItem('nutritionEntriesV125'),hydrationV1219:localStorage.getItem('hydrationV1219'),nutritionDayStatusV1285:localStorage.getItem('nutritionDayStatusV1285'),nutritionRecipesV1251:localStorage.getItem('nutritionRecipesV1251'),nutritionMealTemplatesV1251:localStorage.getItem('nutritionMealTemplatesV1251'),nutritionHealthEnabledV1252:localStorage.getItem('nutritionHealthEnabledV1252')};}
 async function compartilharBackup(){
   const dados=gerarObjetoBackup(),conteudo=JSON.stringify(dados),nome=`treinoapp_backup_v${APP_VERSION}_${hoje()}.json`;
   if(isNativeAndroid()&&window.TreinoNativeBridge?.shareTextFile){
@@ -6366,7 +6391,7 @@ function salvarSnapshotDiario(){const d=hoje();if(localStorage.getItem('_lastSna
 async function listarSnapshotsSeguro(){try{const db=await openSafeDB();const arr=await new Promise((res,rej)=>{const r=db.transaction('snapshots').objectStore('snapshots').getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error);});db.close();return arr.sort((a,b)=>b.createdAt-a.createdAt);}catch(e){return[];}}
 async function excluirSnapshotSeguro(id){try{const db=await openSafeDB();await new Promise((res,rej)=>{const tx=db.transaction('snapshots','readwrite');tx.objectStore('snapshots').delete(id);tx.oncomplete=res;tx.onerror=()=>rej(tx.error);});db.close();}catch(e){}}
 async function abrirSnapshots(){const el=document.getElementById('snapshotList');document.getElementById('modalSnapshots').classList.add('open');if(!el)return;el.innerHTML='<div style="color:var(--text-muted);font-size:.82em;">Carregando...</div>';const arr=await listarSnapshotsSeguro();if(!arr.length){el.innerHTML='<div class="empty-state" style="padding:20px 0;"><p>Nenhum snapshot interno ainda.</p></div>';return;}el.innerHTML=arr.map(x=>`<div class="snapshot-item"><div><strong>${new Date(x.createdAt).toLocaleString('pt-BR')}</strong><div class="snapshot-meta">${esc(x.motivo||'snapshot')} · v${esc(x.version||'?')}</div></div><div style="display:flex;gap:5px;"><button class="btn btn-outline btn-sm" style="width:auto;" onclick="restaurarSnapshotSeguro('${x.id}')">Restaurar</button><button class="btn btn-danger btn-sm btn-icon" onclick="excluirSnapshotSeguro('${x.id}').then(abrirSnapshots)">×</button></div></div>`).join('');}
-async function restaurarSnapshotSeguro(id){const arr=await listarSnapshotsSeguro(),snap=arr.find(x=>x.id===id);if(!snap)return toast('Snapshot não encontrado','error');if(!confirm('Restaurar este snapshot? Os dados atuais serão substituídos.'))return;await salvarSnapshotSeguro('antes_restauracao');const d=snap.data||{},keys=['nutritionMealDraftV1290','nutritionUsualPortionsV1290','nutritionPlansV1290','exerciseProfilesV1290','muscleGoalsV1291','recycleBinV12100','oneHandModeV12100','homeLayoutV1288','_rascunhoTreino','healthPendingV12','pesoCorporal','historicoTreinoV3','exerciciosCustomizadosV3','treinosTemplates','temaPreferido','userProfile','treinoMetas','conquistasDesbloqueadas','perfilPublico','treinoScores','timerSom','restVibration','restNotificationSound','backupConfig','descansoPadrao','effortMode','wakeLockEnabled','academiaModeEnabled','plateBarWeight','platePreset','healthLinksV12','healthHrMax','healthAutoSync','healthWriteEnabled','weeklyPlanV12','healthRecoveryCacheV12','healthActivityCacheV128','activityPreferencesV1283','movementGoalsV1286','nutritionGoalsV125','nutritionFoodsV125','nutritionEntriesV125','nutritionRecipesV1251','nutritionMealTemplatesV1251','nutritionHealthEnabledV1252'];keys.forEach(k=>{if(d[k]!==undefined&&d[k]!==null)localStorage.setItem(k,String(d[k]));});restaurarEstadoDiasBackupNutricao(d);invalidarCache();toast('Snapshot restaurado. Recarregando...','success');setTimeout(()=>location.reload(),900);}
+async function restaurarSnapshotSeguro(id){const arr=await listarSnapshotsSeguro(),snap=arr.find(x=>x.id===id);if(!snap)return toast('Snapshot não encontrado','error');if(!confirm('Restaurar este snapshot? Os dados atuais serão substituídos.'))return;await salvarSnapshotSeguro('antes_restauracao');const d=snap.data||{},keys=['nutritionMealDraftV1290','nutritionUsualPortionsV1290','nutritionPlansV1290','exerciseProfilesV1290','muscleGoalsV1291','recycleBinV12100','oneHandModeV12100','homeLayoutV1288','_rascunhoTreino','healthPendingV12','pesoCorporal','historicoTreinoV3','exerciciosCustomizadosV3','treinosTemplates','temaPreferido','userProfile','treinoMetas','conquistasDesbloqueadas','perfilPublico','treinoScores','timerSom','restVibration','restNotificationSound','backupConfig','descansoPadrao','effortMode','wakeLockEnabled','academiaModeEnabled','plateBarWeight','platePreset','healthLinksV12','healthHrMax','healthAutoSync','healthWriteEnabled','weeklyPlanV12','healthRecoveryCacheV12','healthActivityCacheV128','activityPreferencesV1283','movementGoalsV1286','nutritionGoalsV125','nutritionFoodsV125','nutritionEntriesV125','hydrationV1219','nutritionRecipesV1251','nutritionMealTemplatesV1251','nutritionHealthEnabledV1252'];keys.forEach(k=>{if(d[k]!==undefined&&d[k]!==null)localStorage.setItem(k,String(d[k]));});restaurarEstadoDiasBackupNutricao(d);invalidarCache();toast('Snapshot restaurado. Recarregando...','success');setTimeout(()=>location.reload(),900);}
 
 // ════════════════════════════════════════════════
 // V11 — BUILD/DEPLOY E REPARO DO APP
@@ -6568,9 +6593,11 @@ let _nativeUpdateTimer=null;function agendarUpdateNativo(){if(!isNativeAndroid()
 function resumoAlimentacaoWidget(){
   const date=hoje(),tot=totaisNutricao(getRegistrosNutricao().filter(entry=>entry.date===date));
   const stored=storedNutritionGoals(),goal=getMetasNutricao(date,stored);
+  const water=window.TreinoHydration?.summary(date);
   return {nutritionDate:date,nutritionProfile:nutritionProfileForDate(date,stored),
     kcal:tot.kcal,protein:tot.protein,carbs:tot.carbs,fat:tot.fat,
-    goalKcal:goal?.kcal||0,goalProtein:goal?.protein||0,goalCarbs:goal?.carbs||0,goalFat:goal?.fat||0};
+    goalKcal:goal?.kcal||0,goalProtein:goal?.protein||0,goalCarbs:goal?.carbs||0,goalFat:goal?.fat||0,
+    waterMl:water?.totalMl,waterGoalMl:water?.goalMl};
 }
 async function atualizarWidgetNativo(){
   if(!isNativeAndroid())return;
@@ -7046,6 +7073,7 @@ function renderizarNutricao(){
   if(dayContext){const today=_nutritionDate===hoje(),day=new Date(_nutritionDate+'T12:00:00');dayContext.innerHTML='<span>'+esc(today?'Hoje · '+day.toLocaleDateString('pt-BR',{weekday:'long'}):day.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'}))+'</span>'+(!today?'<button type="button" onclick="selecionarDataNutricao(hoje())">Voltar para hoje</button>':'');}
   const entries=getRegistrosNutricao().filter(e=>e.date===_nutritionDate);
   renderizarResumoNutricao(entries);renderizarEstadoDiaNutricao(entries);renderizarAtalhosNutricao();renderizarRefeicoesNutricao(entries);renderizarSemanaNutricao();renderizarNutricaoDashboard();
+  window.TreinoHydration?.render();
 }
 function renderizarNutricaoDashboard(){
   const el=document.getElementById('dashNutritionToday');if(!el)return;
@@ -7401,5 +7429,6 @@ setInterval(()=>{if(isNativeAndroid()&&treinoAtivoTemplate&&!document.hidden)rec
 <script src="./training-mobile.js"></script>
 <script src="./weight-page.js"></script>
 <script src="./nutrition-diary.js"></script>
+<script src="./hydration.js"></script>
 </body>
 </html>

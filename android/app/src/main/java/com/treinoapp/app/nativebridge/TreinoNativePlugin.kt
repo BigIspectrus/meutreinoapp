@@ -341,6 +341,8 @@ class TreinoNativePlugin : Plugin() {
             hasWorkoutSuggestion = call.getBoolean("hasWorkoutSuggestion", false) == true,
             workoutDraftName = call.getString("workoutDraftName", "") ?: "",
             workoutDraftUntil = call.getLong("workoutDraftUntil", 0L) ?: 0L,
+            waterMl = call.getInt("waterMl"),
+            waterGoalMl = call.getInt("waterGoalMl", 0) ?: 0,
         )
         call.resolve()
     }

@@ -189,6 +189,7 @@ class MainActivity : BridgeActivity() {
                 safe == "nutricao" && requested("addMealText") -> "window.abrirRefeicaoTextoWidget"
                 safe == "nutricao" && requested("addMeal") -> "window.abrirRefeicaoWidget"
                 safe == "nutricao" && requested("openReadyMeals") -> "window.abrirRefeicoesProntasWidget"
+                safe == "nutricao" && requested("openWaterToday") -> "window.abrirAguaWidget"
                 safe == "nutricao" && requested("openFoodToday") -> "window.abrirDiaAlimentacaoWidget"
                 safe == "treinar" && requested("startBlankWorkout") -> "window.iniciarTreinoEmBranco"
                 safe == "treinar" && requested("resumeWorkout") -> "window.continuarTreinoWidget"

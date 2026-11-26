@@ -37,6 +37,10 @@
                     <ProgressBar android:id="@+id/widgetFatProgress" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="4dp" android:layout_marginTop="5dp" android:max="1000" android:progressTint="#FFD18A" android:progressBackgroundTint="#333D52" />
                 </LinearLayout>
             </LinearLayout>
+            <LinearLayout android:id="@+id/widgetHydration" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginTop="7dp" android:visibility="gone">
+                <TextView android:id="@+id/widgetHydrationTotal" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="12sp" android:textColor="#99DDF5" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:fontFamily="sans-serif-medium" />
+                <ProgressBar android:id="@+id/widgetHydrationProgress" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="4dp" android:layout_marginTop="4dp" android:max="1000" android:progressTint="#99DDF5" android:progressBackgroundTint="#333D52" />
+            </LinearLayout>
         </LinearLayout>
         <LinearLayout android:id="@+id/widgetTrainingSection" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginBottom="3dp">
             <TextView android:id="@+id/widgetWorkout" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="24sp" android:textColor="#F3F5FC" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:fontFamily="sans-serif-medium" android:textStyle="bold" />

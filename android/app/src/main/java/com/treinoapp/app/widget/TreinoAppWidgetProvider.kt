@@ -121,6 +121,8 @@ open class TreinoAppWidgetProvider : AppWidgetProvider() {
             hasWorkoutSuggestion: Boolean = nextWorkout.isNotBlank() && nextWorkout != "Treino",
             workoutDraftName: String = "",
             workoutDraftUntil: Long = 0L,
+            waterMl: Int? = null,
+            waterGoalMl: Int = 0,
         ) {
             val edit = context.getSharedPreferences(WIDGET_PREFS, Context.MODE_PRIVATE).edit()
                 .putString("nextWorkout", nextWorkout).putInt("weeklyDone", weeklyDone)
@@ -134,6 +136,11 @@ open class TreinoAppWidgetProvider : AppWidgetProvider() {
                 .putBoolean("hasWorkoutSuggestion", hasWorkoutSuggestion)
                 .putString("workoutDraftName", workoutDraftName.take(120))
                 .putLong("workoutDraftUntil", workoutDraftUntil)
+            if (waterMl != null) {
+                edit.putString("waterDate", nutritionDate)
+                    .putInt("waterMl", waterMl.coerceAtLeast(0))
+                    .putInt("waterGoalMl", waterGoalMl.coerceAtLeast(0))
+            }
             if (nutritionProfile in setOf("standard", "training", "rest")) {
                 edit.putString("nutritionProfile", nutritionProfile).putString("nutritionWebDate", nutritionDate)
             }
@@ -206,6 +213,7 @@ open class TreinoAppWidgetProvider : AppWidgetProvider() {
             }
             val openDiary = pending("diary", "nutricao", "openFoodToday")
             val openText = pending("meal-text", "nutricao", "addMealText")
+            val openWater = pending("water", "nutricao", "openWaterToday")
             val openMovement = pending("movement", "progresso", "openActivity")
             val openTraining = pending("train-list", "treinar")
 
@@ -274,6 +282,13 @@ open class TreinoAppWidgetProvider : AppWidgetProvider() {
             }
             val todayString = today.toString()
             val dateLabel = today.format(dateFormat)
+            val waterDate = prefs.getString("waterDate", "").orEmpty()
+            val hasWater = food && waterDate.isNotBlank()
+            val water = if (waterDate == todayString) prefs.getInt("waterMl", 0).coerceAtLeast(0) else 0
+            val waterGoal = prefs.getInt("waterGoalMl", 0).coerceAtLeast(0)
+            val waterFormat = NumberFormat.getNumberInstance(locale).apply { maximumFractionDigits = 3 }
+            fun waterVolume(ml: Int) = if (ml < 1000) "$ml mL" else "${waterFormat.format(ml / 1000.0)} L"
+            val waterTotal = waterVolume(water) + if (waterGoal > 0) " / ${waterVolume(waterGoal)}" else ""
             text(R.id.widgetTitle, if (combined) "Resumo do dia" else settings.mode.title)
             visible(R.id.widgetStatusChip, !narrow)
             text(R.id.widgetStatusChip, if (training && active) if (paused) "Pausado" else "Em treino" else dateLabel)
@@ -298,7 +313,7 @@ open class TreinoAppWidgetProvider : AppWidgetProvider() {
                 }
                 else if (narrow || contentHeight < 52) size(R.id.widgetNutritionKcal, 18f)
                 else if (!medium) size(R.id.widgetNutritionKcal, 22f)
-                text(R.id.widgetNutritionBalance, balance)
+                text(R.id.widgetNutritionBalance, if (hasWater && !large) "Água · $waterTotal" else balance)
                 if (contentHeight < 52) size(R.id.widgetNutritionBalance, 10f)
                 text(R.id.widgetNutritionGoal, if (ring) "$profile · ${count(goal)} kcal" else profile)
                 visible(R.id.widgetNutritionBalance, food)
@@ -306,6 +321,18 @@ open class TreinoAppWidgetProvider : AppWidgetProvider() {
                 visible(R.id.widgetNutritionProgress, food && medium && !ring && kcal != null && goal != null)
                 views.setProgressBar(R.id.widgetNutritionProgress, 1000, progress(kcal, goal, 1000), false)
                 visible(R.id.widgetNutritionRingBox, ring)
+                visible(R.id.widgetHydration, hasWater && large)
+                if (hasWater) {
+                    if (large) {
+                        text(R.id.widgetHydrationTotal, "Água · $waterTotal")
+                        visible(R.id.widgetHydrationProgress, waterGoal > 0)
+                        views.setProgressBar(R.id.widgetHydrationProgress, 1000, progress(water.toFloat(), waterGoal.toFloat(), 1000), false)
+                        views.setOnClickPendingIntent(R.id.widgetHydration, openWater)
+                    } else {
+                        views.setTextColor(R.id.widgetNutritionBalance, 0xFF99DDF5.toInt())
+                        views.setOnClickPendingIntent(R.id.widgetNutritionBalance, openWater)
+                    }
+                }
                 if (ring && kcal != null && goal != null) {
                     val fraction = kcal.toDouble() / goal
                     text(R.id.widgetNutritionPercent, if (fraction >= 10) "999%+" else "${count(fraction * 100)}%")
