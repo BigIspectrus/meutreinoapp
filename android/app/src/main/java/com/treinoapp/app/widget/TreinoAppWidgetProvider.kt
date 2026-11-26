@@ -167,11 +167,21 @@ open class TreinoAppWidgetProvider : AppWidgetProvider() {
             val narrow = width / scale < 218
             val medium = !settings.compact && (height - 117) / scale >= 111
             val large = !settings.compact && (height - 166) / scale >= 134
+            fun dp(value: Int) = (value * context.resources.displayMetrics.density).toInt()
             if (!medium) {
-                val pad = (8f * context.resources.displayMetrics.density).toInt()
+                val pad = dp(8)
                 views.setViewPadding(R.id.widgetRoot, pad, pad, pad, pad)
             }
-            val summarySize = if (contentHeight < 60) 12f else 14f
+            val summarySize = when {
+                large && !narrow -> 17f
+                contentHeight >= 60 -> 14f
+                else -> 12f
+            }
+            if (combined) {
+                val gap = dp(when { large -> 10; medium -> 7; contentHeight >= 60 -> 2; else -> 0 })
+                for (section in listOf(R.id.widgetNutritionSection, R.id.widgetTrainingSection, R.id.widgetMovementSection))
+                    views.setViewPadding(section, 0, gap, 0, gap)
+            }
             val today = LocalDate.now()
             val locale = Locale.forLanguageTag("pt-BR")
             val dateFormat = DateTimeFormatter.ofPattern("dd/MM", locale)
@@ -281,12 +291,11 @@ open class TreinoAppWidgetProvider : AppWidgetProvider() {
             visible(R.id.widgetCombinedActions, combined)
 
             if (food || combined) {
-                val compactNote = when {
-                    kcal == null -> staleFood
-                    else -> "${count(kcal)} kcal"
+                text(R.id.widgetNutritionKcal, if (combined) "Alimentação · ${count(kcal)} kcal" else energy)
+                if (combined) {
+                    size(R.id.widgetNutritionKcal, summarySize)
+                    if (kcal == null) views.setContentDescription(R.id.widgetNutritionKcal, "Alimentação. $staleFood")
                 }
-                text(R.id.widgetNutritionKcal, if (combined) "Alimentação · $compactNote" else energy)
-                if (combined) size(R.id.widgetNutritionKcal, summarySize)
                 else if (narrow || contentHeight < 52) size(R.id.widgetNutritionKcal, 18f)
                 else if (!medium) size(R.id.widgetNutritionKcal, 22f)
                 text(R.id.widgetNutritionBalance, balance)
@@ -311,7 +320,7 @@ open class TreinoAppWidgetProvider : AppWidgetProvider() {
                         val target = number(targetKey).takeIf { goalToday && it != null && it > 0 }
                         text(labelId, if (narrow) short else label)
                         text(valueId, if (target == null) "${grams(value)} g" else "${grams(value)} / ${grams(target)} g")
-                        if (narrow) size(valueId, 10f)
+                        if (width / scale < 255) size(valueId, 10f)
                         views.setContentDescription(valueId, if (target == null) "$label: ${grams(value)} gramas" else "$label: ${grams(value)} de ${grams(target)} gramas")
                         visible(barId, value != null && target != null)
                         views.setProgressBar(barId, 1000, progress(value, target, 1000), false)
@@ -361,17 +370,16 @@ open class TreinoAppWidgetProvider : AppWidgetProvider() {
                 val sessions = number("movement.sessions").takeIf { sameWeek }
                 val partial = prefs.getBoolean("movement.partial", true)
                 val noPermission = listOf("stepsState", "cardioState").any { prefs.getString("movement.$it", "") == "denied" }
-                val stepsLabel = when {
-                    steps == null -> "Passos · sem leitura"
-                    movement && medium && stepGoal != null -> "${count(steps)} / ${count(stepGoal)} passos"
-                    else -> "${count(steps)} passos"
-                }
+                val stepsLabel = if (steps == null) "Passos · sem leitura" else "${count(steps)} passos"
                 text(R.id.widgetSteps, stepsLabel)
                 size(R.id.widgetSteps, if (combined) summarySize else if (medium && !narrow) 25f else 18f)
                 visible(R.id.widgetStepsProgress, movement && medium && steps != null && stepGoal != null)
                 views.setProgressBar(R.id.widgetStepsProgress, 100, progress(steps, stepGoal, 100), false)
+                text(R.id.widgetStepsGoal, "Meta de hoje · ${count(stepGoal)} passos")
+                visible(R.id.widgetStepsGoal, movement && medium && stepGoal != null)
                 val weekly = if (cardio == null && sessions == null) "Cardio da semana · sem leitura"
-                    else "${count(cardio)} min · ${count(sessions)} sessões" + if (partial) " · parcial" else ""
+                    else "${count(cardio)} min · ${count(sessions)} ${if (sessions == 1f) "sessão" else "sessões"}" +
+                        if (partial) " · parcial" else " de cardio"
                 text(R.id.widgetMovementWeek, weekly)
                 if (contentHeight < 54) size(R.id.widgetMovementWeek, 10f)
                 visible(R.id.widgetMovementWeek, movement)
@@ -384,12 +392,9 @@ open class TreinoAppWidgetProvider : AppWidgetProvider() {
                 }
                 text(R.id.widgetMovementRead, read)
                 visible(R.id.widgetMovementRead, movement && contentHeight >= 65)
-                val goals = listOfNotNull(
-                    stepGoal?.let { "${count(it)} passos/dia" },
-                    number("movement.minutesGoal")?.takeIf { it > 0 }?.let { "${count(it)} min/semana" },
-                )
-                text(R.id.widgetMovementGoals, goals.joinToString(" · "))
-                visible(R.id.widgetMovementGoals, movement && large && goals.isNotEmpty())
+                val minutesGoal = number("movement.minutesGoal")?.takeIf { it > 0 }
+                text(R.id.widgetMovementGoals, "Meta semanal · ${count(minutesGoal)} min de cardio")
+                visible(R.id.widgetMovementGoals, movement && large && minutesGoal != null)
             }
 
             val compactText = if (food && medium && narrow) "Por texto" else "Refeição por texto"

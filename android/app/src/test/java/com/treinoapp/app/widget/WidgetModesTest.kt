@@ -51,7 +51,8 @@ class WidgetModesTest {
             .put("stepsState", "ok").put("cardioState", "ok").put("partial", false)
     }
     private fun save(move: JSONObject? = movement()) = TreinoAppWidgetProvider.saveState(context,
-        "Treino A", 2, 4, 3, LocalDate.now().toString(), 400f, 30f, 50f, 10f, 2000f, move)
+        "Treino A", 2, 4, 3, LocalDate.now().toString(), 400f, 30f, 50f, 10f, 2000f, move,
+        goalProtein = 150f, goalCarbs = 230f, goalFat = 65f)
 
     @Test fun independentModesAndDeletingOnePreserveOtherInstancesAndFood() {
         save()
@@ -108,7 +109,8 @@ class WidgetModesTest {
         assertEquals("Cardio da semana · sem leitura", text(view, R.id.widgetMovementWeek))
         save(movement(steps = 0, sessions = 0).put("minutes", 0))
         view = build(WidgetMode.MOVEMENT)
-        assertEquals("0 / 8.000 passos", text(view, R.id.widgetSteps))
+        assertEquals("0 passos", text(view, R.id.widgetSteps))
+        assertEquals("Meta de hoje · 8.000 passos", text(view, R.id.widgetStepsGoal))
         assertTrue(text(view, R.id.widgetMovementWeek).startsWith("0 min · 0 sessões"))
     }
 
@@ -150,7 +152,7 @@ class WidgetModesTest {
             for ((sectionId, textIds) in listOf(
                 R.id.widgetNutritionSection to listOf(R.id.widgetNutritionKcal, R.id.widgetNutritionProtein),
                 R.id.widgetTrainingSection to listOf(R.id.widgetWorkout, R.id.widgetSubtitle, R.id.widgetStatLeftValue),
-                R.id.widgetMovementSection to listOf(R.id.widgetSteps, R.id.widgetMovementRead, R.id.widgetMovementWeek))) {
+                R.id.widgetMovementSection to listOf(R.id.widgetSteps, R.id.widgetStepsGoal, R.id.widgetMovementRead, R.id.widgetMovementWeek))) {
                 val section = view.findViewById<View>(sectionId)
                 if (section.visibility != View.VISIBLE) continue
                 for (textId in textIds) {
@@ -160,6 +162,9 @@ class WidgetModesTest {
                     if (shown && !withinContent(field, section)) failures += "$mode $height: texto cortado ($textId)"
                     if (shown && field is TextView && field.layout != null && field.layout.height > field.height - field.compoundPaddingTop - field.compoundPaddingBottom)
                         failures += "$mode $height: linhas cortadas ($textId)"
+                    if (shown && textId in listOf(R.id.widgetSteps, R.id.widgetStepsGoal, R.id.widgetNutritionProtein)
+                        && field is TextView && (field.layout?.getEllipsisCount(0) ?: 0) > 0)
+                        failures += "$mode $height: valor truncado ($textId)"
                 }
             }
             val bitmap = Bitmap.createBitmap(widthPx, heightPx, Bitmap.Config.ARGB_8888)
@@ -184,7 +189,7 @@ class WidgetModesTest {
     @Test fun cachedPermissionDeniedAndPartialAreIdentified() {
         save(movement().put("partial", true).put("stepsState", "denied"))
         val view = build(WidgetMode.MOVEMENT)
-        assertEquals("3.400 / 8.000 passos", text(view, R.id.widgetSteps))
+        assertEquals("3.400 passos", text(view, R.id.widgetSteps))
         assertTrue(text(view, R.id.widgetMovementWeek).endsWith("parcial"))
         assertTrue(text(view, R.id.widgetMovementRead).contains("permissões"))
     }
