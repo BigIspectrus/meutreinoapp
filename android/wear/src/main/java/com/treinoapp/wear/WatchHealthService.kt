@@ -15,6 +15,7 @@ import androidx.core.app.ServiceCompat
 import androidx.health.services.client.ExerciseUpdateCallback
 import androidx.health.services.client.HealthServices
 import androidx.health.services.client.data.Availability
+import androidx.health.services.client.data.BatchingMode
 import androidx.health.services.client.data.DataType
 import androidx.health.services.client.data.ExerciseConfig
 import androidx.health.services.client.data.ExerciseLapSummary
@@ -51,33 +52,40 @@ class WatchHealthService : Service() {
     private var callbackSet = false
     private var phoneAttached = false
     private var stopping = false
+    private var sensorPaused = false
+    private var lastSampleMs = -1L
+    private var heartSum = 0.0
+    private var heartSamples = 0
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (sessionId.isNotBlank()) return START_NOT_STICKY
         val current = PhoneWorkout.snapshot.value
+        try {
+            val type = if (Build.VERSION.SDK_INT >= 34) ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH else 0
+            ServiceCompat.startForeground(this, NOTIFICATION, notification(), type)
+        } catch (e: Exception) {
+            if (current?.active == true) {
+                readings.value = WatchReadings(current.sessionId, HealthMode.ERROR, message = "Permita os sensores para medir FC e kcal.")
+            }
+            stopSelf(startId)
+            return START_NOT_STICKY
+        }
         if (current == null || !current.active || !current.isFresh(System.currentTimeMillis()) ||
             current.sessionId != intent?.getStringExtra(SESSION_EXTRA) ||
             !hasPermission(heartPermission()) || !hasPermission(Manifest.permission.ACTIVITY_RECOGNITION)
         ) {
+            ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
             stopSelf(startId)
             return START_NOT_STICKY
         }
         sessionId = current.sessionId
         readings.value = WatchReadings(sessionId, HealthMode.STARTING)
-        try {
-            val type = if (Build.VERSION.SDK_INT >= 34) ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH else 0
-            ServiceCompat.startForeground(this, NOTIFICATION, notification(), type)
-        } catch (e: Exception) {
-            end(HealthMode.ERROR, "Permita os sensores para medir FC e kcal.")
-            return START_NOT_STICKY
-        }
         PhoneWorkout.attach(this)
         phoneAttached = true
         scope.launch {
             try {
                 startCollecting()
                 if (stopping) return@launch
-                var appliedPause = false
                 while (!stopping) {
                     val synced = PhoneWorkout.snapshot.value
                     if (synced == null || !synced.active || synced.sessionId != sessionId) {
@@ -88,9 +96,9 @@ class WatchHealthService : Service() {
                         end(HealthMode.ENDED, "Medição encerrada após perder a conexão.")
                         break
                     }
-                    if (synced.paused != appliedPause) {
+                    if (synced.paused != sensorPaused) {
                         if (synced.paused) exercise.pauseExerciseAsync().await() else exercise.resumeExerciseAsync().await()
-                        appliedPause = synced.paused
+                        sensorPaused = synced.paused
                     }
                     delay(1_000)
                 }
@@ -110,7 +118,8 @@ class WatchHealthService : Service() {
             .firstOrNull { it in capabilities.supportedExerciseTypes }
             ?: error("Sem tipo de treino compatível")
         val supported = capabilities.getExerciseTypeCapabilities(type).supportedDataTypes
-        val dataTypes = setOf(DataType.HEART_RATE_BPM, DataType.CALORIES_TOTAL).intersect(supported)
+        val dataTypes = setOf(DataType.HEART_RATE_BPM, DataType.HEART_RATE_BPM_STATS, DataType.CALORIES_TOTAL)
+            .intersect(supported)
         check(DataType.HEART_RATE_BPM in dataTypes)
 
         val status = exercise.getCurrentExerciseInfoAsync().await().exerciseTrackedStatus
@@ -132,6 +141,7 @@ class WatchHealthService : Service() {
                 dataTypes = dataTypes,
                 isAutoPauseAndResumeEnabled = false,
                 isGpsEnabled = false,
+                batchingModeOverrides = setOf(BatchingMode.HEART_RATE_5_SECONDS).intersect(capabilities.supportedBatchingModeOverrides),
             )).await()
         }
         ownsExercise = true
@@ -147,15 +157,23 @@ class WatchHealthService : Service() {
 
         override fun onExerciseUpdateReceived(update: ExerciseUpdate) {
             if (stopping || !ownsExercise) return
+            sensorPaused = update.exerciseStateInfo.state.isPaused
             val last = readings.value
             val metrics = update.latestMetrics
-            val sample = metrics.getData(DataType.HEART_RATE_BPM)
-                .filter { it.value in 25.0..250.0 }.maxByOrNull { it.timeDurationFromBoot }
+            var current = last.current
+            for (point in metrics.getData(DataType.HEART_RATE_BPM).sortedBy { it.timeDurationFromBoot }) {
+                val time = point.timeDurationFromBoot.toMillis()
+                if (time <= lastSampleMs || point.value !in 25.0..250.0) continue
+                lastSampleMs = time
+                heartSamples++
+                heartSum += point.value
+                current = HeartReading(point.value, time)
+            }
             val avg = metrics.getData(DataType.HEART_RATE_BPM_STATS)?.average?.takeIf { it in 25.0..250.0 }
             val kcal = metrics.getData(DataType.CALORIES_TOTAL)?.total?.takeIf { it.isFinite() && it >= 0 }
             readings.value = last.copy(
-                current = sample?.let { HeartReading(it.value, it.timeDurationFromBoot.toMillis()) } ?: last.current,
-                average = avg ?: last.average,
+                current = current,
+                average = avg ?: if (heartSamples > 0) heartSum / heartSamples else last.average,
                 kcal = kcal ?: last.kcal,
             )
             if (update.exerciseStateInfo.state.isEnded) {

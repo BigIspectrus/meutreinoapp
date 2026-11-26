@@ -147,6 +147,10 @@ class MonitorActivity : Activity() {
     override fun onResume() {
         super.onResume()
         resumed = true
+        if (startAfterPermission && hasPermission(Manifest.permission.ACTIVITY_RECOGNITION)) {
+            startAfterPermission = false
+            startHealthMeasurement()
+        }
         render()
     }
 
@@ -230,6 +234,8 @@ class MonitorActivity : Activity() {
             measured?.mode == HealthMode.MEASURING -> "kcal totais estimadas desde a ativação"
             measured?.message?.isNotBlank() == true -> measured.message
             spot.unavailable -> "Sensor de FC indisponível no momento."
+            paused -> "Medição pausada junto com o treino."
+            spot.average == null -> "Aguardando leitura de FC."
             else -> "¹ Média das leituras com a tela aberta."
         }
         details.show(explanation)
@@ -254,9 +260,11 @@ class MonitorActivity : Activity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode != PERMISSIONS) return
-        val start = startAfterPermission
-        startAfterPermission = false
-        if (start && hasPermission(Manifest.permission.ACTIVITY_RECOGNITION)) startHealthMeasurement()
+        if (!hasPermission(Manifest.permission.ACTIVITY_RECOGNITION)) startAfterPermission = false
+        if (startAfterPermission && resumed) {
+            startAfterPermission = false
+            startHealthMeasurement()
+        }
         render()
     }
 

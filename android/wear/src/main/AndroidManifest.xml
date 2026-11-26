@@ -17,7 +17,7 @@
         android:label="TreinoApp Monitor"
         android:theme="@android:style/Theme.Material.NoActionBar">
         <meta-data android:name="com.google.android.wearable.standalone" android:value="false" />
-        <activity android:name=".MonitorActivity" android:exported="true">
+        <activity android:name=".MonitorActivity" android:exported="true" android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
