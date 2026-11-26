@@ -80,6 +80,7 @@ function renderizarMontagemRefeicaoNutricao(){
   save.textContent=rows.length?'Salvar refeição ('+rows.length+')':'Salvar refeição';
   const next=document.getElementById('nutritionPickNext');if(next)next.hidden=!builder.selected();
   const search=document.getElementById('nutritionMealSearch');if(search)search.hidden=!!builder.selected();
+  if(typeof renderDraftNutritionImpact==='function')renderDraftNutritionImpact();
 }
 function cancelarMontagemRefeicaoNutricao(){
   const builder=window.TreinoMealBuilder;
@@ -93,7 +94,7 @@ function salvarMontagemRefeicaoNutricao(){
   if(draft.mode==='planned')return salvarPlanoDaMontagemNutricao();
   if(!NUTRITION_MEALS.some(m=>m.id===mealType)||!/^\d{4}-\d{2}-\d{2}$/.test(draft.date)||!/^([01]\d|2[0-3]):[0-5]\d$/.test(time))return toast('Confira a data, refeição e horário.','warn');
   draft.saving=true;renderizarMontagemRefeicaoNutricao();
-  const now=Date.now(),rows=draft.items.slice(),entries=rows.map(row=>({id:'draft:'+draft.id+':'+row.key,date:draft.date,time,mealType,foodId:row.food.id,name:row.food.name,
+  const now=Date.now(),rows=draft.items.slice(),entries=rows.map(row=>({id:'draft:'+draft.id+':'+row.key,date:draft.date,time,mealType:NUTRITION_MEALS.some(m=>m.id===row.mealType)?row.mealType:mealType,foodId:row.food.id,name:row.food.name,
     grams:arredondarNutricao(row.grams),serving:capturarPorcaoNutricao(row.food,row.amount,row.unit,row.grams),...calcularPorGramasNutricao(row.food,row.grams),createdAt:now,updatedAt:now}));
   try{
     // Um único setItem para o conjunto inteiro. Se falhar, o rascunho permanece.
@@ -110,6 +111,7 @@ function salvarMontagemRefeicaoNutricao(){
     if(foodsChanged)salvarAlimentosNutricaoLocal(foods);
     if(recipesChanged)localStorage.setItem(NUTRITION_RECIPES_KEY,JSON.stringify(recipes));
   }catch(error){console.warn('Refeição salva; recentes não atualizados',error);toast('Refeição salva. Não foi possível atualizar a lista de recentes.','warn');}
-  fecharModal('modalNutritionAdd');dadosNutricaoAlterados('Refeição registrada · '+entries.length+' '+(entries.length===1?'alimento':'alimentos'));
+  const mealCount=new Set(entries.map(entry=>entry.mealType)).size;
+  fecharModal('modalNutritionAdd');dadosNutricaoAlterados((mealCount===1?'Refeição registrada':mealCount+' refeições registradas')+' · '+entries.length+' '+(entries.length===1?'alimento':'alimentos'));
   renderizarRascunhoRefeicaoPendente();
 }

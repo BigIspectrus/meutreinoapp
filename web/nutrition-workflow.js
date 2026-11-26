@@ -34,7 +34,9 @@ function atualizarContextoMontagemPersistente(){
   const draft=window.TreinoMealBuilder.data();if(!draft)return false;const date=document.getElementById('nutritionDraftDate').value;
   if(!NWF.validDate(date)){toast('Escolha uma data válida.','warn');return false;}
   if(draft.mode==='consumed'&&date>hoje()){draft.mode='planned';document.querySelector('#modalNutritionAdd .modal-title').textContent='Planejar refeição';document.getElementById('nutritionDraftPurpose').textContent='Previsão · não contabiliza consumo';renderizarMontagemRefeicaoNutricao();toast('Data futura: esta montagem será planejamento, separado do consumo.','info');}
-  window.TreinoMealBuilder.setContext({date,mealType:document.getElementById('nutritionAddMeal').value,time:document.getElementById('nutritionAddTime').value||horarioNutricao()});renderizarRascunhoRefeicaoPendente();return true;
+  window.TreinoMealBuilder.setContext({date,mealType:document.getElementById('nutritionAddMeal').value,time:document.getElementById('nutritionAddTime').value||horarioNutricao()});renderizarRascunhoRefeicaoPendente();
+  if(typeof renderDraftNutritionImpact==='function')renderDraftNutritionImpact();
+  return true;
 }
 function getPorcoesHabituais(){const raw=NWF.read(NWF.keys.usual,[]),unique=new Map();for(const row of Array.isArray(raw)?raw:[]){if(!row?.foodId||!normalizarPorcaoRegistradaNutricao(row.serving,Number(row.grams)))continue;const foodId=resolverIdAlimentoNutricao(row.foodId),prior=unique.get(foodId);if(!prior||Number(row.updatedAt)>Number(prior.updatedAt))unique.set(foodId,{...row,foodId});}return [...unique.values()];}
 function foodMontagemAtual(){return alimentoSelecionadoMontagemNutricao()||getItensCatalogoPessoalNutricao().find(f=>f.id===_nutritionSelectedFoodId);}

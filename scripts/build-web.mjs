@@ -17,7 +17,7 @@ for (const file of ['personalization.js', 'nutrition-portions.js', 'mobile-fixes
 for (const [index, script] of [...readFileSync(resolve(web, 'index.html'), 'utf8').matchAll(/<script>([\s\S]*?)<\/script>/g)].entries()) {
   transformSync(script[1], { loader: 'js', target: 'es2020', sourcefile: `index-inline-${index}.js` });
 }
-for (const file of ['training-mobile.js', 'weight-page.js', 'activity.js']) {
+for (const file of ['training-mobile.js', 'weight-page.js', 'activity.js', 'nutrition-diary.js']) {
   transformSync(readFileSync(resolve(web, file), 'utf8'), { loader: 'js', target: 'es2020', sourcefile: file });
 }
 

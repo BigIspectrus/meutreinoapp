@@ -1,0 +1,59 @@
+.nutrition-day-profile,
+.nutrition-meal-undo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: var(--surface2);
+}
+.nutrition-day-profile label { margin: 0; font-size: .78rem; }
+.nutrition-day-profile select { width: auto; min-width: 125px; min-height: 44px; margin: 0; }
+.nutrition-meal-undo .btn { width: auto; min-height: 44px; }
+.nutrition-meal-undo span { font-size: .9rem; }
+.nutrition-meal-edit-modal { width: 100%; max-width: 520px; }
+.nutrition-edit-grid,
+.nutrition-impact-values {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.nutrition-edit-grid label, .nutrition-edit-grid input, .nutrition-edit-grid select { min-width: 0; }
+.nutrition-meal-edit-row,
+.nutrition-profile-fields fieldset,
+.meal-text-groups article {
+  margin-top: 9px;
+  padding: 11px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: var(--surface2);
+}
+.nutrition-meal-edit-row strong { overflow-wrap: anywhere; }
+.nutrition-edit-row-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 9px;
+  margin-top: 7px;
+}
+.nutrition-edit-row-controls .btn { min-height: 44px; }
+.nutrition-meal-replacement { margin-top: 9px; }
+.nutrition-meal-replacement button { text-align: left; min-height: 44px; margin-top: 4px; white-space: normal; }
+.nutrition-profile-fields { margin: 12px 0; }
+.nutrition-profile-fields summary { cursor: pointer; }
+.nutrition-profile-fields fieldset { min-width: 0; }
+.nutrition-impact {
+  padding: 12px;
+  margin: 10px 0;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface2);
+}
+.nutrition-impact > strong { display: block; margin-bottom: 8px; }
+.nutrition-impact-values span, .meal-text-groups small { display: block; color: var(--text-muted); font-size: .74rem; }
+.nutrition-impact-values b { display: block; font-size: .87rem; margin: 4px 0 6px; }
+.meal-text-groups { margin: 8px 0 12px; }
+.meal-text-groups small { margin-top: 4px; }

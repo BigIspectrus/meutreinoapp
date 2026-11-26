@@ -1,12 +1,27 @@
 {
-  "version":2,
-  "checkedAt":"2026-10-24",
+  "version":3,
+  "checkedAt":"2026-11-26",
   "sources":[
     {"name":"TACO / NEPA – UNICAMP","edition":"4ª edição revisada e ampliada, 2011","url":"https://nepa.unicamp.br/wp-content/uploads/sites/27/2023/10/taco_4_edicao_ampliada_e_revisada.pdf"},
-    {"name":"TBCA / USP – FoRC – BRASILFOODS","edition":"Site consultado na versão 7.3; fichas individuais de composição em medidas caseiras","url":"https://www.tbca.net.br/"}
+    {"name":"TBCA / USP – FoRC – BRASILFOODS","edition":"Fichas individuais de composição em medidas caseiras","url":"https://www.tbca.net.br/"},
+    {"name":"IBGE / POF","edition":"Tabelas de composição nutricional · POF 2008–2009","url":"https://www.ibge.gov.br/biblioteca/visualizacao/livros/liv50002.pdf"},
+    {"name":"Rótulos de produtos","edition":"Tabelas transcritas nas fichas de produtos. Confira a versão na sua embalagem.","url":"https://www.kitkat.com.br/produtos/kitkat-ao-leite"}
   ],
   "portionNote":"Medidas caseiras são referências aproximadas: tamanho e peso variam. Prefira pesar a parte comestível, sem casca, caroço ou osso. Você pode editar as medidas nos seus alimentos.",
   "taco":[
+    {"code":433,"name":"Lombo suíno, cru","aliases":["lombo de porco cru","lombo suino in natura"],"measures":[],"note":"Pese a parte comestível crua. Há referências separadas para lombo assado e frito.","reviewEquivalent":true},
+    {"code":432,"name":"Lombo suíno, assado","aliases":["lombo de porco assado"],"measures":[]},
+    {"code":327,"name":"Acém bovino moído, cru","aliases":["acém moído","acém moído cru","carne moída de acém crua"],"measures":[],"note":"Referência para o corte cru. A proporção de gordura pode variar conforme a moagem.","reviewEquivalent":true},
+    {"code":326,"name":"Acém bovino moído, cozido","aliases":["acém moído cozido","carne moída de acém cozida"],"measures":[],"reviewEquivalent":true},
+    {"code":379,"name":"Peito bovino moído, cru, sem gordura aparente","aliases":["peito bovino moído","peito moído cru","peito bovino moído cru"],"measures":[],"note":"Referência do mesmo corte, cru e sem gordura, na TACO. A moagem por si só não altera a composição; o teor de gordura do seu corte pode variar.","reviewEquivalent":true},
+    {"code":372,"name":"Músculo bovino moído, cru, sem gordura aparente","aliases":["músculo bovino moído","músculo moído cru","músculo bovino moído cru"],"measures":[],"note":"Referência do mesmo corte, cru e sem gordura, na TACO. Confira a gordura do corte antes de usar a referência.","reviewEquivalent":true},
+    {"code":378,"name":"Peito bovino sem gordura, cozido","aliases":["peito bovino cozido"],"measures":[]},
+    {"code":371,"name":"Músculo bovino sem gordura, cozido","aliases":["músculo bovino cozido"],"measures":[]},
+    {"code":351,"name":"Coxão mole bovino sem gordura, cozido","measures":[]},
+    {"code":352,"name":"Coxão mole bovino sem gordura, cru","measures":[]},
+    {"code":435,"name":"Pernil suíno, assado","aliases":["pernil de porco assado"],"measures":[]},
+    {"code":428,"name":"Bisteca suína, frita","aliases":["bisteca de porco frita"],"measures":[]},
+    {"code":132,"name":"Mandioca, frita","aliases":["aipim frito","macaxeira frita"],"measures":[]},
     {"code":140,"name":"Pão de queijo assado","aliases":["pao de queijo pequeno","pao de queijo grande"],"measures":[["1 pequeno (aprox.)",25],["1 grande (aprox.)",50]],"note":"Pequeno e grande usam a mesma composição por 100 g; muda apenas o peso. Receita e tamanho podem variar."},
     {"code":53,"name":"Pão francês","aliases":["pao de sal","cacetinho"],"measures":[["1 unidade (aprox.)",50],["1/2 unidade (aprox.)",25]]},
     {"code":182,"name":"Banana prata, crua","measures":[["1 unidade sem casca (aprox.)",65]]},
@@ -176,6 +191,10 @@
     {"code":597,"name":"Noz, crua","measures":[]}
   ],
   "supplements":[
+    {"id":"ibge:7103701-5","source":"ibge","sourceId":"7103701-5","sourceEdition":"IBGE · POF 2008–2009, tabela 1 e tabela 3","sourceUrl":"https://www.ibge.gov.br/biblioteca/visualizacao/livros/liv50002.pdf","name":"Lombo suíno, frito","aliases":["lombo de porco frito","lombo suíno frito"],"kcal100":338.57,"protein100":25.34,"carbs100":0,"fat100":25.67,"fiber100":0,"sodium100":59,"nutrientKnown":["kcal100","protein100","fat100","sodium100"],"micros100":{"ironMg":0.98,"potassiumMg":338,"calciumMg":15,"magnesiumMg":22,"zincMg":3.06},"measures":[],"note":"Referência de preparo frito na POF. A quantidade de gordura absorvida varia conforme o preparo. Carboidratos e fibras não declarados na linha original.","reviewEquivalent":true},
+    {"id":"label:baton-garoto-ao-leite-16","source":"label","sourceId":"78912359","barcode":"78912359","sourceEdition":"Baton ao leite 16 g · tabela de embalagem transcrita","sourceUrl":"https://www.paodeacucar.com/produto/103094/chocolate-ao-leite-baton-garoto-16g","name":"Baton Garoto ao leite, 16 g","brand":"Garoto","aliases":["batom garoto","batom garoto ao leite","baton garoto","baton ao leite"],"kcal100":537.5,"protein100":9.375,"carbs100":51.875,"fat100":31.875,"fiber100":0,"sodium100":106.25,"measures":[["1 unidade",16]],"note":"Porção original de 16 g. Compare os números com a sua embalagem se a fórmula for diferente.","reviewEquivalent":true},
+    {"id":"label:snickers-original-45","source":"label","sourceId":"7896423420180","barcode":"7896423420180","sourceEdition":"Snickers Original 45 g · tabela de embalagem transcrita por 100 g","sourceUrl":"https://www.paodeacucar.com/produto/443028/snickers-chocolate-45g","name":"Snickers Original, 45 g","brand":"Mars","aliases":["snickers","snickers original","snickers 45g","snickers ao leite com amendoim e caramelo"],"kcal100":483,"protein100":8.8,"carbs100":60,"fat100":23,"fiber100":2.5,"sodium100":214,"measures":[["1 barra",45]],"note":"Barra original de 45 g. Confira a versão na sua embalagem, especialmente Duo e Dark.","reviewEquivalent":true},
+    {"id":"label:kitkat-nestle-ao-leite-41-5","source":"label","sourceId":"kitkat-br-ao-leite-41-5","sourceEdition":"KitKat ao leite · ficha nutricional brasileira transcrita por 100 g","sourceUrl":"https://www.casaspedro.com.br/chocolate-kit-kat-ao-leite-41-5g024811/p","name":"KitKat Nestlé ao leite, 41,5 g","brand":"Nestlé","aliases":["kitkat","kit kat","kitkat ao leite","kit kat ao leite","kit kat nestlé ao leite"],"kcal100":537,"protein100":8,"carbs100":59,"fat100":29,"fiber100":2.2,"sodium100":93,"measures":[["1 barra",41.5]],"note":"Versão brasileira ao leite. O peso da barra vem do fabricante e os valores por 100 g da ficha publicada. Confira o rótulo se a barra for de outra versão.","reviewEquivalent":true},
     {
       "id":"tbca:BRC0906B","source":"tbca","sourceId":"BRC0906B","sourceEdition":"TBCA 7.3 · ficha em medidas caseiras","sourceUrl":"https://www.tbca.net.br/base-dados-en/int_food_composition.php?cod_produto=BRC0906B",
       "name":"Tapioca pronta, sem manteiga e sem recheio","aliases":["tapioca pronta simples"],

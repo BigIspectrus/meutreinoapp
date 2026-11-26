@@ -7,8 +7,10 @@
   const safeUrl=value=>{try{const url=new URL(String(value));return url.protocol==='https:'?url.href:'';}catch{return '';}};
   let resolving=false,resolvedRaw=null,resolvedIds=new Map(),preview=[],busy=false,importing=false,scanToken=0;
   const dismissed=new Set();
+  const newReferencesKey='foodLibraryReviewedCatalogV3';
   function metadata(food){
     const result={aliases:strings(food.aliases).slice(0,120),sourceUrl:safeUrl(food.sourceUrl),sourceEdition:String(food.sourceEdition||'').slice(0,180),checkedAt:String(food.checkedAt||'').slice(0,10)};
+    if(typeof food.note==='string'&&food.note)result.note=food.note.slice(0,500);
     if(Array.isArray(food.nutrientKnown))result.nutrientKnown=food.nutrientKnown.filter(k=>ALL.includes(k));
     else result.nutrientKnown=ALL.filter(k=>Object.hasOwn(food,k)&&food[k]!==null&&food[k]!==''&&(MAIN.includes(k)||Number(food[k])>0||!!food.sourceUrl));
     if(food.library?.version===1){const lib=food.library;
@@ -47,6 +49,8 @@
     if(!byName&&!(barcode&&barcode===String(b.barcode||'').trim()))return false;
     const pa=preparation(a),pb=preparation(b);
     if(pa&&pb&&pa!==pb)return false;
+    const specific=['branco','dark','duo','extramilk','amargo','morango','recheado'];
+    if((a.source==='label'||b.source==='label')&&specific.some(token=>ta.includes(token)!==tb.includes(token)))return false;
     // Nem o mesmo código de barras permite trocar leite em pó por líquido ou integral por desnatado.
     const variants=['po','desnatado','semidesnatado','integral','lactose','acucar'];
     if(!byName&&variants.some(t=>ta.includes(t)!==tb.includes(t)))return false;
@@ -74,7 +78,9 @@
   }
   function linked(food,common){
     const explicit=(food.library?.catalogIds||[]).includes(common?.id);
-    return !!common?.builtIn&&(explicit||(food.source===common.source&&food.sourceId&&food.sourceId===common.sourceId))&&sameFood(food,common)&&similar(food,common)&&(brandCompatible(food,common)||(explicit&&(!brand(food)||!brand(common))));
+    const sameSource=food.source===common?.source&&food.sourceId&&food.sourceId===common?.sourceId;
+    return !!common?.builtIn&&sameFood(food,common)&&(explicit||(sameSource&&similar(food,common)))&&
+      (brandCompatible(food,common)||(explicit&&(!brand(food)||!brand(common))));
   }
   function resolve(id){
     if(!id||resolving)return id;resolving=true;
@@ -92,12 +98,19 @@
     }finally{resolving=false;}
   }
   function signature(food){const micros=normalizarMicrosNutricao(food.micros100);return JSON.stringify([String(food.name||'').trim(),String(food.brand||'').trim(),food.basis==='portion'?'portion':'100',Number(food.servingGrams)||100,String(food.servingName||'porção'),...ALL.map(k=>Number(food[k])||0),Object.entries(micros).sort(([a],[b])=>a.localeCompare(b)),(food.measures||[]).map(m=>[String(m.id||''),String(m.name).trim(),Number(m.grams)]),String(food.source||'manual'),String(food.sourceId||''),String(food.barcode||'')]);}
-  function trustedReference(food){return !!food.builtIn&&['taco','tbca'].includes(food.source)&&getAlimentosComunsNutricao().some(f=>f.id===food.id&&signature(f)===signature(food));}
+  function trustedReference(food){return !!food.builtIn&&['taco','tbca','ibge','label'].includes(food.source)&&getAlimentosComunsNutricao().some(f=>f.id===food.id&&signature(f)===signature(food));}
   function recommended(a,b){
     if(trustedReference(a))return a;
     if(trustedReference(b))return b;
     // Sem uma referência verificada, manter a tabela existente em vez de trocar por mais casas decimais.
     return a;
+  }
+  function confirmedReferenceChoice(a,b){
+    if(!b?.reviewEquivalent||!trustedReference(b)||!sameFood(a,b))return false;
+    if(a.barcode&&b.barcode)return a.barcode===b.barcode&&brandCompatible(a,b);
+    if(!brandCompatible(a,b))return false;
+    const prep=preparation(b);
+    return prep?prep===preparation(a):names(b).includes(identityName(a.name));
   }
   function merge(a,b,winner){
     const now=Date.now(),originals=[],seen=new Set();
@@ -145,13 +158,13 @@
     const addIndex=food=>{for(const name of names(food)){if(!catalogIndex.has(name))catalogIndex.set(name,[]);catalogIndex.get(name).push(food);}};
     common.forEach(addIndex);
     for(const a of foods){const options=new Map();for(const name of names(a))for(const b of catalogIndex.get(name)||[])options.set(b.id,b);
-      if(a.barcode)for(const b of foods)if(b.barcode===a.barcode)options.set(b.id,b);
+      if(a.barcode)for(const b of [...common,...foods])if(b.barcode===a.barcode)options.set(b.id,b);
       for(const b of options.values()){
         if(a.id===b.id||linked(a,b)||!sameFood(a,b))continue;
         const key=[a.id,b.id].sort().join('\n');if(seen.has(key)||dismissed.has(key))continue;seen.add(key);
         // Marcas diferentes ficam separadas; marca ausente só permite conciliação manual explícita.
         if(brand(a)&&brand(b)&&!brandCompatible(a,b))continue;
-        pairs.push({a,b,key,similar:similar(a,b),brandConfirmed:brandCompatible(a,b)});
+        pairs.push({a,b,key,similar:similar(a,b),referenceChoice:confirmedReferenceChoice(a,b),brandConfirmed:brandCompatible(a,b)});
       }addIndex(a);
     }
     return pairs.sort((a,b)=>Number(b.similar)-Number(a.similar)||a.a.name.localeCompare(b.a.name,'pt-BR'));
@@ -163,7 +176,7 @@
       '<div class="food-library-table-wrap"><table><caption>Comparação por 100 g de parte comestível</caption><thead><tr><th>Nutriente</th><th>'+esc(a.name)+'<small>'+esc(sourceLabel(a))+'</small></th><th>'+esc(b.name)+'<small>'+esc(sourceLabel(b))+'</small></th></tr></thead><tbody>'+ALL.map((key,i)=>'<tr><th>'+labels[i]+'</th><td>'+esc(known(a,key)?formatarNutricao(a[key],2):'Não informado')+'</td><td>'+esc(known(b,key)?formatarNutricao(b[key],2):'Não informado')+'</td></tr>').join('')+'</tbody></table></div>'+
       '<details><summary>Micronutrientes e medidas</summary><p class="nutrition-note">Ao unir, a tabela escolhida será mantida inteira. Nenhum nutriente é calculado pela média das duas fontes.</p>'+[a,b].map(f=>'<p><strong>'+esc(f.name)+'</strong><br>'+esc(NUTRITION_MICROS.filter(m=>Number(f.micros100?.[m.key])>0).map(m=>m.label+': '+formatarNutricao(f.micros100[m.key],2)+' '+m.unit).join(' · ')||'Micronutrientes não informados')+'<br>'+esc((f.measures||[]).map(m=>m.name+' = '+formatarNutricao(m.grams,1)+' g').join(' · ')||'Sem medidas caseiras')+'</p>').join('')+'</details>'+
       (!pair.brandConfirmed?'<p class="nutrition-note">Uma marca não foi informada. Só una se você confirmar que é o mesmo produto.</p>':'')+
-      (pair.similar?'<label class="food-library-choice">Tabela para os próximos registros<select id="foodLibraryWinner'+index+'"><option value="a"'+(winner===a?' selected':'')+'>Manter '+esc(a.name+' · '+sourceLabel(a))+'</option><option value="b"'+(winner===b?' selected':'')+'>Usar '+esc(b.name+' · '+sourceLabel(b))+'</option></select></label><button type="button" class="btn btn-primary btn-sm" onclick="unirParBibliotecaAlimentos('+index+')">'+(pair.brandConfirmed?'Unir estes dois':'Confirmo o mesmo produto: unir')+'</button>':'')+
+      (pair.similar||pair.referenceChoice?'<label class="food-library-choice">Tabela para os próximos registros<select id="foodLibraryWinner'+index+'"><option value="a"'+(winner===a?' selected':'')+'>Manter '+esc(a.name+' · '+sourceLabel(a))+'</option><option value="b"'+(winner===b?' selected':'')+'>Usar '+esc(b.name+' · '+sourceLabel(b))+'</option></select></label><button type="button" class="btn btn-primary btn-sm" onclick="unirParBibliotecaAlimentos('+index+')">'+(pair.similar&&pair.brandConfirmed?'Unir estes dois':'Confirmo o mesmo alimento: unir')+'</button>':'')+
       '<button type="button" class="btn btn-ghost btn-sm" onclick="ignorarParBibliotecaAlimentos('+index+')">Manter separados</button></article>';
   }
   function renderPreview(){
@@ -174,6 +187,24 @@
   }
   function openReview(){dismissed.clear();scanToken++;renderPreview();document.getElementById('modalFoodLibrary').classList.add('open');}
   function unambiguousPairs(pairs){const degrees=new Map();for(const p of pairs)for(const id of [p.a.id,p.b.id])degrees.set(id,(degrees.get(id)||0)+1);return pairs.filter(p=>p.similar&&p.brandConfirmed&&degrees.get(p.a.id)===1&&degrees.get(p.b.id)===1);}
+  async function applyNewReferences(){
+    if(busy||importing||activeDraft()||localStorage.getItem(newReferencesKey))return;
+    busy=true;
+    try{
+      const before=localStorage.getItem(NUTRITION_FOODS_KEY)||'[]',foods=getAlimentosNutricao();
+      const safe=unambiguousPairs(candidates(foods)).filter(({a,b})=>b.builtIn&&b.reviewEquivalent&&!a.library&&
+        trustedReference(b)&&preparation(a)===preparation(b)&&(!a.barcode||!b.barcode||a.barcode===b.barcode));
+      if(safe.length){
+        const backup=await salvarSnapshotSeguro('antes-atualizar-referencias-alimentos');
+        if(!backup||before!==(localStorage.getItem(NUTRITION_FOODS_KEY)||'[]')||activeDraft())return;
+        const answers=new Map(safe.map(({a,b})=>[a.id,merge(a,b,b)]));
+        salvarAlimentosNutricaoLocal(foods.map(food=>answers.get(food.id)||food));
+      }
+      localStorage.setItem(newReferencesKey,'1');
+      if(safe.length)refresh(safe.length+' alimento(s) conciliado(s) na biblioteca');
+    }catch(error){console.warn('Não foi possível atualizar as referências de alimentos.',error);}
+    finally{busy=false;}
+  }
   async function uniteSafeBatch(){
     if(busy||importing)return;const pairs=unambiguousPairs(preview);if(!pairs.length)return;
     if(activeDraft())return toast('Conclua ou descarte a montagem pendente antes de unir alimentos.','warn');
@@ -187,7 +218,7 @@
     }catch(error){toast(String(error.message||error),'error');}finally{busy=false;}
   }
   async function unite(index){
-    if(busy||importing)return;const pair=preview[index];if(!pair?.similar)return;
+    if(busy||importing)return;const pair=preview[index];if(!pair||!pair.similar&&!pair.referenceChoice)return;
     if(activeDraft())return toast('Guarde os dados e conclua ou descarte a montagem pendente antes de unir alimentos.','warn');
     busy=true;const before=localStorage.getItem(NUTRITION_FOODS_KEY)||'[]',token=scanToken,winner=document.getElementById('foodLibraryWinner'+index)?.value==='b'?'b':'a';
     try{
@@ -195,7 +226,7 @@
       if(!backup)throw new Error('Não foi possível criar a cópia de segurança. Nenhum alimento foi alterado.');
       if(before!==(localStorage.getItem(NUTRITION_FOODS_KEY)||'[]')||token!==scanToken||activeDraft())throw new Error('A biblioteca ou a montagem mudou. Abra novamente a conciliação.');
       const foods=getAlimentosNutricao(),a=foods.find(f=>f.id===pair.a.id),b=pair.b.builtIn?getAlimentosComunsNutricao().find(f=>f.id===pair.b.id):foods.find(f=>f.id===pair.b.id);
-      if(!a||!b||!sameFood(a,b)||!similar(a,b))throw new Error('Os alimentos mudaram; revise a comparação novamente.');
+      if(!a||!b||!sameFood(a,b)||!similar(a,b)&&!confirmedReferenceChoice(a,b))throw new Error('Os alimentos mudaram; revise a comparação novamente.');
       const joined=merge(a,b,winner==='b'?b:a),next=foods.filter(f=>f.id!==b.id).map(f=>f.id===a.id?joined:f);
       salvarAlimentosNutricaoLocal(next);refresh('Alimentos unidos. Suas refeições anteriores foram preservadas.');renderPreview();
     }catch(error){toast(String(error.message||error),'error');}finally{busy=false;}
@@ -258,6 +289,7 @@
   window.unirEquivalentesBibliotecaAlimentos=uniteSafeBatch;
   window.ignorarParBibliotecaAlimentos=index=>{if(busy)return;const pair=preview[index];if(pair)dismissed.add(pair.key);renderPreview();};
   window.desfazerUniaoBibliotecaAlimentos=undo;window.abrirFontesBibliotecaAlimentos=openSources;
+  window.addEventListener('load',()=>setTimeout(applyNewReferences,1600));
   const holder=document.createElement('div');holder.innerHTML='<div class="modal-overlay" id="modalFoodLibrary"><div class="modal food-library-modal"><div class="modal-title">Conciliar alimentos</div><p class="nutrition-note">Uma entrada por alimento, com a tabela que você escolher. Marcas diferentes e cru/cozido ficam separados. Antes de alterar, o app cria uma cópia de segurança. Você também pode desfazer uma união enquanto o alimento não for editado.</p><div id="foodLibraryReview"></div><details><summary>Uniões anteriores</summary><div id="foodLibraryArchive"></div></details><div class="modal-footer"><button type="button" class="btn btn-ghost" onclick="fecharModal(\'modalFoodLibrary\')">Fechar</button></div></div></div><div class="modal-overlay" id="modalFoodLibrarySources"><div class="modal food-library-modal"><div class="modal-title">Fontes da biblioteca</div><div id="foodLibrarySources"></div><div class="modal-footer"><button type="button" class="btn btn-ghost" onclick="fecharModal(\'modalFoodLibrarySources\')">Fechar</button></div></div></div>';
   document.body.append(...holder.children);
 })();

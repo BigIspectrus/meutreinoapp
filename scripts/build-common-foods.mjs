@@ -9,8 +9,8 @@ export function buildCommonFoods(){
   const foods=config.taco.map(item=>{
     const original=taco.foods.find(f=>f.id==='taco:'+item.code);
     if(!original)throw new Error('Alimento TACO inexistente: '+item.code);
-    return {...original,name:item.name,brand:'',aliases:[original.name,...(item.aliases||[])],source:'taco',sourceId:original.id,sourceUrl:taco.sourceUrl,sourceEdition:'TACO · 4ª edição, 2011',measures:measures(item.measures),note:item.note||''};
-  }).concat(config.supplements.map(f=>({...f,brand:f.brand||'',measures:measures(f.measures)}))).map(f=>({...f,basis:'100',servingName:'100 g',servingGrams:100,favorite:false,barcode:'',createdAt:0,updatedAt:0,lastUsedAt:0,builtIn:true}));
+    return {...original,name:item.name,brand:'',aliases:[original.name,...(item.aliases||[])],source:'taco',sourceId:original.id,sourceUrl:taco.sourceUrl,sourceEdition:'TACO · 4ª edição, 2011',measures:measures(item.measures),note:item.note||'',...(item.reviewEquivalent?{reviewEquivalent:true}:{})};
+  }).concat(config.supplements.map(f=>({...f,brand:f.brand||'',measures:measures(f.measures)}))).map(f=>({...f,basis:'100',servingName:'100 g',servingGrams:100,favorite:false,barcode:f.barcode||'',createdAt:0,updatedAt:0,lastUsedAt:0,builtIn:true}));
   const seen=new Set();
   for(const food of foods){
     if(seen.has(food.id))throw new Error('ID duplicado: '+food.id);seen.add(food.id);
