@@ -180,25 +180,22 @@ class MainActivity : BridgeActivity() {
 
     private fun routeIntent(intent: Intent?) {
         val tab = intent?.getStringExtra("openTab") ?: return
-        val startNext = intent.getBooleanExtra("startNextWorkout", false)
-        val addMeal = intent.getBooleanExtra("addMeal", false)
-        val addMealText = intent.getBooleanExtra("addMealText", false)
-        val openActivity = intent.getBooleanExtra("openActivity", false)
+        val safe = if (tab in setOf("dashboard", "treinar", "nutricao", "historico", "progresso", "config")) tab else "treinar"
+        fun requested(key: String) = intent.getBooleanExtra(key, false)
         bridge?.webView?.postDelayed({
-            val safe = if (tab in setOf("dashboard", "treinar", "nutricao", "historico", "progresso", "config")) tab else "treinar"
-            val js = if (intent.getBooleanExtra("recordWeight", false) && safe == "progresso") {
-                "(function openWeight(attempt){if(window.TreinoCompanionFeatures){window.TreinoCompanionFeatures.openWeight();}else if(attempt<40){setTimeout(()=>openWeight(attempt+1),250);}})(0);"
-            } else if (addMealText && safe == "nutricao") {
-                "(function openTextMeal(attempt){if(window.abrirRefeicaoTextoWidget){window.abrirRefeicaoTextoWidget();}else if(attempt<40){setTimeout(()=>openTextMeal(attempt+1),250);}})(0);"
-            } else if (addMeal && safe == "nutricao") {
-                "(function openMeal(attempt){if(window.abrirRefeicaoWidget){window.abrirRefeicaoWidget();}else if(attempt<40){setTimeout(()=>openMeal(attempt+1),250);}})(0);"
-            } else if (openActivity && safe == "progresso") {
-                "(function openMovement(attempt){if(window.abrirCardioPassos){window.abrirCardioPassos();}else if(attempt<40){setTimeout(()=>openMovement(attempt+1),250);}})(0);"
-            } else if (startNext) {
-                "(function openWorkout(attempt){if(window.iniciarTreinoWidget){window.iniciarTreinoWidget();}else if(attempt<40){setTimeout(()=>openWorkout(attempt+1),250);}})(0);"
-            } else {
-                "(function openTab(attempt){if(window.irParaAba){window.irParaAba('$safe');}else if(attempt<40){setTimeout(()=>openTab(attempt+1),250);}})(0);"
+            val action = when {
+                safe == "progresso" && requested("recordWeight") -> "window.TreinoCompanionFeatures?.openWeight"
+                safe == "progresso" && requested("openActivity") -> "window.abrirCardioPassos"
+                safe == "nutricao" && requested("addMealText") -> "window.abrirRefeicaoTextoWidget"
+                safe == "nutricao" && requested("addMeal") -> "window.abrirRefeicaoWidget"
+                safe == "nutricao" && requested("openReadyMeals") -> "window.abrirRefeicoesProntasWidget"
+                safe == "nutricao" && requested("openFoodToday") -> "window.abrirDiaAlimentacaoWidget"
+                safe == "treinar" && requested("startBlankWorkout") -> "window.iniciarTreinoEmBranco"
+                safe == "treinar" && requested("resumeWorkout") -> "window.continuarTreinoWidget"
+                safe == "treinar" && requested("startNextWorkout") -> "window.iniciarTreinoWidget"
+                else -> "window.irParaAba"
             }
+            val js = "(function route(attempt){const action=$action;if(document.readyState==='complete'&&typeof action==='function'){action('$safe');}else if(attempt<40){setTimeout(()=>route(attempt+1),250);}})(0);"
             bridge.webView.evaluateJavascript(js, null)
         }, 350)
     }

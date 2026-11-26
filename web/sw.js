@@ -1,4 +1,4 @@
-const APP_VERSION = '12.16.0';
+const APP_VERSION = '12.17.0';
 const BUILD = '2026.11.26.1';
 const CACHE_PREFIX = 'treinoapp-';
 const CACHE_NAME = `${CACHE_PREFIX}v${APP_VERSION}-${BUILD}`;

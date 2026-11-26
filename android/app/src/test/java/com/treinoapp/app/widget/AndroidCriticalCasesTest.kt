@@ -1,9 +1,7 @@
 package com.treinoapp.app.widget
 
 import android.content.Context
-import android.os.Bundle
 import android.view.View
-import android.widget.RemoteViews
 import android.widget.TextView
 import com.treinoapp.app.R
 import com.treinoapp.app.data.NutritionEntryEntity
@@ -45,13 +43,8 @@ class AndroidCriticalCasesTest {
 
     @After fun cleanup() { closeDatabase() }
 
-    private fun build(height: Int = 400): View {
-        val options = Bundle().apply { putInt(android.appwidget.AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, height) }
-        val method = TreinoAppWidgetProvider.Companion::class.java.getDeclaredMethod("buildViews", Context::class.java, Bundle::class.java)
-            .apply { isAccessible = true }
-        val views = method.invoke(TreinoAppWidgetProvider.Companion, context, options) as RemoteViews
-        return views.apply(context, null)
-    }
+    private fun build(height: Int = 400, mode: WidgetMode = WidgetMode.NUTRITION): View =
+        TreinoAppWidgetProvider.buildViewsForSize(context, 1, WidgetOptions(mode), height).apply(context, null)
 
     private fun text(view: View, id: Int) = view.findViewById<TextView>(id).text.toString()
 
@@ -61,25 +54,24 @@ class AndroidCriticalCasesTest {
 
     @Test fun currentDayShowsCaloriesAndMacrosWithoutWebView() {
         save(); val view = build()
-        assertEquals("400 / 2000 kcal", text(view, R.id.widgetNutritionKcal))
-        assertEquals("P 30 g", text(view, R.id.widgetNutritionProtein))
-        assertEquals("C 50 g", text(view, R.id.widgetNutritionCarbs))
-        assertEquals("G 10 g", text(view, R.id.widgetNutritionFat))
-        assertEquals("INICIAR TREINO", text(view, R.id.widgetButton))
+        assertEquals("400 kcal", text(view, R.id.widgetNutritionKcal))
+        assertEquals("30 g", text(view, R.id.widgetNutritionProtein))
+        assertEquals("50 g", text(view, R.id.widgetNutritionCarbs))
+        assertEquals("10 g", text(view, R.id.widgetNutritionFat))
+        assertEquals("Meta padrão · 2.000 kcal", text(view, R.id.widgetNutritionGoal))
     }
 
     @Test fun previousDayIsNeverShownAsToday() {
         save(LocalDate.now().minusDays(1).toString()); val view = build()
-        assertEquals("0 / 2000 kcal", text(view, R.id.widgetNutritionKcal))
-        assertEquals("P 0 g", text(view, R.id.widgetNutritionProtein))
-        assertEquals("C 0 g", text(view, R.id.widgetNutritionCarbs))
-        assertEquals("G 0 g", text(view, R.id.widgetNutritionFat))
+        assertEquals("— kcal", text(view, R.id.widgetNutritionKcal))
+        assertEquals("Dados de ontem", text(view, R.id.widgetNutritionBalance))
+        assertEquals(View.GONE, view.findViewById<View>(R.id.widgetMacros).visibility)
     }
 
     @Test fun compactWidgetKeepsFoodAndButtons() {
-        save(); val view = build(260)
-        assertEquals(View.GONE, view.findViewById<View>(R.id.widgetTrainingStats).visibility)
-        assertEquals(View.VISIBLE, view.findViewById<View>(R.id.widgetMealButton).visibility)
+        save(); val view = build(156)
+        assertEquals(View.GONE, view.findViewById<View>(R.id.widgetMacros).visibility)
+        assertEquals(View.VISIBLE, view.findViewById<View>(R.id.widgetTextMealButton).visibility)
         assertEquals(View.VISIBLE, view.findViewById<View>(R.id.widgetNutritionKcal).visibility)
     }
 
@@ -89,7 +81,8 @@ class AndroidCriticalCasesTest {
         prefs.edit().putBoolean(WorkoutForegroundService.KEY_ACTIVE, true)
             .putString(WorkoutForegroundService.KEY_NAME, "Sessão ativa")
             .putInt(WorkoutForegroundService.KEY_DONE, 3).putInt(WorkoutForegroundService.KEY_TOTAL, 12).commit()
-        val view = build(); assertEquals("ABRIR TREINO", text(view, R.id.widgetButton))
+        val view = build()
+        assertEquals("Continuar treino", text(build(mode = WidgetMode.WORKOUT), R.id.widgetButton))
         assertTrue(view.findViewById<View>(R.id.widgetMealButton).performClick())
         val intent = shadowOf(RuntimeEnvironment.getApplication()).nextStartedActivity
         assertNotNull(intent); assertEquals("nutricao", intent.getStringExtra("openTab")); assertTrue(intent.getBooleanExtra("addMeal", false))
@@ -117,6 +110,11 @@ class AndroidCriticalCasesTest {
         prefs.edit().putString("nutritionDate", yesterday).putFloat("nutritionKcal", 900f).commit()
         TreinoAppWidgetProvider.refreshNutrition(context)
         assertEquals(today, prefs.getString("nutritionDate", "")); assertEquals(400f, prefs.getFloat("nutritionKcal", -1f), 0f)
+        TreinoAppWidgetProvider.saveState(context, "", 0, 4, 0, today, 420f, 32f, 51f, 12f, 2400f,
+            nutritionProfile = "training")
+        TreinoAppWidgetProvider.refreshNutrition(context)
+        assertEquals(420f, prefs.getFloat("nutritionKcal", -1f), 0f)
+        assertEquals(2400f, prefs.getFloat("nutritionGoalKcal", -1f), 0f)
     }
 
     @Test @Config(sdk = [33]) fun healthUnavailableDoesNotCreateValuesOrSuccessfulReads() = runBlocking {

@@ -36,6 +36,11 @@ jobs:
       - run: npm run test:ui
         if: ${{ !inputs.skip_tests && !contains(github.event.head_commit.message, '[skip-tests]') }}
       - run: npm run prepare:android
+      - name: Validar widgets Android
+        if: ${{ contains(github.event.head_commit.message, '[widget-tests]') }}
+        continue-on-error: true
+        working-directory: android
+        run: gradle testBetaDebugUnitTest --tests '*widget.WidgetModesTest' --tests '*widget.AndroidCriticalCasesTest' --max-workers=1 --stacktrace
       - name: Restaurar chave de assinatura
         shell: bash
         env:
@@ -61,7 +66,7 @@ jobs:
           fi
           gradle assembleBetaRelease bundleBetaRelease --max-workers=1 --stacktrace
       - name: Publicar resultados dos testes Android
-        if: ${{ always() && !inputs.skip_tests && !contains(github.event.head_commit.message, '[skip-tests]') }}
+        if: ${{ always() && ((!inputs.skip_tests && !contains(github.event.head_commit.message, '[skip-tests]')) || contains(github.event.head_commit.message, '[widget-tests]')) }}
         uses: actions/upload-artifact@v4
         with:
           name: TreinoApp-Testes-Android-${{ github.sha }}

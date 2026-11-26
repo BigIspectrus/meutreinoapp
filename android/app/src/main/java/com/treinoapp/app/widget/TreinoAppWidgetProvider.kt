@@ -57,6 +57,7 @@ open class TreinoAppWidgetProvider : AppWidgetProvider() {
 
     companion object {
         private const val WIDGET_PREFS = "treino_widget_state"
+        private val nutritionLock = Any()
         fun updateAll(context: Context) { WidgetConfiguration.installed(context).forEach { updateOne(context, it) } }
 
         fun updateOne(context: Context, id: Int) {
@@ -67,11 +68,10 @@ open class TreinoAppWidgetProvider : AppWidgetProvider() {
             val options = manager.getAppWidgetOptions(id)
             val views = if (Build.VERSION.SDK_INT >= 31) {
                 val heights = when (settings.mode) {
-                    WidgetMode.COMBINED -> listOf(180, 280, 380, 480, 600)
-                    WidgetMode.NUTRITION -> listOf(180, 270, 360)
-                    else -> listOf(180, 270)
+                    WidgetMode.COMBINED -> listOf(184, 240, 320)
+                    else -> listOf(156, 240, 320)
                 }
-                RemoteViews(listOf(220, 270).flatMap { width -> heights.map { height ->
+                RemoteViews(listOf(170, 225, 275).flatMap { width -> heights.map { height ->
                     SizeF(width.toFloat(), height.toFloat()) to buildViewsForSize(context, id, settings, height, width)
                 } }.toMap())
             } else buildViewsForSize(context, id, settings,
@@ -86,17 +86,30 @@ open class TreinoAppWidgetProvider : AppWidgetProvider() {
                 val date = LocalDate.now().toString()
                 val entries = dao.nutritionEntriesForDate(date)
                 val goal = dao.nutritionGoal()
-                context.getSharedPreferences(WIDGET_PREFS, Context.MODE_PRIVATE).edit()
-                    .putString("nutritionDate", date)
-                    .putFloat("nutritionKcal", entries.sumOf { it.kcal }.toFloat())
-                    .putFloat("nutritionProtein", entries.sumOf { it.protein }.toFloat())
-                    .putFloat("nutritionCarbs", entries.sumOf { it.carbs }.toFloat())
-                    .putFloat("nutritionFat", entries.sumOf { it.fat }.toFloat())
-                    .putFloat("nutritionGoalKcal", (goal?.kcal ?: 0.0).toFloat())
-                    .putFloat("nutritionGoalProtein", (goal?.protein ?: 0.0).toFloat())
-                    .putFloat("nutritionGoalCarbs", (goal?.carbs ?: 0.0).toFloat())
-                    .putFloat("nutritionGoalFat", (goal?.fat ?: 0.0).toFloat()).apply()
-                updateAll(context)
+                val changed = synchronized(nutritionLock) {
+                    val prefs = context.getSharedPreferences(WIDGET_PREFS, Context.MODE_PRIVATE)
+                    val previousDate = prefs.getString("nutritionDate", "").orEmpty()
+                    val webDate = prefs.getString("nutritionWebDate", "").orEmpty()
+                    if (webDate == date || entries.isEmpty()) return@synchronized false
+                    val edit = prefs.edit().putString("nutritionDate", date)
+                        .putFloat("nutritionKcal", entries.sumOf { it.kcal }.toFloat())
+                        .putFloat("nutritionProtein", entries.sumOf { it.protein }.toFloat())
+                        .putFloat("nutritionCarbs", entries.sumOf { it.carbs }.toFloat())
+                        .putFloat("nutritionFat", entries.sumOf { it.fat }.toFloat())
+                    // Uma meta copiada da Web pertence ao perfil da data em que foi calculada.
+                    if (webDate.isBlank()) {
+                        edit.putFloat("nutritionGoalKcal", (goal?.kcal ?: 0.0).toFloat())
+                            .putFloat("nutritionGoalProtein", (goal?.protein ?: 0.0).toFloat())
+                            .putFloat("nutritionGoalCarbs", (goal?.carbs ?: 0.0).toFloat())
+                            .putFloat("nutritionGoalFat", (goal?.fat ?: 0.0).toFloat())
+                            .putString("nutritionGoalDate", date)
+                    } else if (previousDate != date && !prefs.contains("nutritionGoalDate")) {
+                        edit.putString("nutritionGoalDate", webDate)
+                    }
+                    edit.apply()
+                    true
+                }
+                if (changed) updateAll(context)
             }
         }
 
@@ -104,6 +117,10 @@ open class TreinoAppWidgetProvider : AppWidgetProvider() {
             nutritionDate: String, kcal: Float, protein: Float, carbs: Float, fat: Float, goalKcal: Float,
             movement: JSONObject? = null,
             goalProtein: Float = 0f, goalCarbs: Float = 0f, goalFat: Float = 0f,
+            nutritionProfile: String = "",
+            hasWorkoutSuggestion: Boolean = nextWorkout.isNotBlank() && nextWorkout != "Treino",
+            workoutDraftName: String = "",
+            workoutDraftUntil: Long = 0L,
         ) {
             val edit = context.getSharedPreferences(WIDGET_PREFS, Context.MODE_PRIVATE).edit()
                 .putString("nextWorkout", nextWorkout).putInt("weeklyDone", weeklyDone)
@@ -113,6 +130,13 @@ open class TreinoAppWidgetProvider : AppWidgetProvider() {
                 .putFloat("nutritionFat", fat).putFloat("nutritionGoalKcal", goalKcal)
                 .putFloat("nutritionGoalProtein", goalProtein).putFloat("nutritionGoalCarbs", goalCarbs)
                 .putFloat("nutritionGoalFat", goalFat)
+                .putString("nutritionGoalDate", nutritionDate)
+                .putBoolean("hasWorkoutSuggestion", hasWorkoutSuggestion)
+                .putString("workoutDraftName", workoutDraftName.take(120))
+                .putLong("workoutDraftUntil", workoutDraftUntil)
+            if (nutritionProfile in setOf("standard", "training", "rest")) {
+                edit.putString("nutritionProfile", nutritionProfile).putString("nutritionWebDate", nutritionDate)
+            }
             if (movement != null) {
                 for (key in listOf("date", "weekStart", "weekEnd", "zoneId", "stepsState", "cardioState"))
                     edit.putString("movement.$key", movement.optString(key, ""))
@@ -126,167 +150,281 @@ open class TreinoAppWidgetProvider : AppWidgetProvider() {
                 }
                 edit.putBoolean("movement.partial", movement.optBoolean("partial", true))
             }
-            edit.apply()
+            synchronized(nutritionLock) { edit.apply() }
             updateAll(context)
         }
 
-        // Legacy test entry point, also preserves the previous combined-widget default.
-        private fun buildViews(context: Context, options: Bundle): RemoteViews =
-            buildViewsForSize(context, 0, WidgetOptions(WidgetMode.COMBINED),
-                options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 300))
-
-        internal fun buildViewsForSize(context: Context, id: Int, settings: WidgetOptions, height: Int, width: Int = 270): RemoteViews {
+        internal fun buildViewsForSize(context: Context, id: Int, settings: WidgetOptions, height: Int, width: Int = 275): RemoteViews {
             val views = RemoteViews(context.packageName, R.layout.widget_dashboard)
-            val widgetPrefs = context.getSharedPreferences(WIDGET_PREFS, Context.MODE_PRIVATE)
-            val workoutPrefs = context.getSharedPreferences(WorkoutForegroundService.PREFS, Context.MODE_PRIVATE)
+            val prefs = context.getSharedPreferences(WIDGET_PREFS, Context.MODE_PRIVATE)
+            val workout = context.getSharedPreferences(WorkoutForegroundService.PREFS, Context.MODE_PRIVATE)
             val combined = settings.mode == WidgetMode.COMBINED
-            val training = combined || settings.mode == WidgetMode.WORKOUT
-            val food = combined || settings.mode == WidgetMode.NUTRITION
-            val movement = combined || settings.mode == WidgetMode.MOVEMENT
-            val usableHeight = (height / max(1f, context.resources.configuration.fontScale)).toInt()
-            val compact = settings.compact || usableHeight < if (combined) 480 else 270
-            val tight = usableHeight < 220
-            // A escala já reduz a altura útil. Dividir também a largura do bucket
-            // ocultaria o anel para sempre em fontes > 100%, mesmo ao ampliar.
-            val ring = food && !compact && width >= 270
-            fun visible(view: Int, show: Boolean) = views.setViewVisibility(view, if (show) View.VISIBLE else View.GONE)
-            visible(R.id.widgetTrainingSection, training && (!combined || usableHeight >= 340)); visible(R.id.widgetNutritionSection, food)
-            visible(R.id.widgetMovementSection, movement && (!combined || usableHeight >= 340)); visible(R.id.widgetButton, training)
-            visible(R.id.widgetFoodActions, food); visible(R.id.widgetMealButton, food); visible(R.id.widgetTextMealButton, food)
-            visible(R.id.widgetOtherActions, (training || movement) && (!combined || usableHeight >= 250))
-            visible(R.id.widgetMovementButton, movement)
-            visible(R.id.widgetTrainingStats, !compact && (!combined || usableHeight >= 600))
-            visible(R.id.widgetProgress, !compact || combined && usableHeight >= 380)
-            visible(R.id.widgetSubtitle, !combined && !tight || combined && usableHeight >= 480)
-            visible(R.id.widgetMacros, food && settings.showMacros && usableHeight >= 155)
-            visible(R.id.widgetNutritionRingBox, ring)
-            visible(R.id.widgetNutritionGoal, !tight)
-            visible(R.id.widgetNutritionBalance, !compact)
-            visible(R.id.widgetMovementGoals, !compact && (!combined || usableHeight >= 600))
-            visible(R.id.widgetMovementWeek, usableHeight >= if (combined) 380 else 220)
-            visible(R.id.widgetMovementRead, !combined || usableHeight >= 480)
-            if (tight) {
-                val padding = (10 * context.resources.displayMetrics.density).toInt()
-                views.setViewPadding(R.id.widgetRoot, padding, padding, padding, padding)
+            val food = settings.mode == WidgetMode.NUTRITION
+            val training = settings.mode == WidgetMode.WORKOUT
+            val movement = settings.mode == WidgetMode.MOVEMENT
+            val scale = context.resources.configuration.fontScale.coerceAtLeast(1f)
+            val contentHeight = (height - 109) / scale
+            val narrow = width / scale < 218
+            val medium = !settings.compact && (height - 117) / scale >= 111
+            val large = !settings.compact && (height - 166) / scale >= 134
+            if (!medium) {
+                val pad = (8f * context.resources.displayMetrics.density).toInt()
+                views.setViewPadding(R.id.widgetRoot, pad, pad, pad, pad)
             }
-            views.setTextViewTextSize(R.id.widgetWorkout, TypedValue.COMPLEX_UNIT_SP, if (compact) 18f else 20f)
-            val active = workoutPrefs.getBoolean(WorkoutForegroundService.KEY_ACTIVE, false)
-            val name = if (active) workoutPrefs.getString(WorkoutForegroundService.KEY_NAME, "Treino") ?: "Treino"
-                else widgetPrefs.getString("nextWorkout", "Treino") ?: "Treino"
-            val done = workoutPrefs.getInt(WorkoutForegroundService.KEY_DONE, 0)
-            val total = workoutPrefs.getInt(WorkoutForegroundService.KEY_TOTAL, 0)
-            val weeklyDone = max(0, widgetPrefs.getInt("weeklyDone", 0))
-            val weeklyTarget = max(1, widgetPrefs.getInt("weeklyTarget", 4))
-            val started = workoutPrefs.getLong(WorkoutForegroundService.KEY_STARTED, 0L)
-            val paused = workoutPrefs.getBoolean(WorkoutForegroundService.KEY_PAUSED, false)
-            val now = System.currentTimeMillis()
-            val pausedMs = workoutPrefs.getLong(WorkoutForegroundService.KEY_PAUSED_TOTAL, 0L) +
-                if (paused) max(0L, now - workoutPrefs.getLong(WorkoutForegroundService.KEY_PAUSED_AT, now)) else 0L
-            val minutes = if (active && started > 0L) max(0L, (now - started - pausedMs) / 60_000L) else 0L
-            val progress = if (active && total > 0) (done * 100 / total).coerceIn(0, 100)
-                else (weeklyDone * 100 / weeklyTarget).coerceIn(0, 100)
-            views.setTextViewText(R.id.widgetTitle, if (combined) "Resumo do dia" else settings.mode.title)
-            views.setTextViewText(R.id.widgetStatusChip, if (training && active) (if (paused) "PAUSADO" else "EM TREINO") else LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM")))
-            views.setTextViewText(R.id.widgetWorkout, name)
-            views.setTextViewText(R.id.widgetSubtitle, if (active)
-                workoutPrefs.getString(WorkoutForegroundService.KEY_EXERCISE, "").orEmpty().ifBlank { "Sessão ativa" }
-                else "Próximo treino · meta semanal")
-            views.setProgressBar(R.id.widgetProgress, 100, progress, false)
-            views.setTextViewText(R.id.widgetStatLeftValue, if (active) "$done/$total" else "$weeklyDone/$weeklyTarget")
-            views.setTextViewText(R.id.widgetStatLeftLabel, if (active) "séries concluídas" else "treinos na semana")
-            views.setTextViewText(R.id.widgetStatRightValue, if (active) "${minutes}m" else widgetPrefs.getInt("streak", 0).toString())
-            views.setTextViewText(R.id.widgetStatRightLabel, if (active) "de treino" else "dias seguidos")
-            views.setTextViewText(R.id.widgetButton, if (active) "Abrir treino" else "Iniciar treino")
-            views.setTextViewText(R.id.widgetMealButton, "＋ Alimento")
-            views.setTextViewText(R.id.widgetTextMealButton, "✎ Por texto")
-            views.setTextViewText(R.id.widgetMovementButton, if (combined) "Movimento" else "Ver cardio e passos")
-
+            val summarySize = if (contentHeight < 60) 12f else 14f
             val today = LocalDate.now()
-            fun number(key: String, valid: Boolean = true): Float? {
-                val v = widgetPrefs.getFloat(key, -1f)
-                return if (valid && v.isFinite() && v >= 0) v else null
-            }
-            fun format(value: Float?) = value?.let { String.format(Locale.forLanguageTag("pt-BR"), "%.0f", it) } ?: "—"
-            val macroFormat = NumberFormat.getNumberInstance(Locale.forLanguageTag("pt-BR")).apply { maximumFractionDigits = 1 }
-            fun grams(value: Float?) = value?.let { macroFormat.format(it.toDouble()) } ?: "—"
-            val foodToday = widgetPrefs.getString("nutritionDate", "") == today.toString()
-            fun foodAmount(key: String) = number(key, foodToday)
-            val kcal = foodAmount("nutritionKcal")
-            val goal = number("nutritionGoalKcal") ?: 0f
-            val fraction = if (goal > 0 && kcal != null) kcal.toDouble() / goal else null
-            fun progressOf(value: Float?, target: Float) = if (value != null && target > 0)
-                (value.toDouble() / target * 1000).coerceIn(0.0, 1000.0).toInt() else 0
-            views.setTextViewText(R.id.widgetNutritionKcal, if (tight && goal > 0) "${format(kcal)} / ${format(goal)} kcal" else "${format(kcal)} kcal")
-            views.setTextViewText(R.id.widgetNutritionGoal, if (!foodToday) "Abra o app para atualizar" else if (goal > 0) "Meta ${format(goal)} kcal" else "Hoje · sem meta de kcal")
-            views.setTextViewText(R.id.widgetNutritionBalance, when {
-                kcal == null -> "Sem registros atualizados de hoje"
-                goal <= 0 -> "Defina suas metas no aplicativo"
-                kcal > goal -> "${format(kcal - goal)} kcal além da meta"
-                kcal < goal -> "Restam ${format(goal - kcal)} kcal da meta"
-                else -> "Meta de kcal alcançada"
-            })
-            views.setTextViewText(R.id.widgetNutritionPercent, fraction?.let { if (it >= 10) "999%+" else "${format((it * 100).toFloat())}%" } ?: "—")
-            views.setContentDescription(R.id.widgetNutritionRingBox, "Calorias registradas: ${format(kcal)} kcal. " + if (goal > 0) "Meta manual: ${format(goal)} kcal." else "Sem meta de calorias.")
-            if (ring) views.setImageViewBitmap(R.id.widgetNutritionRing, WidgetNutritionGraphics.ring(fraction))
-            visible(R.id.widgetNutritionProgress, food && !ring && !tight && fraction != null)
-            views.setProgressBar(R.id.widgetNutritionProgress, 1000, progressOf(kcal, goal), false)
-            fun macro(valueId: Int, labelId: Int, barId: Int, key: String, targetKey: String, short: String, name: String) {
-                val value = foodAmount(key); val target = number(targetKey) ?: 0f
-                views.setTextViewText(valueId, "$short ${grams(value)} g")
-                views.setTextViewText(labelId, if (goal > 0 || target > 0) "meta ${grams(target)} g" else "sem meta")
-                visible(labelId, !compact)
-                visible(barId, !tight && target > 0 && value != null)
-                views.setProgressBar(barId, 1000, progressOf(value, target), false)
-                views.setContentDescription(valueId, "$name: ${grams(value)} gramas registradas." + if (target > 0) " Meta manual: ${grams(target)} gramas." else " Sem referência positiva para progresso.")
-                views.setContentDescription(barId, "$name: ${grams(value)} de ${grams(target)} gramas. A barra vai até 100%; o valor não é limitado.")
-            }
-            macro(R.id.widgetNutritionProtein, R.id.widgetProteinGoal, R.id.widgetProteinProgress, "nutritionProtein", "nutritionGoalProtein", "P", "Proteína")
-            macro(R.id.widgetNutritionCarbs, R.id.widgetCarbsGoal, R.id.widgetCarbsProgress, "nutritionCarbs", "nutritionGoalCarbs", "C", "Carboidrato")
-            macro(R.id.widgetNutritionFat, R.id.widgetFatGoal, R.id.widgetFatProgress, "nutritionFat", "nutritionGoalFat", "G", "Gordura")
-
-            val zone = widgetPrefs.getString("movement.zoneId", "").orEmpty()
-            val sameZone = zone.isBlank() || zone == ZoneId.systemDefault().id
-            val sameDay = sameZone && widgetPrefs.getString("movement.date", "") == today.toString()
-            val monday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-            val sameWeek = sameZone && widgetPrefs.getString("movement.weekStart", "") == monday.toString()
-                && widgetPrefs.getString("movement.weekEnd", "") == monday.plusDays(6).toString()
-            val steps = number("movement.steps", sameDay); val stepGoal = number("movement.stepsGoal")
-            val cardioMinutes = number("movement.minutes", sameWeek); val sessions = number("movement.sessions", sameWeek)
-            views.setTextViewText(R.id.widgetSteps, if (stepGoal != null && stepGoal > 0) "${format(steps)} / ${format(stepGoal)} passos" else "${format(steps)} passos")
-            visible(R.id.widgetStepsProgress, !compact && stepGoal != null && stepGoal > 0 && steps != null)
-            views.setProgressBar(R.id.widgetStepsProgress, 100, if (stepGoal != null && stepGoal > 0 && steps != null) (steps * 100 / stepGoal).toInt().coerceIn(0, 100) else 0, false)
-            val partial = widgetPrefs.getBoolean("movement.partial", true)
-            views.setTextViewText(R.id.widgetMovementWeek, "${format(cardioMinutes)} min · ${format(sessions)} sessões na semana" + if (partial || !sameWeek) " · parcial" else "")
-            val minuteGoal = number("movement.minutesGoal"); val sessionGoal = number("movement.sessionsGoal")
-            views.setTextViewText(R.id.widgetMovementGoals, listOfNotNull(
-                minuteGoal?.takeIf { it > 0 }?.let { "Meta: ${format(it)} min" },
-                sessionGoal?.takeIf { it > 0 }?.let { "${format(it)} sessões" }).joinToString(" · "))
-            val stamp = DateTimeFormatter.ofPattern("dd/MM HH:mm", Locale.forLanguageTag("pt-BR"))
-            fun reading(key: String, valid: Boolean): String {
-                val time = widgetPrefs.getLong("movement.$key", 0L)
-                return if (valid && time > 0L) Instant.ofEpochMilli(time).atZone(ZoneId.systemDefault()).format(stamp) else "sem leitura"
-            }
-            val denied = listOf("stepsState", "cardioState").any { widgetPrefs.getString("movement.$it", "") == "denied" }
-            val stepsRead = "Salvos · passos ${reading("stepsReadAt", steps != null)}"
-            val readLabel = if (usableHeight < 220) stepsRead else stepsRead + "\nCardio ${reading("cardioReadAt", cardioMinutes != null)}"
-            views.setTextViewText(R.id.widgetMovementRead, readLabel + if (denied) " · confira permissões" else "")
-            fun open(tab: String) = Intent(context, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                putExtra("openTab", tab)
-            }
-            fun pending(kind: String, intent: Intent): PendingIntent {
-                intent.data = Uri.parse("treinoapp-widget://$id/$kind")
+            val locale = Locale.forLanguageTag("pt-BR")
+            val dateFormat = DateTimeFormatter.ofPattern("dd/MM", locale)
+            val whole = NumberFormat.getIntegerInstance(locale)
+            val precise = NumberFormat.getNumberInstance(locale).apply { maximumFractionDigits = 1 }
+            fun count(value: Number?) = value?.let { whole.format(it) } ?: "—"
+            fun grams(value: Float?) = value?.let { precise.format(it.toDouble()) } ?: "—"
+            fun number(key: String) = prefs.getFloat(key, -1f).takeIf { it.isFinite() && it >= 0f }
+            fun progress(value: Float?, target: Float?, maximum: Int) =
+                if (value != null && target != null && target > 0) (value.toDouble() / target * maximum).coerceIn(0.0, maximum.toDouble()).toInt() else 0
+            fun visible(view: Int, show: Boolean) = views.setViewVisibility(view, if (show) View.VISIBLE else View.GONE)
+            fun text(view: Int, value: CharSequence) = views.setTextViewText(view, value)
+            fun size(view: Int, sp: Float) = views.setTextViewTextSize(view, TypedValue.COMPLEX_UNIT_SP, sp)
+            fun pending(kind: String, tab: String, extra: String? = null): PendingIntent {
+                val intent = Intent(context, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    data = Uri.parse("treinoapp-widget://$id/$kind")
+                    putExtra("openTab", tab)
+                    if (extra != null) putExtra(extra, true)
+                }
                 return PendingIntent.getActivity(context, id, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
             }
-            views.setOnClickPendingIntent(R.id.widgetButton, pending("train", open("treinar").apply { if (!active) putExtra("startNextWorkout", true) }))
-            views.setOnClickPendingIntent(R.id.widgetMealButton, pending("meal", open("nutricao").apply { putExtra("addMeal", true) }))
-            views.setOnClickPendingIntent(R.id.widgetTextMealButton, pending("meal-text", open("nutricao").apply { putExtra("addMealText", true) }))
-            val move = open("progresso").apply { putExtra("openActivity", true) }
-            views.setOnClickPendingIntent(R.id.widgetMovementButton, pending("movement", move))
-            val tab = when (settings.mode) { WidgetMode.NUTRITION -> "nutricao"; WidgetMode.WORKOUT -> "treinar"; WidgetMode.MOVEMENT -> "progresso"; else -> "dashboard" }
-            views.setOnClickPendingIntent(R.id.widgetRoot, pending("open", open(tab).apply { if (settings.mode == WidgetMode.MOVEMENT) putExtra("openActivity", true) }))
-            views.setOnClickPendingIntent(R.id.widgetConfigure, pending("configure",
-                Intent(context, WidgetConfigActivity::class.java).putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id)))
+            val openDiary = pending("diary", "nutricao", "openFoodToday")
+            val openText = pending("meal-text", "nutricao", "addMealText")
+            val openMovement = pending("movement", "progresso", "openActivity")
+            val openTraining = pending("train-list", "treinar")
+
+            val now = System.currentTimeMillis()
+            val active = workout.getBoolean(WorkoutForegroundService.KEY_ACTIVE, false)
+            val paused = active && workout.getBoolean(WorkoutForegroundService.KEY_PAUSED, false)
+            val draft = prefs.getString("workoutDraftName", "").orEmpty()
+                .takeIf { prefs.getLong("workoutDraftUntil", 0L) > now }.orEmpty()
+            val suggested = prefs.getString("nextWorkout", "").orEmpty()
+            val canStartSuggested = prefs.getBoolean("hasWorkoutSuggestion", suggested.isNotBlank() && suggested != "Treino")
+            val continuing = active || draft.isNotBlank()
+            val workoutName = when {
+                active -> workout.getString(WorkoutForegroundService.KEY_NAME, "").orEmpty().ifBlank { "Treino em andamento" }
+                draft.isNotBlank() -> draft
+                canStartSuggested -> suggested
+                else -> "Treino em branco"
+            }
+            val done = workout.getInt(WorkoutForegroundService.KEY_DONE, 0).coerceAtLeast(0)
+            val total = workout.getInt(WorkoutForegroundService.KEY_TOTAL, 0).coerceAtLeast(0)
+            val weeklyDone = prefs.getInt("weeklyDone", 0).coerceAtLeast(0)
+            val weeklyTarget = prefs.getInt("weeklyTarget", 4).coerceAtLeast(1)
+            val start = workout.getLong(WorkoutForegroundService.KEY_STARTED, 0L)
+            val pauseStart = workout.getLong(WorkoutForegroundService.KEY_PAUSED_AT, now)
+            val pausedMs = workout.getLong(WorkoutForegroundService.KEY_PAUSED_TOTAL, 0L) + if (paused) max(0L, now - pauseStart) else 0L
+            val minutes = if (active && start > 0L) (now - start - pausedMs).coerceAtLeast(0L) / 60_000L else 0L
+            val exercise = workout.getString(WorkoutForegroundService.KEY_EXERCISE, "").orEmpty()
+            val trainingAction = when {
+                continuing -> "Continuar treino"
+                canStartSuggested -> "Iniciar treino"
+                else -> "Treino em branco"
+            }
+            val goTraining = pending("workout", "treinar", when {
+                continuing -> "resumeWorkout"
+                canStartSuggested -> "startNextWorkout"
+                else -> "startBlankWorkout"
+            })
+
+            val savedDay = prefs.getString("nutritionDate", "").orEmpty()
+            val foodToday = savedDay == today.toString()
+            val goalToday = prefs.getString("nutritionGoalDate", savedDay) == today.toString()
+            val kcal = number("nutritionKcal").takeIf { foodToday }
+            val goal = number("nutritionGoalKcal").takeIf { goalToday && it != null && it > 0 }
+            val profile = when (prefs.getString("nutritionProfile", "")) {
+                "training" -> "Meta de treino"
+                "rest" -> "Meta de descanso"
+                else -> "Meta padrão"
+            }
+            val staleFood = when (savedDay) {
+                "" -> "Abra o app para atualizar"
+                today.minusDays(1).toString() -> "Dados de ontem"
+                else -> runCatching { "Dados de ${LocalDate.parse(savedDay).format(dateFormat)}" }.getOrDefault("Abra o app para atualizar")
+            }
+            val ring = food && large && !narrow && kcal != null && goal != null
+            val energy = when {
+                kcal == null -> "— kcal"
+                goal != null && !ring -> "${count(kcal)} / ${count(goal)} kcal"
+                else -> "${count(kcal)} kcal"
+            }
+            val balance = when {
+                kcal == null -> staleFood
+                !goalToday -> "Abra o app para atualizar a meta"
+                goal == null -> "Sem meta definida"
+                kcal > goal -> "${count(kcal - goal)} kcal acima da meta"
+                kcal < goal -> "Restam ${count(goal - kcal)} kcal"
+                else -> "Meta de calorias atingida"
+            }
+            val todayString = today.toString()
+            val dateLabel = today.format(dateFormat)
+            text(R.id.widgetTitle, if (combined) "Resumo do dia" else settings.mode.title)
+            visible(R.id.widgetStatusChip, !narrow)
+            text(R.id.widgetStatusChip, if (training && active) if (paused) "Pausado" else "Em treino" else dateLabel)
+            visible(R.id.widgetNutritionSection, food || combined)
+            visible(R.id.widgetTrainingSection, training || combined)
+            visible(R.id.widgetMovementSection, movement || combined)
+            visible(R.id.widgetFoodActions, food)
+            visible(R.id.widgetTextMealButton, food)
+            visible(R.id.widgetMealButton, food && medium)
+            visible(R.id.widgetReadyActions, food && large)
+            visible(R.id.widgetOtherActions, training || movement)
+            visible(R.id.widgetButton, training)
+            visible(R.id.widgetBlankButton, training && !continuing && canStartSuggested)
+            visible(R.id.widgetMovementButton, movement)
+            visible(R.id.widgetCombinedActions, combined)
+
+            if (food || combined) {
+                val compactNote = when {
+                    kcal == null -> staleFood
+                    else -> "${count(kcal)} kcal"
+                }
+                text(R.id.widgetNutritionKcal, if (combined) "Alimentação · $compactNote" else energy)
+                if (combined) size(R.id.widgetNutritionKcal, summarySize)
+                else if (narrow || contentHeight < 52) size(R.id.widgetNutritionKcal, 18f)
+                else if (!medium) size(R.id.widgetNutritionKcal, 22f)
+                text(R.id.widgetNutritionBalance, balance)
+                if (contentHeight < 52) size(R.id.widgetNutritionBalance, 10f)
+                text(R.id.widgetNutritionGoal, if (ring) "$profile · ${count(goal)} kcal" else profile)
+                visible(R.id.widgetNutritionBalance, food)
+                visible(R.id.widgetNutritionGoal, food && medium && goal != null)
+                visible(R.id.widgetNutritionProgress, food && medium && !ring && kcal != null && goal != null)
+                views.setProgressBar(R.id.widgetNutritionProgress, 1000, progress(kcal, goal, 1000), false)
+                visible(R.id.widgetNutritionRingBox, ring)
+                if (ring && kcal != null && goal != null) {
+                    val fraction = kcal.toDouble() / goal
+                    text(R.id.widgetNutritionPercent, if (fraction >= 10) "999%+" else "${count(fraction * 100)}%")
+                    views.setContentDescription(R.id.widgetNutritionRingBox, "${count(kcal)} de ${count(goal)} quilocalorias")
+                    views.setImageViewBitmap(R.id.widgetNutritionRing, WidgetNutritionGraphics.ring(fraction))
+                }
+                val showMacros = food && medium && settings.showMacros && foodToday
+                visible(R.id.widgetMacros, showMacros)
+                if (showMacros) {
+                    fun showMacro(valueId: Int, labelId: Int, barId: Int, key: String, targetKey: String, label: String, short: String) {
+                        val value = number(key)
+                        val target = number(targetKey).takeIf { goalToday && it != null && it > 0 }
+                        text(labelId, if (narrow) short else label)
+                        text(valueId, if (target == null) "${grams(value)} g" else "${grams(value)} / ${grams(target)} g")
+                        if (narrow) size(valueId, 10f)
+                        views.setContentDescription(valueId, if (target == null) "$label: ${grams(value)} gramas" else "$label: ${grams(value)} de ${grams(target)} gramas")
+                        visible(barId, value != null && target != null)
+                        views.setProgressBar(barId, 1000, progress(value, target, 1000), false)
+                    }
+                    showMacro(R.id.widgetNutritionProtein, R.id.widgetProteinGoal, R.id.widgetProteinProgress, "nutritionProtein", "nutritionGoalProtein", "Proteína", "Prot")
+                    showMacro(R.id.widgetNutritionCarbs, R.id.widgetCarbsGoal, R.id.widgetCarbsProgress, "nutritionCarbs", "nutritionGoalCarbs", "Carboidratos", "Carb")
+                    showMacro(R.id.widgetNutritionFat, R.id.widgetFatGoal, R.id.widgetFatProgress, "nutritionFat", "nutritionGoalFat", "Gorduras", "Gord")
+                }
+            }
+            if (training || combined) {
+                val title = if (active && exercise.isNotBlank() && !combined) exercise else workoutName
+                val detail = when {
+                    active -> listOfNotNull(if (paused) "Pausado" else null, if (total > 0) "$done/$total séries" else "Adicione exercícios",
+                        if (!narrow && medium) "${minutes} min" else null).joinToString(" · ")
+                    draft.isNotBlank() -> "Sessão guardada"
+                    canStartSuggested -> "Próximo treino · $weeklyDone/$weeklyTarget na semana"
+                    else -> "Adicione os exercícios na sessão"
+                }
+                text(R.id.widgetWorkout, if (combined) "Treino · $title" else title)
+                size(R.id.widgetWorkout, if (combined) summarySize else if (medium && !narrow) 24f else 18f)
+                if (contentHeight < 54) size(R.id.widgetSubtitle, 10f)
+                text(R.id.widgetSubtitle, detail)
+                visible(R.id.widgetSubtitle, training)
+                val showProgress = training && medium && (!active || total > 0)
+                visible(R.id.widgetProgress, showProgress)
+                if (showProgress) {
+                    val value = if (active) done else weeklyDone
+                    val target = if (active) total else weeklyTarget
+                    views.setProgressBar(R.id.widgetProgress, 100, progress(value.toFloat(), target.toFloat(), 100), false)
+                }
+                visible(R.id.widgetTrainingStats, training && large)
+                text(R.id.widgetStatLeftValue, if (active && total > 0) "$done/$total" else "$weeklyDone/$weeklyTarget")
+                text(R.id.widgetStatLeftLabel, if (active && total > 0) "séries concluídas" else "treinos na semana")
+                text(R.id.widgetStatRightValue, if (active) "$minutes min" else count(prefs.getInt("streak", 0)))
+                text(R.id.widgetStatRightLabel, if (active) "duração da sessão" else "dias seguidos")
+            }
+            if (movement || combined) {
+                val zone = prefs.getString("movement.zoneId", "").orEmpty()
+                val sameZone = zone.isBlank() || zone == ZoneId.systemDefault().id
+                val sameDay = sameZone && prefs.getString("movement.date", "") == todayString
+                val monday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+                val sameWeek = sameZone && prefs.getString("movement.weekStart", "") == monday.toString() &&
+                    prefs.getString("movement.weekEnd", "") == monday.plusDays(6).toString()
+                val steps = number("movement.steps").takeIf { sameDay }
+                val stepGoal = number("movement.stepsGoal").takeIf { it != null && it > 0 }
+                val cardio = number("movement.minutes").takeIf { sameWeek }
+                val sessions = number("movement.sessions").takeIf { sameWeek }
+                val partial = prefs.getBoolean("movement.partial", true)
+                val noPermission = listOf("stepsState", "cardioState").any { prefs.getString("movement.$it", "") == "denied" }
+                val stepsLabel = when {
+                    steps == null -> "Passos · sem leitura"
+                    movement && medium && stepGoal != null -> "${count(steps)} / ${count(stepGoal)} passos"
+                    else -> "${count(steps)} passos"
+                }
+                text(R.id.widgetSteps, stepsLabel)
+                size(R.id.widgetSteps, if (combined) summarySize else if (medium && !narrow) 25f else 18f)
+                visible(R.id.widgetStepsProgress, movement && medium && steps != null && stepGoal != null)
+                views.setProgressBar(R.id.widgetStepsProgress, 100, progress(steps, stepGoal, 100), false)
+                val weekly = if (cardio == null && sessions == null) "Cardio da semana · sem leitura"
+                    else "${count(cardio)} min · ${count(sessions)} sessões" + if (partial) " · parcial" else ""
+                text(R.id.widgetMovementWeek, weekly)
+                if (contentHeight < 54) size(R.id.widgetMovementWeek, 10f)
+                visible(R.id.widgetMovementWeek, movement)
+                val stamp = DateTimeFormatter.ofPattern(if (narrow) "dd/MM HH:mm" else "dd/MM 'às' HH:mm", locale)
+                val recent = listOf("stepsReadAt", "cardioReadAt").map { prefs.getLong("movement.$it", 0L) }.filter { it in 1..now }.maxOrNull()
+                val read = when {
+                    noPermission -> "Health Connect · revise permissões"
+                    recent == null -> "Health Connect · aguardando leitura"
+                    else -> "Leitura ${Instant.ofEpochMilli(recent).atZone(ZoneId.systemDefault()).format(stamp)}"
+                }
+                text(R.id.widgetMovementRead, read)
+                visible(R.id.widgetMovementRead, movement && contentHeight >= 65)
+                val goals = listOfNotNull(
+                    stepGoal?.let { "${count(it)} passos/dia" },
+                    number("movement.minutesGoal")?.takeIf { it > 0 }?.let { "${count(it)} min/semana" },
+                )
+                text(R.id.widgetMovementGoals, goals.joinToString(" · "))
+                visible(R.id.widgetMovementGoals, movement && large && goals.isNotEmpty())
+            }
+
+            val compactText = if (food && medium && narrow) "Por texto" else "Refeição por texto"
+            text(R.id.widgetTextMealButton, compactText)
+            text(R.id.widgetButton, trainingAction)
+            text(R.id.widgetMovementButton, "Ver cardio e passos")
+            views.setOnClickPendingIntent(R.id.widgetTextMealButton, openText)
+            views.setOnClickPendingIntent(R.id.widgetMealButton, pending("meal", "nutricao", "addMeal"))
+            views.setOnClickPendingIntent(R.id.widgetReadyMealButton, pending("ready-meal", "nutricao", "openReadyMeals"))
+            views.setOnClickPendingIntent(R.id.widgetButton, goTraining)
+            views.setOnClickPendingIntent(R.id.widgetBlankButton, pending("blank-workout", "treinar", "startBlankWorkout"))
+            views.setOnClickPendingIntent(R.id.widgetMovementButton, openMovement)
+            if (combined) {
+                val (label, action) = when (settings.primaryAction) {
+                    WidgetAction.TEXT_MEAL -> "Refeição por texto" to openText
+                    WidgetAction.WORKOUT -> trainingAction to goTraining
+                    WidgetAction.MOVEMENT -> "Ver cardio e passos" to openMovement
+                }
+                text(R.id.widgetCombinedButton, label)
+                views.setOnClickPendingIntent(R.id.widgetCombinedButton, action)
+                views.setOnClickPendingIntent(R.id.widgetNutritionSection, openDiary)
+                views.setOnClickPendingIntent(R.id.widgetTrainingSection, if (continuing) goTraining else openTraining)
+                views.setOnClickPendingIntent(R.id.widgetMovementSection, openMovement)
+            }
+            views.setOnClickPendingIntent(R.id.widgetRoot, when (settings.mode) {
+                WidgetMode.COMBINED -> pending("dashboard", "dashboard")
+                WidgetMode.NUTRITION -> openDiary
+                WidgetMode.WORKOUT -> openTraining
+                WidgetMode.MOVEMENT -> openMovement
+            })
+            val config = Intent(context, WidgetConfigActivity::class.java)
+                .setData(Uri.parse("treinoapp-widget://$id/configure"))
+                .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id)
+            views.setOnClickPendingIntent(R.id.widgetConfigure,
+                PendingIntent.getActivity(context, id, config, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
             return views
         }
     }

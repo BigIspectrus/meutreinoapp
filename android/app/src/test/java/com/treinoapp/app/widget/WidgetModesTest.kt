@@ -36,8 +36,9 @@ class WidgetModesTest {
         for (name in listOf("treino_widget_state", "treino_widget_configuration", WorkoutForegroundService.PREFS))
             context.getSharedPreferences(name, Context.MODE_PRIVATE).edit().clear().commit()
     }
-    private fun build(mode: WidgetMode, id: Int = 1, height: Int = 400, macros: Boolean = true, compact: Boolean = false): View =
-        TreinoAppWidgetProvider.buildViewsForSize(context, id, WidgetOptions(mode, compact, macros), height).apply(context, null)
+    private fun build(mode: WidgetMode, id: Int = 1, height: Int = 400, macros: Boolean = true,
+        compact: Boolean = false, width: Int = 275, action: WidgetAction = WidgetAction.TEXT_MEAL): View =
+        TreinoAppWidgetProvider.buildViewsForSize(context, id, WidgetOptions(mode, compact, macros, action), height, width).apply(context, null)
     private fun text(view: View, id: Int) = view.findViewById<TextView>(id).text.toString()
     private fun visible(view: View, id: Int) = view.findViewById<View>(id).visibility == View.VISIBLE
     private fun movement(date: LocalDate = LocalDate.now(), steps: Any? = 3400, sessions: Any? = 2): JSONObject {
@@ -81,8 +82,10 @@ class WidgetModesTest {
             sections.forEachIndexed { i, section -> assertEquals(i == index, visible(view, section)) }
             buttons.forEachIndexed { i, button -> assertEquals(i == index, visible(view, button)) }
         }
-        val combined = build(WidgetMode.COMBINED, height = 460)
-        (sections + buttons).forEach { assertTrue(visible(combined, it)) }
+        val combined = build(WidgetMode.COMBINED, height = 184)
+        sections.forEach { assertTrue(visible(combined, it)) }
+        buttons.forEach { assertFalse(visible(combined, it)) }
+        assertTrue(visible(combined, R.id.widgetCombinedButton))
     }
 
     @Test fun compactAndMacrosChoicesRemainPerInstance() {
@@ -92,34 +95,42 @@ class WidgetModesTest {
         assertTrue(visible(build(WidgetMode.NUTRITION), R.id.widgetMacros))
         val training = build(WidgetMode.WORKOUT, compact = true)
         assertFalse(visible(training, R.id.widgetTrainingStats)); assertTrue(visible(training, R.id.widgetButton))
-        val small = build(WidgetMode.COMBINED, height = 180)
-        assertFalse(visible(small, R.id.widgetTrainingSection)); assertFalse(visible(small, R.id.widgetMovementSection))
-        assertTrue(visible(small, R.id.widgetNutritionSection)); assertTrue(visible(small, R.id.widgetMovementButton))
+        val small = build(WidgetMode.NUTRITION, height = 156, width = 170)
+        assertFalse(visible(small, R.id.widgetMacros)); assertFalse(visible(small, R.id.widgetMealButton))
+        assertTrue(visible(small, R.id.widgetTextMealButton))
+        assertTrue(visible(food, R.id.widgetReadyActions))
     }
 
     @Test fun absentIsNotZeroAndRealZeroIsShown() {
         save(movement(steps = null, sessions = null))
         var view = build(WidgetMode.MOVEMENT)
-        assertEquals("— / 8000 passos", text(view, R.id.widgetSteps))
-        assertTrue(text(view, R.id.widgetMovementWeek).startsWith("— min · — sessões"))
+        assertEquals("Passos · sem leitura", text(view, R.id.widgetSteps))
+        assertEquals("Cardio da semana · sem leitura", text(view, R.id.widgetMovementWeek))
         save(movement(steps = 0, sessions = 0).put("minutes", 0))
         view = build(WidgetMode.MOVEMENT)
-        assertEquals("0 / 8000 passos", text(view, R.id.widgetSteps))
+        assertEquals("0 / 8.000 passos", text(view, R.id.widgetSteps))
         assertTrue(text(view, R.id.widgetMovementWeek).startsWith("0 min · 0 sessões"))
     }
 
     @Test @GraphicsMode(GraphicsMode.Mode.NATIVE) fun minimumSizesKeepContentAboveTheShortcutRow() {
         save()
         val density = context.resources.displayMetrics.density
-        val cases = listOf(WidgetMode.NUTRITION to 180, WidgetMode.WORKOUT to 180, WidgetMode.MOVEMENT to 180,
-            WidgetMode.COMBINED to 180, WidgetMode.COMBINED to 280, WidgetMode.COMBINED to 380, WidgetMode.COMBINED to 460)
+        val cases = WidgetMode.entries.flatMap { mode ->
+            listOf(170 to (if (mode == WidgetMode.COMBINED) 184 else 156), 225 to 240, 275 to 320)
+                .map { (width, height) -> Triple(mode, width, height) }
+        }
         val failures = mutableListOf<String>()
-        for ((mode, height) in cases) {
-            val view = build(mode, height = height)
-            val widthPx = (250 * density).toInt(); val heightPx = (height * density).toInt()
+        for ((mode, width, height) in cases) {
+            val view = build(mode, height = height, width = width)
+            val widthPx = (width * density).toInt(); val heightPx = (height * density).toInt()
             view.measure(View.MeasureSpec.makeMeasureSpec(widthPx, View.MeasureSpec.EXACTLY), View.MeasureSpec.makeMeasureSpec(heightPx, View.MeasureSpec.EXACTLY))
             view.layout(0, 0, widthPx, heightPx)
-            val action = listOf(R.id.widgetButton, R.id.widgetMealButton, R.id.widgetMovementButton).map { view.findViewById<View>(it) }.first { it.visibility == View.VISIBLE }
+            val action = view.findViewById<View>(when (mode) {
+                WidgetMode.NUTRITION -> R.id.widgetTextMealButton
+                WidgetMode.WORKOUT -> R.id.widgetButton
+                WidgetMode.MOVEMENT -> R.id.widgetMovementButton
+                WidgetMode.COMBINED -> R.id.widgetCombinedButton
+            })
             val row = action.parent as View
             println("$mode $height: density=$density scaledDensity=${context.resources.displayMetrics.scaledDensity} fontScale=${context.resources.configuration.fontScale} heightPx=$heightPx action=${row.top}..${row.bottom}")
             if (row.bottom > heightPx) failures += "$mode $height: ação fora do widget (${row.bottom} > $heightPx)"
@@ -163,19 +174,18 @@ class WidgetModesTest {
 
     @Test fun dayWeekAndZoneChangesDoNotRelabelOldValues() {
         save(movement(LocalDate.now().minusDays(1)))
-        assertEquals("— / 8000 passos", text(build(WidgetMode.MOVEMENT), R.id.widgetSteps))
+        assertEquals("Passos · sem leitura", text(build(WidgetMode.MOVEMENT), R.id.widgetSteps))
         save(movement(LocalDate.now().minusWeeks(1)))
-        assertTrue(text(build(WidgetMode.MOVEMENT), R.id.widgetMovementWeek).startsWith("— min · — sessões"))
+        assertEquals("Cardio da semana · sem leitura", text(build(WidgetMode.MOVEMENT), R.id.widgetMovementWeek))
         save(movement().put("zoneId", "different-zone"))
-        assertEquals("— / 8000 passos", text(build(WidgetMode.MOVEMENT), R.id.widgetSteps))
+        assertEquals("Passos · sem leitura", text(build(WidgetMode.MOVEMENT), R.id.widgetSteps))
     }
 
     @Test fun cachedPermissionDeniedAndPartialAreIdentified() {
         save(movement().put("partial", true).put("stepsState", "denied"))
         val view = build(WidgetMode.MOVEMENT)
-        assertEquals("3400 / 8000 passos", text(view, R.id.widgetSteps))
+        assertEquals("3.400 / 8.000 passos", text(view, R.id.widgetSteps))
         assertTrue(text(view, R.id.widgetMovementWeek).endsWith("parcial"))
-        assertTrue(text(view, R.id.widgetMovementRead).contains("Salvos"))
         assertTrue(text(view, R.id.widgetMovementRead).contains("permissões"))
     }
 
@@ -196,11 +206,27 @@ class WidgetModesTest {
 
     @Test fun restoringLauncherIdsMigratesOnlyConfiguration() {
         save()
-        WidgetConfiguration.save(context, 10, WidgetOptions(WidgetMode.NUTRITION, true, false))
+        WidgetConfiguration.save(context, 10, WidgetOptions(WidgetMode.COMBINED, true, false, WidgetAction.MOVEMENT))
         TreinoAppWidgetProvider().onRestored(context, intArrayOf(10), intArrayOf(20))
-        assertEquals(WidgetOptions(WidgetMode.NUTRITION, true, false), WidgetConfiguration.load(context, 20))
+        assertEquals(WidgetOptions(WidgetMode.COMBINED, true, false, WidgetAction.MOVEMENT), WidgetConfiguration.load(context, 20))
         assertEquals(WidgetMode.COMBINED, WidgetConfiguration.load(context, 10).mode)
         assertEquals(400f, context.getSharedPreferences("treino_widget_state", Context.MODE_PRIVATE).getFloat("nutritionKcal", 0f), 0f)
+    }
+
+    @Test fun textMealReadyMealAndBlankWorkoutOpenDistinctActions() {
+        save()
+        val shadow = shadowOf(RuntimeEnvironment.getApplication())
+        val food = build(WidgetMode.NUTRITION)
+        assertTrue(food.findViewById<View>(R.id.widgetTextMealButton).performClick())
+        assertTrue(shadow.nextStartedActivity.getBooleanExtra("addMealText", false))
+        assertTrue(food.findViewById<View>(R.id.widgetReadyMealButton).performClick())
+        assertTrue(shadow.nextStartedActivity.getBooleanExtra("openReadyMeals", false))
+        val training = build(WidgetMode.WORKOUT)
+        assertTrue(training.findViewById<View>(R.id.widgetBlankButton).performClick())
+        assertTrue(shadow.nextStartedActivity.getBooleanExtra("startBlankWorkout", false))
+        val combined = build(WidgetMode.COMBINED, action = WidgetAction.MOVEMENT)
+        assertTrue(combined.findViewById<View>(R.id.widgetCombinedButton).performClick())
+        assertTrue(shadow.nextStartedActivity.getBooleanExtra("openActivity", false))
     }
 
     @Test fun pausedWorkoutTimeAndOpeningItKeepTheSession() {
@@ -212,10 +238,11 @@ class WidgetModesTest {
             .putBoolean(WorkoutForegroundService.KEY_PAUSED, true).putLong(WorkoutForegroundService.KEY_PAUSED_AT, now - 5 * 60_000L)
             .putLong(WorkoutForegroundService.KEY_PAUSED_TOTAL, 5 * 60_000L).commit()
         val view = build(WidgetMode.WORKOUT)
-        assertEquals("PAUSADO", text(view, R.id.widgetStatusChip)); assertEquals("10m", text(view, R.id.widgetStatRightValue))
+        assertEquals("Pausado", text(view, R.id.widgetStatusChip)); assertEquals("10 min", text(view, R.id.widgetStatRightValue))
         assertTrue(view.findViewById<View>(R.id.widgetButton).performClick())
         val intent = shadowOf(RuntimeEnvironment.getApplication()).nextStartedActivity
         assertEquals("treinar", intent.getStringExtra("openTab")); assertFalse(intent.getBooleanExtra("startNextWorkout", false))
+        assertTrue(intent.getBooleanExtra("resumeWorkout", false))
         assertTrue(prefs.getBoolean(WorkoutForegroundService.KEY_ACTIVE, false)); assertTrue(prefs.getBoolean(WorkoutForegroundService.KEY_PAUSED, false))
     }
 

@@ -327,6 +327,10 @@ class TreinoNativePlugin : Plugin() {
             goalProtein = (call.getDouble("goalProtein", 0.0) ?: 0.0).coerceAtLeast(0.0).toFloat(),
             goalCarbs = (call.getDouble("goalCarbs", 0.0) ?: 0.0).coerceAtLeast(0.0).toFloat(),
             goalFat = (call.getDouble("goalFat", 0.0) ?: 0.0).coerceAtLeast(0.0).toFloat(),
+            nutritionProfile = call.getString("nutritionProfile", "") ?: "",
+            hasWorkoutSuggestion = call.getBoolean("hasWorkoutSuggestion", false) == true,
+            workoutDraftName = call.getString("workoutDraftName", "") ?: "",
+            workoutDraftUntil = call.getLong("workoutDraftUntil", 0L) ?: 0L,
         )
         call.resolve()
     }

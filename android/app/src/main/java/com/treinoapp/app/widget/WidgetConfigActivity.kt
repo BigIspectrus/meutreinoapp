@@ -37,7 +37,10 @@ class WidgetConfigActivity : AppCompatActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         if (widgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
             if (!validId(widgetId)) { finish(); return }
-            selected = savedInstanceState?.let { WidgetOptions(WidgetMode.fromKey(it.getString("mode")), it.getBoolean("compact"), it.getBoolean("macros", true)) }
+            selected = savedInstanceState?.let {
+                WidgetOptions(WidgetMode.fromKey(it.getString("mode")), it.getBoolean("compact"), it.getBoolean("macros", true),
+                    WidgetAction.fromKey(it.getString("action")))
+            }
                 ?: optionsFor(widgetId)
             showConfiguration()
         } else showManager()
@@ -46,6 +49,7 @@ class WidgetConfigActivity : AppCompatActivity() {
     override fun onSaveInstanceState(out: Bundle) {
         out.putInt("widgetId", widgetId); out.putBoolean("managing", managing)
         out.putString("mode", selected.mode.key); out.putBoolean("compact", selected.compact); out.putBoolean("macros", selected.showMacros)
+        out.putString("action", selected.primaryAction.key)
         super.onSaveInstanceState(out)
     }
 
@@ -135,22 +139,42 @@ class WidgetConfigActivity : AppCompatActivity() {
         content.addView(group)
         val preview = label("", 15, "#DCE8FF").apply { setPadding(dp(14), dp(14), dp(14), dp(14)); setBackgroundResource(R.drawable.widget_stat_background) }
         val compact = Switch(this).apply { text = "Sempre compacto"; isChecked = selected.compact; setTextColor(Color.WHITE); minHeight = dp(56) }
-        val macros = Switch(this).apply { text = "Mostrar proteínas, carboidratos e gorduras"; isChecked = selected.showMacros; setTextColor(Color.WHITE); minHeight = dp(56) }
+        val macros = Switch(this).apply { text = "Mostrar macros"; isChecked = selected.showMacros; setTextColor(Color.WHITE); minHeight = dp(56) }
         content.addView(compact); content.addView(macros)
+        val actionLabel = label("Botão principal do Combinado", 14, "#DCE8FF")
+        val actions = RadioGroup(this)
+        val actionIds = mutableMapOf<Int, WidgetAction>()
+        for (action in WidgetAction.entries) {
+            val button = RadioButton(this).apply {
+                id = View.generateViewId(); text = action.title; textSize = 15f
+                setTextColor(Color.WHITE); minHeight = dp(48)
+            }
+            actionIds[button.id] = action
+            actions.addView(button)
+            if (action == selected.primaryAction) actions.check(button.id)
+        }
+        content.addView(actions)
         fun updatePreview() {
-            macros.visibility = if (selected.mode in setOf(WidgetMode.COMBINED, WidgetMode.NUTRITION)) View.VISIBLE else View.GONE
+            macros.visibility = if (selected.mode == WidgetMode.NUTRITION) View.VISIBLE else View.GONE
+            compact.visibility = if (selected.mode == WidgetMode.COMBINED) View.GONE else View.VISIBLE
+            actionLabel.visibility = if (selected.mode == WidgetMode.COMBINED) View.VISIBLE else View.GONE
+            actions.visibility = actionLabel.visibility
             preview.text = when (selected.mode) {
-                WidgetMode.NUTRITION -> "Anel de kcal do dia${if (selected.showMacros) " + barras de macros" else ""}\nMetas manuais e atalhos: alimento ou refeição por texto"
-                WidgetMode.WORKOUT -> "Próximo treino ou sessão ativa\nAtalho para iniciar ou retomar o treino"
-                WidgetMode.MOVEMENT -> "Passos de hoje e cardio da semana\nMetas manuais e horário das leituras salvas"
-                WidgetMode.COMBINED -> "Treino, alimentação e movimento\nKcal/macros visuais e atalho para refeição por texto\nAmplie o widget para revelar todos os painéis"
+                WidgetMode.NUTRITION -> "Calorias de hoje e atalho por texto" +
+                    if (selected.compact) "" else "\nAmplie para ver ${if (selected.showMacros) "macros, " else ""}o anel e as refeições prontas"
+                WidgetMode.WORKOUT -> "Próximo treino ou exercício atual\nIniciar, continuar ou treinar em branco"
+                WidgetMode.MOVEMENT -> "Passos de hoje e cardio da semana\nHorário da leitura quando houver espaço"
+                WidgetMode.COMBINED -> "Toque em uma linha para abrir a área\nBotão principal: ${selected.primaryAction.title}"
             }
         }
         group.setOnCheckedChangeListener { _, checked -> choices[checked]?.let { selected = selected.copy(mode = it); updatePreview() } }
-        compact.setOnCheckedChangeListener { _, checked -> selected = selected.copy(compact = checked) }
+        compact.setOnCheckedChangeListener { _, checked -> selected = selected.copy(compact = checked); updatePreview() }
         macros.setOnCheckedChangeListener { _, checked -> selected = selected.copy(showMacros = checked); updatePreview() }
+        actions.setOnCheckedChangeListener { _, checked ->
+            actionIds[checked]?.let { selected = selected.copy(primaryAction = it); updatePreview() }
+        }
         updatePreview()
-        label("O modo automático adapta os detalhes ao tamanho e à fonte do Android. Para ver o anel de kcal, amplie o widget e desative “Sempre compacto”. As barras só comparam com suas metas positivas, sem criar metas automaticamente. Toque em ⋮ para editar novamente.")
+        label("Arraste as bordas na tela inicial para ajustar o tamanho. Use ⋮ no widget para trocar suas opções.")
         button("Salvar widget") {
             if (!validId(widgetId)) { Toast.makeText(this, "Este widget foi removido. Adicione outro na tela inicial.", Toast.LENGTH_LONG).show(); finish(); return@button }
             if (!WidgetConfiguration.save(this, widgetId, selected)) { Toast.makeText(this, "Não foi possível salvar. Tente novamente.", Toast.LENGTH_LONG).show(); return@button }

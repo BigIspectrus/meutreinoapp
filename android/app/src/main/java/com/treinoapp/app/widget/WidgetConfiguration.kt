@@ -9,7 +9,22 @@ enum class WidgetMode(val key: String, val title: String) {
     WORKOUT("workout", "Treino"), MOVEMENT("movement", "Movimento");
     companion object { fun fromKey(key: String?) = entries.firstOrNull { it.key == key } ?: COMBINED }
 }
-data class WidgetOptions(val mode: WidgetMode, val compact: Boolean = false, val showMacros: Boolean = true)
+enum class WidgetAction(val key: String, val title: String) {
+    TEXT_MEAL("text_meal", "Refeição por texto"),
+    WORKOUT("workout", "Iniciar ou continuar treino"),
+    MOVEMENT("movement", "Ver cardio e passos");
+
+    companion object {
+        fun fromKey(key: String?) = entries.firstOrNull { it.key == key } ?: TEXT_MEAL
+    }
+}
+
+data class WidgetOptions(
+    val mode: WidgetMode,
+    val compact: Boolean = false,
+    val showMacros: Boolean = true,
+    val primaryAction: WidgetAction = WidgetAction.TEXT_MEAL,
+)
 
 object WidgetConfiguration {
     private const val PREFS = "treino_widget_configuration"
@@ -24,17 +39,18 @@ object WidgetConfiguration {
     fun load(context: Context, id: Int, default: WidgetMode = WidgetMode.COMBINED): WidgetOptions {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         return WidgetOptions(WidgetMode.fromKey(prefs.getString("$id.mode", default.key)),
-            prefs.getBoolean("$id.compact", false), prefs.getBoolean("$id.macros", true))
+            prefs.getBoolean("$id.compact", false), prefs.getBoolean("$id.macros", true),
+            WidgetAction.fromKey(prefs.getString("$id.action", null)))
     }
     fun save(context: Context, id: Int, options: WidgetOptions): Boolean {
         if (id == AppWidgetManager.INVALID_APPWIDGET_ID) return false
         return context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putString("$id.mode", options.mode.key).putBoolean("$id.compact", options.compact)
-            .putBoolean("$id.macros", options.showMacros).commit()
+            .putBoolean("$id.macros", options.showMacros).putString("$id.action", options.primaryAction.key).commit()
     }
     fun remove(context: Context, ids: IntArray) {
         val edit = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-        ids.forEach { edit.remove("$it.mode").remove("$it.compact").remove("$it.macros") }; edit.apply()
+        ids.forEach { edit.remove("$it.mode").remove("$it.compact").remove("$it.macros").remove("$it.action") }; edit.apply()
     }
     fun installed(context: Context): List<Int> {
         val manager = AppWidgetManager.getInstance(context)

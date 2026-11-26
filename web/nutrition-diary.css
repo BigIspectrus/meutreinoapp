@@ -57,3 +57,4 @@
 .nutrition-impact-values b { display: block; font-size: .87rem; margin: 4px 0 6px; }
 .meal-text-groups { margin: 8px 0 12px; }
 .meal-text-groups small { margin-top: 4px; }
+.widget-ready-meals .nutrition-library-recipes { display: none; }
