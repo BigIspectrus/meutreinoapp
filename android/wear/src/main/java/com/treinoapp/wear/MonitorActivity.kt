@@ -21,7 +21,6 @@ import android.widget.ScrollView
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.wear.ambient.AmbientLifecycleObserver
 import androidx.health.services.client.HealthServices
@@ -82,17 +81,6 @@ class MonitorActivity : ComponentActivity() {
     private val detailsBack = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() = showDetails(false)
     }
-    private val heartAccess = registerForActivityResult(ActivityResultContracts.RequestPermission()) { render() }
-    private val activityAccess = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        startAfterPermission = granted
-        if (granted && resumed) startHealthIfAuthorized()
-        render()
-    }
-    private val shortcutAccess = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) WatchShortcut.update(this, PhoneWorkout.snapshot.value, force = true)
-        render()
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         startAfterPermission = savedInstanceState?.getBoolean("startSensors") ?: false
@@ -175,7 +163,7 @@ class MonitorActivity : ComponentActivity() {
         connection = content.line(11f, BLUE, margin = 6)
         sensorButton = content.action("Medir FC e kcal") { requestSensors() }
         shortcutButton = content.action("Ativar atalho no mostrador") {
-            if (Build.VERSION.SDK_INT >= 33) shortcutAccess.launch(Manifest.permission.POST_NOTIFICATIONS)
+            if (Build.VERSION.SDK_INT >= 33) requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), SHORTCUT_ACCESS)
         }
     }
 
@@ -471,13 +459,25 @@ class MonitorActivity : ComponentActivity() {
 
     private fun requestSensors() {
         if (!hasPermission(heartPermission())) {
-            heartAccess.launch(heartPermission())
+            requestPermissions(arrayOf(heartPermission()), HEART_ACCESS)
         } else if (!hasPermission(Manifest.permission.ACTIVITY_RECOGNITION)) {
-            activityAccess.launch(Manifest.permission.ACTIVITY_RECOGNITION)
+            requestPermissions(arrayOf(Manifest.permission.ACTIVITY_RECOGNITION), ACTIVITY_ACCESS)
         } else {
             startAfterPermission = true
             startHealthIfAuthorized()
         }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            ACTIVITY_ACCESS -> {
+                startAfterPermission = hasPermission(Manifest.permission.ACTIVITY_RECOGNITION)
+                startHealthIfAuthorized()
+            }
+            SHORTCUT_ACCESS -> if (WatchShortcut.canPost(this)) WatchShortcut.update(this, PhoneWorkout.snapshot.value, force = true)
+        }
+        render()
     }
 
     private fun startHealthIfAuthorized() {
@@ -509,6 +509,9 @@ class MonitorActivity : ComponentActivity() {
         else String.format(Locale.ROOT, "%02d:%02d", total / 60, total % 60)
 
     companion object {
+        private const val HEART_ACCESS = 10
+        private const val ACTIVITY_ACCESS = 11
+        private const val SHORTCUT_ACCESS = 12
         private val AMBIENT_CLOCK = DateTimeFormatter.ofPattern("HH:mm")
         private val INK = Color.rgb(242, 249, 255)
         private val MUTED = Color.rgb(177, 194, 213)
