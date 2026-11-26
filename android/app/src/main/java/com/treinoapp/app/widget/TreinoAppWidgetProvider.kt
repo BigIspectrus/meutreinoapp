@@ -424,12 +424,19 @@ open class TreinoAppWidgetProvider : AppWidgetProvider() {
                 visible(R.id.widgetMovementGoals, movement && large && minutesGoal != null)
             }
 
-            val compactText = if (food && medium && narrow) "Por texto" else "Refeição por texto"
-            text(R.id.widgetTextMealButton, compactText)
+            val tightFoodActions = food && medium && width / scale < 248
+            val mealText = when {
+                tightFoodActions && narrow -> "Texto"
+                tightFoodActions || narrow -> "Por texto"
+                else -> "Refeição por texto"
+            }
+            text(R.id.widgetTextMealButton, mealText)
+            text(R.id.widgetMealButton, if (tightFoodActions && narrow) "Alim." else if (tightFoodActions) "Alimento" else "+ Alimento")
             text(R.id.widgetButton, trainingAction)
             text(R.id.widgetMovementButton, "Ver cardio e passos")
             views.setOnClickPendingIntent(R.id.widgetTextMealButton, openText)
             views.setOnClickPendingIntent(R.id.widgetMealButton, pending("meal", "nutricao", "addMeal"))
+            views.setOnClickPendingIntent(R.id.widgetWaterButton, openWater)
             views.setOnClickPendingIntent(R.id.widgetReadyMealButton, pending("ready-meal", "nutricao", "openReadyMeals"))
             views.setOnClickPendingIntent(R.id.widgetButton, goTraining)
             views.setOnClickPendingIntent(R.id.widgetBlankButton, pending("blank-workout", "treinar", "startBlankWorkout"))
