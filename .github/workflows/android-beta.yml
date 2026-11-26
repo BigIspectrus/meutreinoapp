@@ -29,6 +29,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.14.3'
+          cache-read-only: false
       - run: npm install --no-audit --no-fund
       - run: npm run build:web
       - run: python scripts/validate_project.py
@@ -64,7 +65,7 @@ jobs:
           if [ "$SKIP_REQUESTED_TESTS" != "true" ]; then
             gradle testBetaDebugUnitTest --max-workers=1 --stacktrace
           fi
-          gradle assembleBetaRelease bundleBetaRelease --max-workers=1 --stacktrace
+          gradle :watch-link:testDebugUnitTest :app:assembleBetaRelease :app:bundleBetaRelease :wear:assembleBetaRelease --max-workers=1 --stacktrace
       - name: Publicar resultados dos testes Android
         if: ${{ always() && ((!inputs.skip_tests && !contains(github.event.head_commit.message, '[skip-tests]')) || contains(github.event.head_commit.message, '[widget-tests]')) }}
         uses: actions/upload-artifact@v4
@@ -82,3 +83,8 @@ jobs:
             android/app/build/outputs/apk/beta/release/*.apk
             android/app/build/outputs/bundle/betaRelease/*.aab
             android/app/schemas/**/*.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TreinoApp-Wear-Beta-${{ github.sha }}
+          path: android/wear/build/outputs/apk/beta/release/*.apk
+          if-no-files-found: error

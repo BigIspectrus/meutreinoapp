@@ -1,0 +1,62 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+def treinoVersion = rootProject.file('../VERSION').text.trim()
+def (major, minor, patch) = treinoVersion.tokenize('.').collect { it.toInteger() }
+
+android {
+    namespace 'com.treinoapp.wear'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'com.treinoapp.app'
+        minSdk 30
+        targetSdk 36
+        versionCode 800000 + major * 10000 + minor * 100 + patch
+        versionName treinoVersion
+    }
+
+    flavorDimensions += 'channel'
+    productFlavors {
+        stable { dimension 'channel' }
+        beta {
+            dimension 'channel'
+            applicationId 'com.treinoapp.beta'
+            versionNameSuffix '-beta'
+        }
+    }
+
+    signingConfigs {
+        release {
+            def keyPath = System.getenv('TREINOAPP_KEYSTORE_PATH')
+            if (keyPath && file(keyPath).exists()) {
+                storeFile file(keyPath)
+                storePassword System.getenv('TREINOAPP_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('TREINOAPP_KEY_ALIAS')
+                keyPassword System.getenv('TREINOAPP_KEY_PASSWORD')
+            }
+        }
+    }
+    buildTypes {
+        debug { applicationIdSuffix '.debug' }
+        release {
+            if (System.getenv('TREINOAPP_KEYSTORE_PATH')) signingConfig signingConfigs.release
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+    kotlinOptions { jvmTarget = '21' }
+    packaging { resources.excludes += ['/META-INF/{AL2.0,LGPL2.1}'] }
+}
+
+dependencies {
+    implementation project(':watch-link')
+    implementation 'androidx.core:core-ktx:1.17.0'
+    implementation 'androidx.health:health-services-client:1.1.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.10.2'
+}

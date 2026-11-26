@@ -21,11 +21,13 @@ import androidx.core.content.ContextCompat
 import com.treinoapp.app.MainActivity
 import com.treinoapp.app.R
 import com.treinoapp.app.widget.TreinoAppWidgetProvider
+import com.treinoapp.watchlink.WorkoutSnapshot
 import kotlin.math.max
 
 class WorkoutForegroundService : Service() {
     private val handler = Handler(Looper.getMainLooper())
     private val prefs by lazy { getSharedPreferences(PREFS, Context.MODE_PRIVATE) }
+    private val watchPublisher by lazy { WatchMonitorPublisher(this) }
     private var restFinishRunnable: Runnable? = null
     private var restWakeLock: PowerManager.WakeLock? = null
     private val widgetTicker = object : Runnable {
@@ -36,6 +38,14 @@ class WorkoutForegroundService : Service() {
             }
         }
     }
+    private val monitorTicker = object : Runnable {
+        override fun run() {
+            if (!prefs.getBoolean(KEY_ACTIVE, false)) return
+            publishWatchSnapshot(heartbeat = true)
+            handler.postDelayed(this, WorkoutSnapshot.HEARTBEAT_MS)
+        }
+    }
+    private var monitorTickerStarted = false
 
     override fun onCreate() {
         super.onCreate()
@@ -52,6 +62,7 @@ class WorkoutForegroundService : Service() {
                 setNumber = intent.getIntExtra(EXTRA_SET, 0),
                 nextExercise = intent.getStringExtra(EXTRA_NEXT_EXERCISE).orEmpty(),
                 nextSetNumber = intent.getIntExtra(EXTRA_NEXT_SET, 0),
+                nextExerciseSets = intent.getIntExtra(EXTRA_NEXT_EXERCISE_SETS, 0),
                 nextOrdinal = intent.getIntExtra(EXTRA_NEXT_ORDINAL, -1),
                 sessionId = intent.getStringExtra(EXTRA_SESSION).orEmpty(),
             )
@@ -83,6 +94,11 @@ class WorkoutForegroundService : Service() {
         if (prefs.getBoolean(KEY_ACTIVE, false)) {
             ensureForeground()
             scheduleRestAlarmIfNeeded()
+            publishWatchSnapshot()
+            if (!monitorTickerStarted) {
+                monitorTickerStarted = true
+                handler.postDelayed(monitorTicker, WorkoutSnapshot.HEARTBEAT_MS)
+            }
             TreinoAppWidgetProvider.updateAll(this)
             handler.removeCallbacks(widgetTicker)
             handler.postDelayed(widgetTicker, 60_000L)
@@ -102,11 +118,14 @@ class WorkoutForegroundService : Service() {
 
     private fun saveWorkoutFromIntent(intent: Intent, reset: Boolean) {
         val editor = prefs.edit().putBoolean(KEY_ACTIVE, true)
-        if (reset) {
+        val sameSession = prefs.getBoolean(KEY_ACTIVE, false) &&
+            intent.getStringExtra(EXTRA_SESSION) == prefs.getString(KEY_SESSION, "")
+        if (reset && !sameSession) {
             editor.putLong(KEY_REST_END, 0L)
                 .putBoolean(KEY_PAUSED, false)
                 .putLong(KEY_PAUSED_AT, 0L)
                 .putLong(KEY_PAUSED_TOTAL, 0L)
+                .putBoolean(KEY_SET_RUNNING, false)
                 .remove(KEY_NEXT_EXERCISE)
                 .remove(KEY_NEXT_SET)
                 .remove(KEY_NEXT_ORDINAL)
@@ -127,7 +146,11 @@ class WorkoutForegroundService : Service() {
         if (intent.hasExtra(EXTRA_TOTAL)) editor.putInt(KEY_TOTAL, intent.getIntExtra(EXTRA_TOTAL, 0))
         if (intent.hasExtra(EXTRA_DONE)) editor.putInt(KEY_DONE, intent.getIntExtra(EXTRA_DONE, 0))
         if (intent.hasExtra(EXTRA_SET)) editor.putInt(KEY_SET, intent.getIntExtra(EXTRA_SET, 0))
+        if (intent.hasExtra(EXTRA_EXERCISE_SETS)) editor.putInt(KEY_EXERCISE_SETS, intent.getIntExtra(EXTRA_EXERCISE_SETS, 0))
+        if (intent.hasExtra(EXTRA_SET_RUNNING)) editor.putBoolean(KEY_SET_RUNNING, intent.getBooleanExtra(EXTRA_SET_RUNNING, false))
         if (intent.hasExtra(EXTRA_PAUSED_BOOL)) editor.putBoolean(KEY_PAUSED, intent.getBooleanExtra(EXTRA_PAUSED_BOOL, false))
+        if (intent.hasExtra(EXTRA_PAUSED_AT)) editor.putLong(KEY_PAUSED_AT, intent.getLongExtra(EXTRA_PAUSED_AT, 0L))
+        if (intent.hasExtra(EXTRA_PAUSED_TOTAL)) editor.putLong(KEY_PAUSED_TOTAL, intent.getLongExtra(EXTRA_PAUSED_TOTAL, 0L))
         editor.apply()
     }
 
@@ -137,6 +160,7 @@ class WorkoutForegroundService : Service() {
         setNumber: Int,
         nextExercise: String,
         nextSetNumber: Int,
+        nextExerciseSets: Int,
         nextOrdinal: Int,
         sessionId: String,
     ) {
@@ -150,8 +174,10 @@ class WorkoutForegroundService : Service() {
             .putLong(KEY_REST_END, end)
             .putString(KEY_EXERCISE, exercise)
             .putInt(KEY_SET, setNumber)
+            .putBoolean(KEY_SET_RUNNING, false)
             .putString(KEY_NEXT_EXERCISE, nextExercise)
             .putInt(KEY_NEXT_SET, nextSetNumber)
+            .putInt(KEY_NEXT_EXERCISE_SETS, nextExerciseSets)
             .putInt(KEY_NEXT_ORDINAL, nextOrdinal)
             .putString(KEY_NEXT_SESSION, resolvedSession)
             .putString(KEY_NEXT_TOKEN, targetToken)
@@ -205,6 +231,8 @@ class WorkoutForegroundService : Service() {
         restFinishRunnable?.let(handler::removeCallbacks)
         restFinishRunnable = null
         handler.removeCallbacks(widgetTicker)
+        handler.removeCallbacks(monitorTicker)
+        monitorTickerStarted = false
         releaseRestWakeLock()
         prefs.edit().putBoolean(KEY_ACTIVE, false).putLong(KEY_REST_END, 0L)
             .remove(KEY_NEXT_EXERCISE)
@@ -220,11 +248,46 @@ class WorkoutForegroundService : Service() {
             .remove(KEY_PENDING_REQUEST_ID)
             .remove(KEY_PENDING_TARGET_TOKEN)
             .apply()
+        publishWatchSnapshot()
         NotificationManagerCompat.from(this).cancel(REST_NOTIFICATION_ID)
         NotificationManagerCompat.from(this).cancel(WATCH_CONFIRMATION_NOTIFICATION_ID)
         TreinoAppWidgetProvider.updateAll(this)
         ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
         stopSelf()
+    }
+
+    private fun publishWatchSnapshot(heartbeat: Boolean = false) {
+        val session = prefs.getString(KEY_SESSION, "").orEmpty()
+        if (session.isBlank()) return
+        val now = System.currentTimeMillis()
+        val active = prefs.getBoolean(KEY_ACTIVE, false)
+        val startedAt = prefs.getLong(KEY_STARTED, now)
+        val paused = prefs.getBoolean(KEY_PAUSED, false)
+        val pausedAt = prefs.getLong(KEY_PAUSED_AT, 0L)
+        val total = prefs.getInt(KEY_TOTAL, 0).coerceAtLeast(0)
+        val done = prefs.getInt(KEY_DONE, 0).coerceIn(0, total)
+        val rest = prefs.getLong(KEY_REST_END, 0L)
+        val next = prefs.getString(KEY_NEXT_EXERCISE, "").orEmpty()
+        val useNext = next.isNotBlank() && rest > now
+        val showExercise = active && done < total
+        watchPublisher.publish(
+            WorkoutSnapshot(
+                sessionId = session,
+                active = active,
+                name = prefs.getString(KEY_NAME, "Treino").orEmpty().take(100),
+                exercise = if (!showExercise) "" else if (useNext) next.take(100) else prefs.getString(KEY_EXERCISE, "").orEmpty().take(100),
+                setNumber = if (!showExercise) 0 else prefs.getInt(if (useNext) KEY_NEXT_SET else KEY_SET, 0),
+                exerciseSets = if (!showExercise) 0 else prefs.getInt(if (useNext) KEY_NEXT_EXERCISE_SETS else KEY_EXERCISE_SETS, 0),
+                completedSets = done,
+                totalSets = total,
+                setRunning = active && !useNext && prefs.getBoolean(KEY_SET_RUNNING, false),
+                paused = paused,
+                sentAt = now,
+                elapsedMs = ((if (paused && pausedAt > 0L) pausedAt else now) - startedAt -
+                    prefs.getLong(KEY_PAUSED_TOTAL, 0L)).coerceAtLeast(0L),
+                restEndsAt = if (active) rest else 0L,
+            ), heartbeat,
+        )
     }
 
     private fun scheduleRestAlarmIfNeeded() {
@@ -270,6 +333,7 @@ class WorkoutForegroundService : Service() {
             targetToken = targetToken,
         )
         updateNotification()
+        publishWatchSnapshot()
     }
 
     private fun postRestFinishedAlert(exercise: String, set: Int, isTest: Boolean, targetToken: String = "") {
@@ -378,6 +442,8 @@ class WorkoutForegroundService : Service() {
             .putLong(KEY_REST_END, 0L)
             .putString(KEY_EXERCISE, exercise)
             .putInt(KEY_SET, setNumber)
+            .putInt(KEY_EXERCISE_SETS, prefs.getInt(KEY_NEXT_EXERCISE_SETS, 0))
+            .putBoolean(KEY_SET_RUNNING, true)
             .putLong(KEY_PENDING_SET_STARTED_AT, startedAt)
             .putString(KEY_PENDING_SET_EXERCISE, exercise)
             .putInt(KEY_PENDING_SET_NUMBER, setNumber)
@@ -622,6 +688,7 @@ class WorkoutForegroundService : Service() {
     override fun onDestroy() {
         restFinishRunnable?.let(handler::removeCallbacks)
         handler.removeCallbacks(widgetTicker)
+        handler.removeCallbacks(monitorTicker)
         releaseRestWakeLock()
         super.onDestroy()
     }
@@ -638,6 +705,8 @@ class WorkoutForegroundService : Service() {
         const val KEY_DONE = "completedSets"
         const val KEY_EXERCISE = "currentExercise"
         const val KEY_SET = "currentSet"
+        const val KEY_EXERCISE_SETS = "currentExerciseSets"
+        const val KEY_SET_RUNNING = "currentSetRunning"
         const val KEY_REST_END = "restEndAt"
         const val KEY_PAUSED = "paused"
         const val KEY_PAUSED_AT = "pausedAt"
@@ -646,6 +715,7 @@ class WorkoutForegroundService : Service() {
         const val KEY_REST_SOUND = "restSound"
         const val KEY_NEXT_EXERCISE = "nextExercise"
         const val KEY_NEXT_SET = "nextSet"
+        const val KEY_NEXT_EXERCISE_SETS = "nextExerciseSets"
         const val KEY_NEXT_ORDINAL = "nextOrdinal"
         const val KEY_NEXT_SESSION = "nextSession"
         const val KEY_NEXT_TOKEN = "nextToken"
@@ -680,13 +750,18 @@ class WorkoutForegroundService : Service() {
         const val EXTRA_DONE = "completedSets"
         const val EXTRA_EXERCISE = "currentExercise"
         const val EXTRA_SET = "currentSet"
+        const val EXTRA_EXERCISE_SETS = "currentExerciseSets"
+        const val EXTRA_SET_RUNNING = "currentSetRunning"
         const val EXTRA_SECONDS = "seconds"
         const val EXTRA_DELTA = "deltaSeconds"
         const val EXTRA_PAUSED_BOOL = "paused"
+        const val EXTRA_PAUSED_AT = "pausedAt"
+        const val EXTRA_PAUSED_TOTAL = "pausedTotalMs"
         const val EXTRA_VIBRATION = "vibration"
         const val EXTRA_SOUND = "sound"
         const val EXTRA_NEXT_EXERCISE = "nextExercise"
         const val EXTRA_NEXT_SET = "nextSetNumber"
+        const val EXTRA_NEXT_EXERCISE_SETS = "nextExerciseSets"
         const val EXTRA_NEXT_ORDINAL = "nextOrdinal"
         const val EXTRA_TARGET_TOKEN = "targetToken"
         const val EXTRA_REQUEST_ID = "requestId"

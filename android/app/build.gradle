@@ -15,8 +15,8 @@ android {
         applicationId 'com.treinoapp.app'
         minSdk 26
         targetSdk 36
-        versionCode 121701
-        versionName '12.17.1'
+        versionCode 121800
+        versionName '12.18.0'
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
         vectorDrawables { useSupportLibrary true }
         buildConfigField 'String', 'GIT_SHA', '"' + gitSha + '"'
@@ -95,6 +95,7 @@ android {
 
 
 dependencies {
+    implementation project(':watch-link')
     implementation project(':capacitor-android')
     implementation project(':capacitor-barcode-scanner')
     implementation 'com.google.mlkit:text-recognition:16.0.1'

@@ -174,6 +174,7 @@ class TreinoNativePlugin : Plugin() {
                 putExtra(WorkoutForegroundService.EXTRA_DONE, call.getInt("completedSets", 0) ?: 0)
                 putExtra(WorkoutForegroundService.EXTRA_EXERCISE, call.getString("currentExercise", ""))
                 putExtra(WorkoutForegroundService.EXTRA_SET, call.getInt("currentSet", 1) ?: 1)
+                putMonitorDetails(call)
             }
             call.resolve(JSObject().apply { put("started", true) })
         } catch (e: Exception) {
@@ -191,10 +192,18 @@ class TreinoNativePlugin : Plugin() {
                 putExtra(WorkoutForegroundService.EXTRA_DONE, call.getInt("completedSets", 0) ?: 0)
                 call.getString("currentExercise")?.let { putExtra(WorkoutForegroundService.EXTRA_EXERCISE, it) }
                 putExtra(WorkoutForegroundService.EXTRA_SET, call.getInt("currentSet", 1) ?: 1)
-                putExtra(WorkoutForegroundService.EXTRA_PAUSED_BOOL, call.getBoolean("paused", false) ?: false)
+                putMonitorDetails(call)
             }
             call.resolve()
         } catch (e: Exception) { call.reject("Falha ao atualizar treino nativo", e) }
+    }
+
+    private fun Intent.putMonitorDetails(call: PluginCall) {
+        call.getInt("currentExerciseSets")?.let { putExtra(WorkoutForegroundService.EXTRA_EXERCISE_SETS, it) }
+        call.getBoolean("currentSetRunning")?.let { putExtra(WorkoutForegroundService.EXTRA_SET_RUNNING, it) }
+        call.getBoolean("paused")?.let { putExtra(WorkoutForegroundService.EXTRA_PAUSED_BOOL, it) }
+        if (call.hasOption("pausedAt")) putExtra(WorkoutForegroundService.EXTRA_PAUSED_AT, longArg(call, "pausedAt", 0L))
+        if (call.hasOption("pausedTotalMs")) putExtra(WorkoutForegroundService.EXTRA_PAUSED_TOTAL, longArg(call, "pausedTotalMs", 0L))
     }
 
     @PluginMethod fun pauseWorkout(call: PluginCall) = serviceCall(call, WorkoutForegroundService.ACTION_PAUSE)
@@ -210,6 +219,7 @@ class TreinoNativePlugin : Plugin() {
                 putExtra(WorkoutForegroundService.EXTRA_SET, call.getInt("setNumber", 0) ?: 0)
                 putExtra(WorkoutForegroundService.EXTRA_NEXT_EXERCISE, call.getString("nextExercise", ""))
                 putExtra(WorkoutForegroundService.EXTRA_NEXT_SET, call.getInt("nextSetNumber", 0) ?: 0)
+                putExtra(WorkoutForegroundService.EXTRA_NEXT_EXERCISE_SETS, call.getInt("nextExerciseSets", 0) ?: 0)
                 putExtra(WorkoutForegroundService.EXTRA_NEXT_ORDINAL, call.getInt("nextOrdinal", -1) ?: -1)
                 putExtra(WorkoutForegroundService.EXTRA_SESSION, call.getString("sessionId", ""))
             }
