@@ -30,6 +30,7 @@
     }
   }
   function changed(){
+    if(_ultimaSerieConcluida?.isConnected&&_ultimaSerieConcluida.querySelector('.serie-check.checked'))prepararAcoesDescanso(_ultimaSerieConcluida);
     marcarDadosNaoSalvos();atualizarFocoSeries();getExerciseCards().forEach(atualizarEstadoCardExercicio);atualizarProgressoTreino();decorate();const saved=salvarRascunho();agendarUpdateNativo();agendarTreinoUmaMao();if(saved!==true)toast('Não foi possível guardar a última alteração. Mantenha o treino aberto e tente salvar novamente.','error');return saved===true;
   }
   function stopAffectedRest(card,row=null){if(_proximaSerieDescanso&&(row?_proximaSerieDescanso===row:_proximaSerieDescanso.closest('.exercicio-card')===card)){pararTimer();_proximaSerieDescanso=null;}}

@@ -151,8 +151,20 @@ function retomarRevisaoTextoUX(){
 const _uxNavigate=irParaAba;irParaAba=function(id){if(window._uxCancelling)return;if(id!==_currentTab&&document.getElementById('aba-'+id)&&!_uxNavigatingBack){_uxTabStack.push({tab:_currentTab,sub:_currentTab==='progresso'?_currentSubTab:null,scroll:window.scrollY});if(_uxTabStack.length>20)_uxTabStack.shift();}const result=_uxNavigate.apply(this,arguments);agendarContextoUX();return result;};
 const _uxSubNavigate=ativarSubTab;ativarSubTab=function(id){if(_currentTab==='progresso'&&id!==_currentSubTab&&!_uxNavigatingBack){_uxTabStack.push({tab:'progresso',sub:_currentSubTab,scroll:window.scrollY});if(_uxTabStack.length>20)_uxTabStack.shift();}return _uxSubNavigate.apply(this,arguments);};
 function uxCamposSerieValidos(row){const weight=row?.querySelector('.ativo-carga'),reps=row?.querySelector('.ativo-reps');return !!weight&&!!reps&&cargaSerieValida(row)&&!weight.validity.badInput&&!reps.validity.badInput&&weight.value!==''&&Number.isFinite(Number(weight.value))&&Number(weight.value)>=0&&reps.value!==''&&Number.isInteger(Number(reps.value))&&Number(reps.value)>0;}
-const _uxCheck=toggleSerieCheck;toggleSerieCheck=function(button){if(window._uxCancelling)return;const checked=button.classList.contains('checked');if(!checked&&!uxCamposSerieValidos(button.closest('.serie-row')))return feedbackLocalUX('Preencha uma carga válida (placas: número inteiro; 0 é permitido) e repetições inteiras maiores que zero.');const result=_uxCheck.apply(this,arguments);if(checked!==button.classList.contains('checked'))feedbackLocalUX(button.classList.contains('checked')?'Série concluída no rascunho. Finalize o treino para registrar no histórico.':'Série reaberta para correção.');agendarContextoUX();return result;};
-const _uxHandAction=agirTreinoUmaMao;agirTreinoUmaMao=function(){const state=estadoTreinoUmaMao();if(state?.action==='complete'){const fields=['oneHandWeight','oneHandReps'].map(id=>document.getElementById(id));if(fields.some(e=>e.validity.badInput||e.value===''||!Number.isFinite(Number(e.value))||Number(e.value)<0)||(capturarTipoCargaSerie(state.row).mode==='plates'&&!Number.isInteger(Number(fields[0].value)))||!Number.isInteger(Number(fields[1].value))||Number(fields[1].value)<=0)return feedbackLocalUX('Confira carga e repetições no controle inferior antes de concluir.');}return _uxHandAction.apply(this,arguments);};
+const _uxCheck=toggleSerieCheck;toggleSerieCheck=function(button){
+  if(window._uxCancelling)return;
+  const row=button.closest('.serie-row'),checked=button.classList.contains('checked'),number=numeroSerieSessao(row);
+  if(!checked&&!uxCamposSerieValidos(row)){
+    const error='Confira a carga e as repetições da série '+number+'. Use repetições inteiras maiores que zero.';
+    feedbackLocalUX(error);return toast(error,'warn');
+  }
+  const result=_uxCheck.apply(this,arguments),done=button.classList.contains('checked');
+  if(checked!==done&&!document.body.classList.contains('ux-dock-visible')){
+    const message='Série '+number+(done?' concluída':' reaberta');
+    feedbackLocalUX(message);toast(message,done?'success':'info');
+  }
+  agendarContextoUX();return result;
+};
 const _uxMealRender=renderizarMontagemRefeicaoNutricao;renderizarMontagemRefeicaoNutricao=function(){const result=_uxMealRender.apply(this,arguments);const draft=window.TreinoMealBuilder.data();if(draft){const search=document.getElementById('nutritionMealSearch');search.hidden=false;document.getElementById('nutritionPickNext').textContent='Conferir e continuar buscando';if(!modoTextoRefeicao())document.getElementById('nutritionAddSave').textContent=draft.mode==='planned'?'Guardar planejamento':'Registrar refeição ('+draft.items.length+')';}agendarContextoUX();return result;};
 const _uxHandRender=renderizarTreinoUmaMao;renderizarTreinoUmaMao=function(){const result=_uxHandRender.apply(this,arguments);agendarContextoUX();return result;};
 const _uxFinishSave=salvarTreinoAtivo;salvarTreinoAtivo=function(){try{return _uxFinishSave.apply(this,arguments);}finally{window._uxSavingSession=false;}};

@@ -3,12 +3,34 @@
 body.workout-mode #treinoAtivoCard>.card-title{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center}.workout-back span{font-size:12px}body.workout-mode .workout-back{width:auto;min-width:78px;min-height:44px;height:auto;padding:9px;display:flex;align-items:center;justify-content:center;gap:6px}#treinoAtivoNome{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 body.workout-mode:not(.ux-date-open) #dataTreinoAtivo{display:none}body.workout-mode.ux-date-open #dataTreinoAtivo{display:block;width:100%!important;grid-column:1/-1;font-size:16px!important;min-height:44px}
 .ux-workout-context{display:flex;flex-direction:column;gap:5px;margin:5px 0 10px;min-height:36px}.ux-workout-context[hidden]{display:none}.ux-date-button{text-align:left;font-size:12px;background:transparent;padding:5px 0;min-height:40px;color:var(--text-muted)}#workoutFeedbackUX{font-size:11px;line-height:1.4;color:var(--text-muted)}#workoutFeedbackUX:empty{display:none}
-body.ux-dock-visible #exerciciosAtivos .serie-row:not(.serie-completed)>.serie-check,body.ux-dock-visible #exerciciosAtivos .serie-row:not(.serie-completed)>.set-start-btn{display:none!important}
-body.one-hand-workout #exerciciosAtivos .serie-row:not(.serie-completed)>.ativo-carga,body.one-hand-workout #exerciciosAtivos .serie-row:not(.serie-completed)>.ativo-reps,body.one-hand-workout #exerciciosAtivos .serie-row:not(.serie-completed)>.inc-btn,body.one-hand-workout #exerciciosAtivos .serie-row:not(.serie-completed)>.set-field-label{display:none!important}
-body.one-hand-workout #exerciciosAtivos .serie-row:not(.serie-completed){display:flex;flex-direction:column;gap:6px}body.workout-mode.one-hand-workout #aba-treinar{padding-bottom:calc(var(--ux-dock-height,248px) + 28px + var(--app-safe-bottom))!important}
+body.ux-dock-visible:not(.flow-table-mode) #exerciciosAtivos .serie-dock-row:not(.serie-collapsed)>:is(.serie-check,.set-start-btn),
+body.ux-dock-visible:not(.flow-table-mode):not(.ui-resting) #exerciciosAtivos .serie-dock-row:not(.serie-collapsed)>:is(.ativo-carga,.ativo-reps,.inc-btn,.set-field-label){display:none!important}
+body.ux-dock-visible:not(.flow-table-mode):not(.ui-resting) #exerciciosAtivos .serie-dock-row:not(.serie-collapsed){display:flex;flex-direction:column;gap:6px}
+body.workout-mode.one-hand-workout #aba-treinar{padding-bottom:calc(var(--ux-dock-height,248px) + 28px + var(--app-safe-bottom))!important}
 #treinoAtivoNome{display:flex;flex-direction:column;gap:3px}#workoutTitleStateUX{font-size:10px;font-weight:500;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ux-weight-adjusts{display:flex;gap:6px;margin-top:5px}.ux-weight-adjusts button{flex:1;min-height:36px;border:1px solid var(--border);background:var(--surface2);color:var(--text);border-radius:9px;font-size:18px}
 .ux-exercise-details{margin:0 0 10px;border-bottom:1px solid var(--border)}.ux-exercise-details>summary{cursor:pointer;color:var(--text-muted);font-size:11px;min-height:36px;padding:10px 5px}.ux-exercise-details .exercise-context-tools{margin-top:4px}
 body.workout-mode #exerciciosAtivos .serie-row .ativo-carga,body.workout-mode #exerciciosAtivos .serie-row .ativo-reps{min-width:0;font-size:20px!important}body.workout-mode .workout-focus-nav>.btn{min-height:44px;min-width:44px}#oneHandMainAction{min-height:48px}.onehand-fields input{font-size:18px!important;min-height:46px}
+body.workout-mode #exerciciosAtivos .set-start-btn[hidden],.rest-inline-primary[hidden],.onehand-receipt[hidden]{display:none!important}
+body.workout-mode #exerciciosAtivos .serie-row.serie-current:not(.flow-set-skipped){border-inline-start:3px solid var(--primary);background:color-mix(in srgb,var(--primary-dim) 28%,var(--surface));border-radius:10px}
+body.workout-mode #exerciciosAtivos .serie-row.serie-current.set-running:not(.flow-set-skipped){border-inline-start-color:var(--success)}
+body.workout-mode #exerciciosAtivos .serie-row.serie-current .set-focus-heading strong{background:var(--primary-dim);color:var(--text)}
+body.workout-mode #exerciciosAtivos .serie-row.set-running .set-focus-heading strong,
+body.workout-mode #exerciciosAtivos .serie-row.serie-completed .set-focus-heading strong{background:var(--success-dim);color:var(--success)}
+body.workout-mode.flow-table-mode #exerciciosAtivos .serie-row.serie-current:not(.flow-set-skipped){box-shadow:inset 3px 0 var(--primary)}
+body.workout-mode.flow-table-mode #exerciciosAtivos .serie-row.set-running:not(.flow-set-skipped){box-shadow:inset 3px 0 var(--success)}
+body.workout-mode .rest-inline-next{white-space:normal}
+.one-hand-bar{border-top:2px solid var(--primary);padding:10px 12px}
+.one-hand-bar[data-phase=complete]{border-top-color:var(--success)}
+.onehand-heading{margin-bottom:4px}
+.onehand-heading strong{font-size:21px;line-height:1.15;font-weight:850}
+#oneHandExercise{display:block;margin-top:2px;font-size:13px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.onehand-phase{font-size:12px;font-weight:750;color:var(--text-muted);margin:3px 0 9px}
+.one-hand-bar[data-phase=complete] .onehand-phase{color:var(--success)}
+.onehand-receipt{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:0 0 7px;padding:0 7px 0 10px;border-radius:9px;background:var(--success-dim);color:var(--success);font-size:12px;font-weight:750}
+.onehand-receipt .btn{min-height:40px;width:auto;min-width:68px;padding:4px 6px;color:var(--text);font-size:12px}
+.onehand-error{margin:0 0 7px;color:var(--danger);font-size:12px;font-weight:650}
+.onehand-error:empty{display:none}
+#oneHandMainAction{white-space:normal;line-height:1.2}
 .ux-cancel-message{font-size:14px;line-height:1.6;margin:12px 0}.ux-cancel-check{display:flex;align-items:flex-start;gap:10px;line-height:1.5;font-size:12px!important;margin:15px 0}.ux-cancel-check[hidden]{display:none}.ux-cancel-check input{width:22px;min-width:22px;height:22px;margin:0}.ux-cancel-actions{display:grid;gap:10px;margin-top:18px}.ux-cancel-actions>.btn{min-height:46px;white-space:normal;line-height:1.4}#modalCancelWorkoutUX{z-index:750}#modalCancelWorkoutUX [hidden]{display:none!important}
 .ux-meal-state{font-size:11px;line-height:1.5;padding:9px 11px;border:1px solid var(--border);border-radius:11px;background:var(--surface2);color:var(--text-muted);margin-bottom:12px}.ux-inline-feedback{font-size:11px;line-height:1.4;color:var(--text-muted);margin:6px 0}.ux-inline-feedback:empty{display:none}
 #modalNutritionAdd .nutrition-selected{padding:10px}#modalNutritionAdd #nutritionPickNext{min-height:44px;margin-bottom:4px}#modalNutritionAdd #nutritionMealSearch{margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}#modalNutritionAdd .meal-context-grid input,#modalNutritionAdd .meal-context-grid select{min-height:44px}#modalNutritionAdd .nutrition-filter-chips{overflow-x:auto;flex-wrap:nowrap;max-width:100%;padding-bottom:5px}#modalNutritionAdd .nutrition-filter-chips>button{flex-shrink:0;min-height:40px}
