@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
 const html=readFileSync(new URL('../web/index.html',import.meta.url),'utf8');
+const training=readFileSync(new URL('../web/training-mobile.js',import.meta.url),'utf8');
 // Testar os handlers reais; não manter uma segunda implementação da lógica.
 function source(name,next){const start=html.indexOf('function '+name+'('),end=html.indexOf('function '+next+'(',start);assert.ok(start>=0&&end>start);return html.slice(start,end);}
 let active=null,draft=null,planned=null,treinos=[],last=null,calls=[];
@@ -12,20 +13,20 @@ const context=vm.createContext({
   iniciarTreinoPorId:id=>calls.push(['start',id]),irParaAba:tab=>calls.push(['tab',tab]),
   selecionarTreino:t=>calls.push(['snapshot',t.id]),
 });
-vm.runInContext(source('normalizarBuscaUI','filtrarTreinosUI')+source('iniciarSugestaoDashboardUI','abrirFerramentasTreinoUI'),context);
+vm.runInContext(training+source('normalizarBuscaUI','filtrarTreinosUI')+source('iniciarSugestaoDashboardUI','abrirFerramentasTreinoUI'),context);
 assert.equal(context.normalizarBuscaUI('  BRAÇOS · Elevação  '),'bracos · elevacao');
 assert.equal(context.normalizarBuscaUI(null),'');
 function run(expected){calls=[];context.iniciarSugestaoDashboardUI();assert.deepEqual(calls,expected);}
 active={id:'active'};run([['tab','treinar']]); // Nunca reconstruir a sessão ativa.
-active=null;treinos=[{id:'a'},{id:'b'}];draft={templateId:'b'};run([['start','b']]);
+active=null;treinos=[{id:'a'},{id:'b'}];draft={templateId:'b'};run([['tab','treinar'],['snapshot','b']]);
 draft={templateId:'avulso',templateSnapshot:{id:'avulso',isAdHoc:true}};run([['tab','treinar'],['snapshot','avulso']]);
-draft=null;planned={id:'b'};run([['start','b']]);
-planned=null;last=['session',[{templateId:'b'}]];run([['start','b']]);
-last=null;run([['start','a']]);
+draft=null;planned={id:'b'};run([['tab','treinar'],['snapshot','b']]);
+planned=null;last=['session',[{templateId:'b'}]];run([['tab','treinar'],['snapshot','b']]);
+last=null;run([['tab','treinar'],['snapshot','a']]);
 treinos=[];run([['tab','treinar']]);
 vm.runInContext(html.match(/function iniciarTreinoWidget\(\)\{[^\n]+\}/)[0],context);
 active={id:'active'};calls=[];context.iniciarTreinoWidget();assert.deepEqual(calls,[['tab','treinar']]);
-active=null;planned={id:'b'};calls=[];context.iniciarTreinoWidget();assert.deepEqual(calls,[['start','b']]);
+active=null;planned={id:'b'};calls=[];context.iniciarTreinoWidget();assert.deepEqual(calls,[['tab','treinar'],['snapshot','b']]);
 planned=null;
 
 let empty={hidden:true},query={value:'PERNA'},buttons=[{dataset:{search:'treino a peito'},hidden:false},{dataset:{search:'treino b pernas'},hidden:false}];

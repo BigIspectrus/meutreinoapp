@@ -210,7 +210,25 @@ function periodoAtividade(){return TreinoActivityData.dates(hoje(),_activityDays
 function formatarAtividade(v,suffix='',decimals=0){return v==null?'—':Number(v).toLocaleString('pt-BR',{maximumFractionDigits:decimals})+suffix;}
 function resumoAtividadeAtual(){return TreinoActivityData.summarize(getAtividadeHealth(),periodoAtividade(),hoje(),document.getElementById('activityKind')?.value||'all');}
 function definirPeriodoAtividade(days){_activityDays=[7,30,90].includes(Number(days))?Number(days):30;_activityAllRows=false;salvarPreferenciasAtividade();renderizarAtividades();renderizarEvolucaoRotina();}
-function abrirCardioPassos(){irParaAba('progresso');ativarSubTab('atividade');}
+function abrirCardioPassos(){
+  if(_currentTab==='progresso'){
+    ativarSubTab('atividade');
+    window.scrollTo({top:0,behavior:'instant'});
+    return;
+  }
+  _currentSubTab='atividade';
+  irParaAba('progresso');
+}
+function selecionarModalidadeCardio(kind){
+  if(kind!=='all'&&!Object.hasOwn(TreinoActivityData.kinds,kind))return;
+  document.getElementById('activityKind').value=kind;
+  const metric=document.getElementById('activityChartMetric');
+  if(kind==='stationary'&&metric.value==='cardioDistance')metric.value='cardioMinutes';
+  alterarModalidadeAtividade();
+  const title=document.getElementById('activityCardioTitle');
+  title.focus({preventScroll:true});
+  title.scrollIntoView({block:'start',behavior:'smooth'});
+}
 function abrirRefeicaoWidget(){
   // Um atalho do launcher sempre registra HOJE, não o dia antigo aberto no diário.
   _nutritionDate=hoje();irParaAba('nutricao');abrirRegistroNutricao(refeicaoSugeridaNutricao());
@@ -279,30 +297,77 @@ function estadoAtividadeHealth(data){
   if(data.lastAttemptAt||data.generatedAt)notes.push('Última tentativa: '+horaLeituraAtividade(data.lastAttemptAt||data.generatedAt)+'.');
   return notes.join(' ');
 }
+function renderizarModalidadesCardio(summary,selected){
+  const host=document.getElementById('activityKindCards');
+  const icons={walking:'walk',running:'activity',treadmill:'activity',cycling:'bike',stationary:'bike'};
+  if(!host.childElementCount){
+    for(const [kind,label] of Object.entries(TreinoActivityData.kinds)){
+      const button=document.createElement('button');
+      button.type='button';
+      button.className='cardio-kind';
+      button.dataset.activityKind=kind;
+      button.innerHTML=iconeUI(icons[kind])+'<strong>'+esc(label)+'</strong><small></small>';
+      button.onclick=()=>selecionarModalidadeCardio(kind);
+      host.appendChild(button);
+    }
+  }
+  for(const button of document.querySelectorAll('[data-activity-kind]')){
+    const kind=button.dataset.activityKind;
+    button.setAttribute('aria-pressed',String(kind===selected));
+    if(kind==='all')continue;
+    const sessions=summary.sessions.filter(row=>row.kind===kind);
+    const elapsed=sessions.reduce((sum,row)=>sum+row.minutes,0);
+    button.querySelector('small').textContent=sessions.length?sessions.length+(sessions.length===1?' sessão':' sessões')+' · '+formatarAtividade(elapsed,' min',1):'Sem registro';
+  }
+}
+function htmlSessaoCardio(row,expanded){
+  const quality=TreinoActivityData.quality;
+  const label=TreinoActivityData.kinds[row.kind],date=row.date.split('-').reverse().join('/');
+  const hour=new Date(row.startMs).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const energy=formatarAtividade(row.kcal,' kcal');
+  const energyDetail=row.kcal==null?'Kcal não informadas':energy+(row.calorieKind==='active'?' ativas':' no intervalo');
+  return '<details class="cardio-session" data-cardio-session="'+esc(row.id)+'"'+(expanded?' open':'')+'><summary><span><strong>'+esc(label)+'</strong><small>'+date+' · '+hour+'</small></span><span class="cardio-session-duration">'+formatarAtividade(row.minutes,' min',1)+(row.kcal==null?'':'<small>'+energy+'</small>')+'</span></summary><div class="cardio-session-details"><div><strong>'+esc(row.source)+'</strong>'+(row.title?'<small>'+esc(row.title)+'</small>':'')+htmlQualidadeAtividade(quality([row],'sessions'))+'</div><div><strong>'+energyDetail+'</strong>'+htmlQualidadeAtividade(quality([row],'sessionKcal'))+'</div>'+htmlDistanciaCardio(row)+'</div></details>';
+}
 function renderizarAtividades(){
   if(typeof renderizarMetasMovimento==='function')renderizarMetasMovimento();
   const el=document.getElementById('activityStats');if(!el)return;
-  const data=getAtividadeHealth(),s=resumoAtividadeAtual();
+  const data=getAtividadeHealth(),range=periodoAtividade(),today=hoje(),kind=document.getElementById('activityKind').value||'all';
+  const overall=TreinoActivityData.summarize(data,range,today);
+  const s=kind==='all'?overall:TreinoActivityData.summarize(data,range,today,kind);
   const last=data.daily.find(d=>d.date===hoje()),quality=TreinoActivityData.quality,
     stepsToday=quality(last?[last]:[],'steps'),stepsAverage=quality(s.daily.filter(d=>d.date<hoje()&&d.steps!=null),'steps'),
     cardio=quality([...s.daily.filter(d=>d.cardioKnown),...s.sessions],'sessions'),energy=quality(s.sessions.filter(x=>x.kcal!=null),'sessionKcal'),
     partialSessions=data.readStatus?.sessions?.state==='partial';
   document.querySelectorAll('[data-activity-days]').forEach(b=>{const on=Number(b.dataset.activityDays)===_activityDays;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});
-  el.innerHTML=htmlEstatisticaAtividade(formatarAtividade(s.todaySteps),'passos hoje','dia em andamento',stepsToday)+
-    htmlEstatisticaAtividade(formatarAtividade(s.averageSteps),'média de passos/dia',s.stepDays+' dias completos com dados',stepsAverage)+
-    htmlEstatisticaAtividade(s.knownDays||s.cardioCount?String(s.cardioCount):'—','cardios no período',formatarAtividade(s.minutes,' min',1),cardio,partialSessions)+
-    htmlEstatisticaAtividade(formatarAtividade(s.kcal,' kcal'),'kcal dos cardios',s.kcalCount+'/'+s.cardioCount+' sessões com kcal'+(s.totalFallback?' · inclui gasto total no intervalo':''),energy,data.readStatus?.sessionKcal?.state==='partial')+
-    (s.distanceCount?htmlEstatisticaAtividade(formatarAtividade(s.distanceKm,' km',2),'distância dos cardios',s.distanceCount+'/'+s.cardioCount+' sessões com cobertura suficiente',quality(s.sessions.filter(x=>x.distanceComplete),'sessionDistance')):'');
+  const known=overall.knownDays||overall.cardioCount;
+  document.getElementById('activityOverviewStats').innerHTML=
+    htmlEstatisticaAtividade(known?String(overall.cardioCount):'—','sessões')+
+    htmlEstatisticaAtividade(known?formatarAtividade(overall.minutes,' min',1):'—','tempo de cardio')+
+    htmlEstatisticaAtividade(formatarAtividade(overall.kcal),'kcal do cardio',overall.cardioCount?overall.kcalCount+'/'+overall.cardioCount+' com kcal':'');
+  renderizarModalidadesCardio(overall,kind);
+  document.getElementById('activityCardioTitle').textContent=kind==='all'?'Todos os cardios':TreinoActivityData.kinds[kind];
+  const cardioKnown=s.knownDays||s.cardioCount;
+  el.innerHTML=htmlEstatisticaAtividade(cardioKnown?String(s.cardioCount):'—','sessões',formatarAtividade(cardioKnown?s.minutes:null,' min',1),cardio,partialSessions)+
+    (s.distanceCount?htmlEstatisticaAtividade(formatarAtividade(s.distanceKm,' km',2),'distância',s.distanceCount+'/'+s.cardioCount+' sessões com distância completa',quality(s.sessions.filter(x=>x.distanceComplete),'sessionDistance')):'')+
+    htmlEstatisticaAtividade(formatarAtividade(s.kcal),'kcal registradas',s.cardioCount?s.kcalCount+'/'+s.cardioCount+' sessões com kcal'+(s.totalFallback?' · inclui gasto total no intervalo':''):'',energy,data.readStatus?.sessionKcal?.state==='partial');
+  document.getElementById('activityStepsStats').innerHTML=
+    htmlEstatisticaAtividade(formatarAtividade(s.todaySteps),'passos hoje','Dia em andamento',stepsToday)+
+    htmlEstatisticaAtividade(formatarAtividade(s.averageSteps),'média de passos/dia',s.stepDays+' dias completos com dados',stepsAverage);
   document.getElementById('activityEnergy').innerHTML=['activeKcal','totalKcal'].map(key=>'<div><strong>'+formatarAtividade(last?.[key],' kcal')+'</strong><span>'+(key==='activeKcal'?'ativas hoje':'totais hoje')+'</span>'+htmlQualidadeAtividade(quality(last?[last]:[],key))+'</div>').join('');
   document.getElementById('activityStatus').textContent=(_activityBusy?'Atualizando Health Connect… ':'' )+estadoAtividadeHealth(data);
+  const lastRead=data.readStatus?.sessions?.readAt;
+  const syncSummary=document.getElementById('activitySyncSummary');
+  syncSummary.textContent=_activityBusy?'Atualizando Health Connect…':lastRead?'Cardio lido em '+horaLeituraAtividade(lastRead):known?'Exibindo cardios salvos':'Aguardando dados do Health Connect';
   document.getElementById('activitySyncButton').disabled=!!_activityBusy;
   renderizarStatusLeiturasAtividade(data);
   const filtered=s.sessions,shown=_activityAllRows?filtered:filtered.slice(0,10),list=document.getElementById('activitySessions');
-list.innerHTML=shown.length?shown.map(row=>'<article class="activity-session"><div class="activity-session-mark" aria-hidden="true">'+(row.kind==='cycling'||row.kind==='stationary'?'↻':'↗')+'</div><div class="activity-session-main"><strong>'+esc(TreinoActivityData.kinds[row.kind])+'</strong><span>'+row.date.split('-').reverse().join('/')+' · '+new Date(row.startMs).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' · '+formatarAtividade(row.minutes,' min',1)+'</span><small>'+esc(row.source)+(row.title?' · '+esc(row.title):'')+'</small>'+htmlQualidadeAtividade(quality([row],'sessions'))+htmlDistanciaCardio(row)+'</div><div class="activity-session-energy"><strong>'+formatarAtividade(row.kcal)+'</strong><small>'+(row.kcal==null?'kcal não informadas':row.calorieKind==='active'?'kcal ativas':'kcal no intervalo')+'</small>'+htmlQualidadeAtividade(quality([row],'sessionKcal'))+'</div></article>').join(''):
-    '<div class="activity-empty"><strong>Nenhum cardio neste período</strong><p>Finalize a atividade no relógio e aguarde Samsung Health → Health Connect. Caminhada, corrida, esteira e bicicletas aparecem aqui quando disponíveis.</p></div>';
+  const expanded=new Set([...list.querySelectorAll('details[open][data-cardio-session]')].map(item=>item.dataset.cardioSession));
+  list.innerHTML=shown.length?shown.map(row=>htmlSessaoCardio(row,expanded.has(row.id))).join(''):
+    '<div class="activity-empty"><strong>Nenhuma sessão registrada neste período</strong><p>Os cardios aparecem após finalizar no relógio e os dados chegarem ao Health Connect pelo Samsung Health.</p></div>';
   document.getElementById('activityShowAll').hidden=filtered.length<=10||_activityAllRows;
   document.getElementById('activityShowAll').textContent='Ver todos os '+filtered.length+' cardios';
   desenharGraficoAtividade();
+  desenharGraficoPassos(overall.daily);
 }
 function mostrarTodosCardios(){_activityAllRows=true;renderizarAtividades();}
 function formatarRitmoCardio(seconds){if(!Number.isFinite(seconds)||seconds<=0)return '—';const whole=Math.round(seconds);return Math.floor(whole/60)+':'+String(whole%60).padStart(2,'0')+' min/km';}
@@ -329,7 +394,7 @@ function construirGraficoRotina(id,rows,series,type='line'){
     background=getComputedStyle(document.body).getPropertyValue('--surface').trim(),nutrition=series.some(s=>['kcal','protein','carbs','fat'].includes(s.key));
   return new Chart(canvas,{type,data:{labels:rows.map(d=>d.date.slice(8)+'/'+d.date.slice(5,7)),datasets:series.map(s=>({
     label:s.label,data:rows.map(d=>d[s.key]),borderColor:s.color,backgroundColor:s.color+'35',borderWidth:2,borderDash:s.dash||[],
-    tension:.2,spanGaps:false,pointRadius:nutrition?3:rows.length>30?0:2,pointHoverRadius:5,fill:false,
+    tension:.2,spanGaps:!!s.connect,pointRadius:s.points??(nutrition?3:rows.length>30?0:2),pointHoverRadius:5,fill:false,
     pointBackgroundColor:nutrition?rows.map(d=>d.nutritionStatus==='complete'?s.color:background):s.color
   }))},options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},
     plugins:{legend:{display:series.length>1,labels:{color:muted,boxWidth:12}},tooltip:{callbacks:{title:items=>rows[items[0]?.dataIndex]?.date.split('-').reverse().join('/')||'',
@@ -340,7 +405,9 @@ function construirGraficoRotina(id,rows,series,type='line'){
 function desenharGraficoAtividade(){
   if(_activityChart){_activityChart.destroy();_activityChart=null;}
   if(!document.getElementById('sub-atividade')?.classList.contains('active'))return;
-  const rows=dadosRotinaAtividade(),key=document.getElementById('activityChartMetric')?.value||'steps',
+  const metric=document.getElementById('activityChartMetric');
+  if(metric.value==='steps')metric.value='cardioMinutes';
+  const rows=dadosRotinaAtividade(),key=metric.value||'cardioMinutes',
     config={steps:['Passos','#75aaff','passos'],cardioMinutes:['Minutos de cardio','#65d8b0','minutos'],cardioCount:['Cardios','#c6a3ff','sessões'],cardioKcal:['Kcal dos cardios','#f1bc6b','kcal'],cardioDistance:['Distância dos cardios','#65d8b0','km']},c=config[key]||config.steps;
   const any=rows.some(d=>d[key]!=null);document.getElementById('activityChartEmpty').hidden=any;
   document.getElementById('activityChartEmpty').textContent=key==='cardioDistance'?'Sem distância com cobertura suficiente para este gráfico. Registros parciais continuam na lista.':'Sem dados para este gráfico no período.';
@@ -377,6 +444,18 @@ function renderizarAtividadeDashboard(){
   const data=getAtividadeHealth(),s=TreinoActivityData.summarize(data,TreinoActivityData.dates(hoje(),7),hoje());
   const today=data.daily.find(d=>d.date===hoje()),q=TreinoActivityData.quality(today?[today]:[],'steps');
   el.innerHTML='<div><span class="eyebrow">Movimento do dia</span><strong>'+formatarAtividade(s.todaySteps)+' <small>passos hoje</small></strong><span>'+(s.knownDays||s.cardioCount?s.cardioCount+' cardios nos últimos 7 dias · '+formatarAtividade(s.minutes,' min'):'Conecte o Health para acompanhar seus cardios')+'</span>'+htmlQualidadeAtividade(q)+'</div><span class="activity-dashboard-arrow" aria-hidden="true">↗</span>';
+}
+let _stepsChart=null;
+function desenharGraficoPassos(daily){
+  _stepsChart?.destroy();
+  _stepsChart=null;
+  if(!document.getElementById('sub-atividade').classList.contains('active')||!document.getElementById('activityStepsDisclosure').open)return;
+  const days=new Map((daily||getAtividadeHealth().daily).map(row=>[row.date,row.steps]));
+  const rows=periodoAtividade().map(date=>({date,steps:days.get(date)??null}));
+  const hasData=rows.some(row=>row.steps!=null);
+  document.getElementById('activityStepsChartWrap').hidden=!hasData;
+  document.getElementById('activityStepsChartEmpty').hidden=hasData;
+  if(hasData)_stepsChart=construirGraficoRotina('activityStepsChart',rows,[{key:'steps',label:'Passos',color:'#75aaff'}],'bar');
 }
 window.addEventListener('load',()=>{carregarPreferenciasAtividade();renderizarAtividadeDashboard();if(isNativeAndroid())setTimeout(()=>sincronizarAtividadesHealth(false),2200);});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){renderizarAtividadeDashboard();if(isNativeAndroid()){sincronizarAtividadesHealth(false);atualizarWidgetNativo();}}});

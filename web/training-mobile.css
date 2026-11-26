@@ -1,0 +1,114 @@
+.workout-launch,
+.weight-summary-card,
+.cardio-overview {
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+  background: linear-gradient(145deg, color-mix(in srgb, var(--primary-dim) 65%, var(--surface)), var(--surface) 75%);
+}
+.workout-launch-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+.workout-launch-actions .btn { min-height: 48px; padding-inline: 8px; }
+.workout-launch-actions .btn-primary:last-child { grid-column: 1 / -1; }
+.workout-launch-copy h2 { margin: 0 0 5px; font-size: 1.35rem; }
+.workout-launch-copy p, .workout-blank-state p { margin: 0; color: var(--text-muted); font-size: .85rem; }
+.workout-picker .section-heading .btn { min-height: 44px; width: auto; white-space: nowrap; }
+.workout-blank-state {
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 22px 18px;
+  margin: 10px 0;
+  background: var(--surface);
+}
+.workout-blank-state h2 { font-size: 1.2rem; margin: 0 0 6px; }
+.workout-blank-state .btn { margin-top: 16px; }
+.workout-model-offer {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface2);
+}
+#workoutModelForm { display: grid; gap: 8px; }
+.exercise-search-heading { margin: 6px 0; }
+.exercise-search-results {
+  max-height: min(220px, 32dvh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: grid;
+  gap: 5px;
+  margin-bottom: 12px;
+}
+.exercise-search-results .flow-swap-result { min-height: 48px; }
+.exercise-search-results button[aria-pressed="true"] { border-color: var(--primary); background: var(--primary-dim); }
+.progress-destinations { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
+.progress-destinations .btn { width: auto; }
+
+body[data-current-tab="dashboard"] .home-shortcuts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.home-shortcut > span { min-width: 0; overflow-wrap: anywhere; }
+.weight-summary-card h2,
+.cardio-detail h2,
+.cardio-steps h2,
+.cardio-health h2 { font-size: 1.2rem; }
+.weight-page-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 14px 0; }
+.weight-page-summary > div { min-width: 0; }
+.weight-page-summary strong { display: block; margin: 5px 0; font-size: 1.28rem; line-height: 1.25; overflow-wrap: anywhere; }
+.weight-page-summary span, .weight-page-summary small, .weight-record small { display: block; color: var(--text-muted); font-size: .74rem; }
+.weight-page-summary p { grid-column: 1 / -1; margin: 0; }
+.weight-actions { display: grid; grid-template-columns: 1.35fr 1fr; gap: 7px; }
+.weight-actions .btn { min-width: 0; padding-inline: 6px; }
+.weight-record { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid var(--border); }
+.weight-record:first-child { margin-top: 14px; }
+.weight-record small { margin-top: 4px; }
+.weight-record .btn { width: auto; min-height: 44px; }
+.weight-entry-dialog .modal-footer .btn { flex: 1; }
+.weight-simulation-card .weight-projection { margin: 0; border: 0; padding: 0; background: transparent; }
+
+.cardio-sync-line { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 7px; }
+.cardio-sync-line .activity-note { margin: 0; flex: 1 1 140px; }
+.cardio-sync-line .btn, .cardio-modalities .section-heading .btn { width: auto; min-height: 44px; }
+.cardio-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.cardio-metrics .activity-stat { padding: 12px 9px; }
+.cardio-metrics .activity-stat strong { font-size: clamp(15px, 5vw, 23px); }
+.cardio-overview .activity-stats { margin-bottom: 0; }
+.cardio-jump { margin-top: 8px; width: auto; min-height: 44px; }
+.cardio-kind-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+.cardio-kind {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-content: center;
+  min-height: 68px;
+  column-gap: 7px;
+  row-gap: 3px;
+  padding: 9px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: var(--surface2);
+  color: var(--text);
+  text-align: left;
+}
+.cardio-kind .ui-icon { grid-row: span 2; width: 21px; height: 21px; align-self: center; color: var(--primary); }
+.cardio-kind strong { grid-column: 2; font-size: .81rem; overflow-wrap: anywhere; }
+.cardio-kind small { grid-column: 2; font-size: .72rem; color: var(--text-muted); }
+.cardio-kind[aria-pressed="true"], [data-activity-kind="all"][aria-pressed="true"] { border-color: var(--primary); background: var(--primary-dim); }
+.cardio-detail h2, #activityStepsTitle, #weightPageProjection { scroll-margin-top: calc(var(--app-safe-top) + 75px); }
+.cardio-detail h3 { margin-top: 14px; font-size: 1rem; }
+.cardio-session { border-bottom: 1px solid var(--border); }
+.cardio-session:last-child { border-bottom: 0; }
+.cardio-session > summary { display: grid; grid-template-columns: minmax(0, 1fr) auto 14px; align-items: center; gap: 10px; min-height: 59px; padding-block: 8px; cursor: pointer; list-style: none; }
+.cardio-session > summary::-webkit-details-marker { display: none; }
+.cardio-session > summary::after { content: '⌄'; color: var(--text-muted); }
+.cardio-session[open] > summary::after { content: '⌃'; }
+.cardio-session small { display: block; margin-top: 3px; color: var(--text-muted); font-size: .72rem; }
+.cardio-session-duration { font-size: .88rem; font-weight: 700; text-align: right; }
+.cardio-session-details { background: var(--surface2); border-radius: 11px; display: grid; gap: 8px; padding: 12px; margin-bottom: 8px; min-width: 0; overflow-wrap: anywhere; font-size: .85rem; }
+.cardio-session-details .activity-distance-values span { color: var(--text); font-size: .8rem; }
+@media (max-width: 350px) {
+  .workout-launch-actions { grid-template-columns: 1fr; }
+  .cardio-kind { grid-template-columns: 16px minmax(0, 1fr); padding-inline: 6px; column-gap: 5px; }
+  .cardio-kind .ui-icon { width: 15px; height: 15px; }
+}

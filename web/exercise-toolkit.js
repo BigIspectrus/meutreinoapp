@@ -49,7 +49,10 @@ function prepararSubstitutoFavorito(alt){
   const card=getExerciseCards().find(c=>c.dataset.ex===_occupiedExercise&&!c.classList.contains('skipped'));if(!card)return;
   const group=grupoDoExercicio(alt);if(!group)return toast('Cadastre esse exercício no catálogo antes de usá-lo.','warn');
   focarExercicioCard(card,false);fecharModal('modalOccupiedExercise');abrirAddExSessao();_addSessaoTargetEx=card.dataset.ex;
-  document.getElementById('addSessaoGrupo').value=group;atualizarExsAddSessao();document.getElementById('addSessaoEx').value=alt;
+  document.getElementById('addSessaoGrupo').value=group;
+  document.getElementById('addSessaoEx').value=alt;
+  document.getElementById('addSessaoSelectedGroup').value=group;
+  renderizarBuscaExercicioSessao();
   const started=exercicioTemSeriesIniciadas(card);document.getElementById('addSessaoAction').value=started?'add':'replace';atualizarAcaoAddSessao();
   if(started)document.getElementById('addSessaoActionNote').textContent='Já há séries iniciadas/concluídas: o favorito será adicional. O original e suas séries serão preservados; finalize apenas o que realmente concluir.';
 }

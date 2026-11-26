@@ -1,6 +1,6 @@
 /* v12.11.0 — fluxos mais curtos, voltar nativo e cancelamento sem registrar sessão. */
 window._uxCancelling=false;
-const UX_EDITORS=new Set(['modalNutritionFood','modalNutritionEntry','modalNutritionRecipe','modalNutritionGoals','modalTreino','modalEditarRegistro','modalExerciseProfile','modalMuscleGoals','modalAddSessaoEx','modalMeta','modalContextoSessao']);
+const UX_EDITORS=new Set(['modalNutritionFood','modalNutritionEntry','modalNutritionRecipe','modalNutritionGoals','modalTreino','modalEditarRegistro','modalExerciseProfile','modalMuscleGoals','modalAddSessaoEx','modalMeta','modalContextoSessao','modalWeightEntry']);
 const _uxModalBaselines=new WeakMap(),_uxTabStack=[];
 let _uxNavigatingBack=false,_uxUpdateFrame=0,_uxFeedbackTimer=null,_uxInlineEntry=null,_uxMealsPending=false,_uxReviewPersistTimer=null,_uxNativeStarting=null;
 function uxFormValue(modal){return JSON.stringify({fields:[...modal.querySelectorAll('input,select,textarea')].map(e=>[e.id||e.name,e.type==='checkbox'||e.type==='radio'?e.checked:e.value]),choices:[...modal.querySelectorAll('.session-rpe-btn.active,.context-chip.active,.icon-opt.selected')].map(e=>[e.id,e.dataset.rpe,e.dataset.context,e.dataset.icon,e.textContent])});}
@@ -67,6 +67,7 @@ async function confirmarCancelamentoTreinoUX(){
     _sessionExerciseChanges=[];_sessionOrderChanged=false;setModoTreinoAtivo(false);pararRelogioTreino();liberarWakeLock();mostrarFABTimer(false);
     if(adhoc)try{localStorage.removeItem('_adhocTemplateV12');}catch(_){}
     document.getElementById('exerciciosAtivos').replaceChildren();document.querySelectorAll('#aba-treinar .card').forEach(c=>c.style.display='');document.getElementById('treinoAtivoCard').style.display='none';
+    atualizarTreinoVazio();
     fecharModal(modal.id);_uxTabStack.length=0;_uxNavigate.call(window,'dashboard');await atualizarWidgetNativo();toast('Sessão cancelada. Histórico anterior e ficha preservados.','info');
   }catch(error){document.getElementById('cancelWorkoutErrorUX').textContent=error?.message||'Não foi possível cancelar. Seu rascunho foi mantido.';}
   finally{window._uxCancelling=false;modal.querySelectorAll('button,input').forEach(e=>e.disabled=false);agendarContextoUX();}
