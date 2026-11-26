@@ -64,7 +64,7 @@ class MonitorActivity : Activity() {
             isVerticalScrollBarEnabled = false
             setBackgroundColor(BG)
             isFocusableInTouchMode = true
-            addView(outer, ScrollView.LayoutParams(-1, -2))
+            addView(outer, -1, -2)
             setOnGenericMotionListener { _, event ->
                 if (!event.isFromSource(InputDevice.SOURCE_ROTARY_ENCODER) || event.action != MotionEvent.ACTION_SCROLL) {
                     return@setOnGenericMotionListener false
@@ -193,7 +193,7 @@ class MonitorActivity : Activity() {
         val status = when {
             workout == null -> "AGUARDANDO CELULAR"
             !active -> "TREINO ENCERRADO"
-            !fresh -> "SEM ATUALIZAÇÃO DO CELULAR"
+            !fresh -> "AGUARDANDO ATUALIZAÇÃO"
             paused -> "TREINO PAUSADO"
             resting -> "DESCANSO"
             workout.setRunning -> "SÉRIE EM ANDAMENTO"

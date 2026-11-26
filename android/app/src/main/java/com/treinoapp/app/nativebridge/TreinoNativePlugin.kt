@@ -202,8 +202,8 @@ class TreinoNativePlugin : Plugin() {
         call.getInt("currentExerciseSets")?.let { putExtra(WorkoutForegroundService.EXTRA_EXERCISE_SETS, it) }
         call.getBoolean("currentSetRunning")?.let { putExtra(WorkoutForegroundService.EXTRA_SET_RUNNING, it) }
         call.getBoolean("paused")?.let { putExtra(WorkoutForegroundService.EXTRA_PAUSED_BOOL, it) }
-        if (call.hasOption("pausedAt")) putExtra(WorkoutForegroundService.EXTRA_PAUSED_AT, longArg(call, "pausedAt", 0L))
-        if (call.hasOption("pausedTotalMs")) putExtra(WorkoutForegroundService.EXTRA_PAUSED_TOTAL, longArg(call, "pausedTotalMs", 0L))
+        if (call.data.has("pausedAt")) putExtra(WorkoutForegroundService.EXTRA_PAUSED_AT, longArg(call, "pausedAt", 0L))
+        if (call.data.has("pausedTotalMs")) putExtra(WorkoutForegroundService.EXTRA_PAUSED_TOTAL, longArg(call, "pausedTotalMs", 0L))
     }
 
     @PluginMethod fun pauseWorkout(call: PluginCall) = serviceCall(call, WorkoutForegroundService.ACTION_PAUSE)
