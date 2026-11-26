@@ -63,6 +63,7 @@ class WorkoutForegroundService : Service() {
                 nextExercise = intent.getStringExtra(EXTRA_NEXT_EXERCISE).orEmpty(),
                 nextSetNumber = intent.getIntExtra(EXTRA_NEXT_SET, 0),
                 nextExerciseSets = intent.getIntExtra(EXTRA_NEXT_EXERCISE_SETS, 0),
+                nextSetStates = intent.getStringExtra(EXTRA_NEXT_SET_STATES).orEmpty(),
                 nextOrdinal = intent.getIntExtra(EXTRA_NEXT_ORDINAL, -1),
                 sessionId = intent.getStringExtra(EXTRA_SESSION).orEmpty(),
             )
@@ -122,6 +123,9 @@ class WorkoutForegroundService : Service() {
             intent.getStringExtra(EXTRA_SESSION) == prefs.getString(KEY_SESSION, "")
         if (reset && !sameSession) {
             editor.putLong(KEY_REST_END, 0L)
+                .putLong(KEY_REST_DURATION, 0L)
+                .putBoolean(KEY_REST_FINISHED, false)
+                .remove(KEY_EXERCISE_SET_STATES)
                 .putBoolean(KEY_PAUSED, false)
                 .putLong(KEY_PAUSED_AT, 0L)
                 .putLong(KEY_PAUSED_TOTAL, 0L)
@@ -147,7 +151,12 @@ class WorkoutForegroundService : Service() {
         if (intent.hasExtra(EXTRA_DONE)) editor.putInt(KEY_DONE, intent.getIntExtra(EXTRA_DONE, 0))
         if (intent.hasExtra(EXTRA_SET)) editor.putInt(KEY_SET, intent.getIntExtra(EXTRA_SET, 0))
         if (intent.hasExtra(EXTRA_EXERCISE_SETS)) editor.putInt(KEY_EXERCISE_SETS, intent.getIntExtra(EXTRA_EXERCISE_SETS, 0))
-        if (intent.hasExtra(EXTRA_SET_RUNNING)) editor.putBoolean(KEY_SET_RUNNING, intent.getBooleanExtra(EXTRA_SET_RUNNING, false))
+        intent.getStringExtra(EXTRA_EXERCISE_SET_STATES)?.let { editor.putString(KEY_EXERCISE_SET_STATES, it.take(40)) }
+        if (intent.hasExtra(EXTRA_SET_RUNNING)) {
+            val running = intent.getBooleanExtra(EXTRA_SET_RUNNING, false)
+            editor.putBoolean(KEY_SET_RUNNING, running)
+            if (running) editor.putBoolean(KEY_REST_FINISHED, false)
+        }
         if (intent.hasExtra(EXTRA_PAUSED_BOOL)) editor.putBoolean(KEY_PAUSED, intent.getBooleanExtra(EXTRA_PAUSED_BOOL, false))
         if (intent.hasExtra(EXTRA_PAUSED_AT)) editor.putLong(KEY_PAUSED_AT, intent.getLongExtra(EXTRA_PAUSED_AT, 0L))
         if (intent.hasExtra(EXTRA_PAUSED_TOTAL)) editor.putLong(KEY_PAUSED_TOTAL, intent.getLongExtra(EXTRA_PAUSED_TOTAL, 0L))
@@ -161,6 +170,7 @@ class WorkoutForegroundService : Service() {
         nextExercise: String,
         nextSetNumber: Int,
         nextExerciseSets: Int,
+        nextSetStates: String,
         nextOrdinal: Int,
         sessionId: String,
     ) {
@@ -172,12 +182,15 @@ class WorkoutForegroundService : Service() {
         } else ""
         prefs.edit()
             .putLong(KEY_REST_END, end)
+            .putLong(KEY_REST_DURATION, seconds * 1_000L)
+            .putBoolean(KEY_REST_FINISHED, false)
             .putString(KEY_EXERCISE, exercise)
             .putInt(KEY_SET, setNumber)
             .putBoolean(KEY_SET_RUNNING, false)
             .putString(KEY_NEXT_EXERCISE, nextExercise)
             .putInt(KEY_NEXT_SET, nextSetNumber)
             .putInt(KEY_NEXT_EXERCISE_SETS, nextExerciseSets)
+            .putString(KEY_NEXT_SET_STATES, nextSetStates.take(40))
             .putInt(KEY_NEXT_ORDINAL, nextOrdinal)
             .putString(KEY_NEXT_SESSION, resolvedSession)
             .putString(KEY_NEXT_TOKEN, targetToken)
@@ -191,7 +204,10 @@ class WorkoutForegroundService : Service() {
         val current = prefs.getLong(KEY_REST_END, 0L)
         if (current <= 0L) return
         val next = max(System.currentTimeMillis() + 1_000L, current + deltaSeconds * 1000L)
-        prefs.edit().putLong(KEY_REST_END, next).apply()
+        val duration = prefs.getLong(KEY_REST_DURATION, 0L)
+        val adjustedDuration = if (duration > 0) duration + next - current else next - System.currentTimeMillis()
+        prefs.edit().putLong(KEY_REST_END, next)
+            .putLong(KEY_REST_DURATION, adjustedDuration.coerceAtLeast(1_000L)).apply()
         scheduleRestAlarmIfNeeded()
         updateNotification()
     }
@@ -202,6 +218,8 @@ class WorkoutForegroundService : Service() {
         releaseRestWakeLock()
         prefs.edit()
             .putLong(KEY_REST_END, 0L)
+            .putLong(KEY_REST_DURATION, 0L)
+            .putBoolean(KEY_REST_FINISHED, false)
             .remove(KEY_NEXT_EXERCISE)
             .remove(KEY_NEXT_SET)
             .remove(KEY_NEXT_ORDINAL)
@@ -235,6 +253,7 @@ class WorkoutForegroundService : Service() {
         monitorTickerStarted = false
         releaseRestWakeLock()
         prefs.edit().putBoolean(KEY_ACTIVE, false).putLong(KEY_REST_END, 0L)
+            .putLong(KEY_REST_DURATION, 0L).putBoolean(KEY_REST_FINISHED, false)
             .remove(KEY_NEXT_EXERCISE)
             .remove(KEY_NEXT_SET)
             .remove(KEY_NEXT_ORDINAL)
@@ -286,6 +305,11 @@ class WorkoutForegroundService : Service() {
                 elapsedMs = ((if (paused && pausedAt > 0L) pausedAt else now) - startedAt -
                     prefs.getLong(KEY_PAUSED_TOTAL, 0L)).coerceAtLeast(0L),
                 restEndsAt = if (active) rest else 0L,
+                exerciseSetStates = if (!showExercise) "" else prefs.getString(
+                    if (useNext) KEY_NEXT_SET_STATES else KEY_EXERCISE_SET_STATES, ""
+                ).orEmpty(),
+                restDurationMs = prefs.getLong(KEY_REST_DURATION, 0L),
+                restFinished = active && done < total && prefs.getBoolean(KEY_REST_FINISHED, false),
             ), heartbeat,
         )
     }
@@ -321,9 +345,17 @@ class WorkoutForegroundService : Service() {
 
     private fun onRestFinished() {
         releaseRestWakeLock()
-        prefs.edit().putLong(KEY_REST_END, 0L).apply()
         val nextExercise = prefs.getString(KEY_NEXT_EXERCISE, "").orEmpty()
         val nextSet = prefs.getInt(KEY_NEXT_SET, 0)
+        val hasNext = nextExercise.isNotBlank() && nextSet > 0
+        prefs.edit().putLong(KEY_REST_END, 0L).putBoolean(KEY_REST_FINISHED, hasNext).apply {
+            if (hasNext) {
+                putString(KEY_EXERCISE, nextExercise)
+                putInt(KEY_SET, nextSet)
+                putInt(KEY_EXERCISE_SETS, prefs.getInt(KEY_NEXT_EXERCISE_SETS, 0))
+                putString(KEY_EXERCISE_SET_STATES, prefs.getString(KEY_NEXT_SET_STATES, ""))
+            }
+        }.apply()
         val targetToken = prefs.getString(KEY_NEXT_TOKEN, "").orEmpty()
         val fallbackExercise = prefs.getString(KEY_EXERCISE, "Exercício") ?: "Exercício"
         postRestFinishedAlert(
@@ -440,9 +472,11 @@ class WorkoutForegroundService : Service() {
         releaseRestWakeLock()
         prefs.edit()
             .putLong(KEY_REST_END, 0L)
+            .putBoolean(KEY_REST_FINISHED, false)
             .putString(KEY_EXERCISE, exercise)
             .putInt(KEY_SET, setNumber)
             .putInt(KEY_EXERCISE_SETS, prefs.getInt(KEY_NEXT_EXERCISE_SETS, 0))
+            .putString(KEY_EXERCISE_SET_STATES, prefs.getString(KEY_NEXT_SET_STATES, ""))
             .putBoolean(KEY_SET_RUNNING, true)
             .putLong(KEY_PENDING_SET_STARTED_AT, startedAt)
             .putString(KEY_PENDING_SET_EXERCISE, exercise)
@@ -706,8 +740,11 @@ class WorkoutForegroundService : Service() {
         const val KEY_EXERCISE = "currentExercise"
         const val KEY_SET = "currentSet"
         const val KEY_EXERCISE_SETS = "currentExerciseSets"
+        private const val KEY_EXERCISE_SET_STATES = "currentExerciseSetStates"
         const val KEY_SET_RUNNING = "currentSetRunning"
         const val KEY_REST_END = "restEndAt"
+        private const val KEY_REST_DURATION = "watchRestDurationMs"
+        private const val KEY_REST_FINISHED = "watchRestFinished"
         const val KEY_PAUSED = "paused"
         const val KEY_PAUSED_AT = "pausedAt"
         const val KEY_PAUSED_TOTAL = "pausedTotal"
@@ -716,6 +753,7 @@ class WorkoutForegroundService : Service() {
         const val KEY_NEXT_EXERCISE = "nextExercise"
         const val KEY_NEXT_SET = "nextSet"
         const val KEY_NEXT_EXERCISE_SETS = "nextExerciseSets"
+        private const val KEY_NEXT_SET_STATES = "nextExerciseSetStates"
         const val KEY_NEXT_ORDINAL = "nextOrdinal"
         const val KEY_NEXT_SESSION = "nextSession"
         const val KEY_NEXT_TOKEN = "nextToken"
@@ -751,6 +789,7 @@ class WorkoutForegroundService : Service() {
         const val EXTRA_EXERCISE = "currentExercise"
         const val EXTRA_SET = "currentSet"
         const val EXTRA_EXERCISE_SETS = "currentExerciseSets"
+        const val EXTRA_EXERCISE_SET_STATES = "currentExerciseSetStates"
         const val EXTRA_SET_RUNNING = "currentSetRunning"
         const val EXTRA_SECONDS = "seconds"
         const val EXTRA_DELTA = "deltaSeconds"
@@ -762,6 +801,7 @@ class WorkoutForegroundService : Service() {
         const val EXTRA_NEXT_EXERCISE = "nextExercise"
         const val EXTRA_NEXT_SET = "nextSetNumber"
         const val EXTRA_NEXT_EXERCISE_SETS = "nextExerciseSets"
+        const val EXTRA_NEXT_SET_STATES = "nextExerciseSetStates"
         const val EXTRA_NEXT_ORDINAL = "nextOrdinal"
         const val EXTRA_TARGET_TOKEN = "targetToken"
         const val EXTRA_REQUEST_ID = "requestId"

@@ -186,7 +186,7 @@ class WatchHealthService : Service() {
     private fun end(mode: HealthMode, message: String) {
         if (stopping) return
         stopping = true
-        readings.value = readings.value.copy(mode = mode, current = null, message = message)
+        readings.value = readings.value.copy(mode = mode, message = message)
         if (ownsExercise) runCatching { exercise.endExerciseAsync() }
         ownsExercise = false
         ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)

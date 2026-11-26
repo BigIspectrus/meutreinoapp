@@ -1,5 +1,5 @@
-const APP_VERSION = '12.19.1';
-const BUILD = '2026.11.26.2';
+const APP_VERSION = '12.20.0';
+const BUILD = '2026.11.26.1';
 const CACHE_PREFIX = 'treinoapp-';
 const CACHE_NAME = `${CACHE_PREFIX}v${APP_VERSION}-${BUILD}`;
 const FOOD_LIBRARY_ASSETS = ['./food-library.js', './food-library.css'];

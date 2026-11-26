@@ -10,8 +10,8 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <title>TreinoApp v12</title>
-  <meta name="treinoapp-version" content="12.19.1">
-  <meta name="treinoapp-build" content="2026.11.26.2">
+  <meta name="treinoapp-version" content="12.20.0">
+  <meta name="treinoapp-build" content="2026.11.26.1">
   <script defer src="./vendor/chart.umd.js"></script>
   <script defer src="./vendor/jspdf.umd.min.js"></script>
   <script defer src="./vendor/qrcode.min.js"></script>
@@ -1085,8 +1085,8 @@
   <div class="modal" style="max-width:500px;">
     <div class="modal-title">Novidades da versão</div>
     <div style="font-size:.88em;line-height:1.6;color:var(--text-muted);">
-      <p><strong>Água no diário</strong> · Escolha o tamanho da garrafa e configure sua meta diária. Use o botão de volume para registrar com um toque.</p>
-      <p style="margin-top:8px;"><strong>Widget de Alimentação</strong> · Acompanhe a água do dia junto com kcal e macros. No tamanho maior, veja uma barra para a meta de água.</p>
+      <p><strong>Monitor no Galaxy Watch</strong> · Veja a contagem regressiva com um anel, o progresso das séries e a FC atual. Deslize para cima para consultar FC média e calorias.</p>
+      <p style="margin-top:8px;"><strong>Atalho no mostrador</strong> · No relógio, abra Detalhes e permita notificações para voltar ao Monitor com um toque durante o treino.</p>
     </div>
     <div class="modal-footer"><button class="btn btn-primary" onclick="fecharNovidades()">Entendi</button></div>
   </div>
@@ -2372,14 +2372,14 @@
 <script src="./load-conventions.js"></script>
 <script src="./nutrition-portions.js"></script>
 <script>
-const APP_VERSION = '12.19.1';
-const APP_BUILD = '2026.11.26.2';
+const APP_VERSION = '12.20.0';
+const APP_BUILD = '2026.11.26.1';
 const DATA_SCHEMA_VERSION = 18;
 const GITHUB_REPO='BigIspectrus/meutreinoapp';
 const GITHUB_PAGES_BASE='https://bigispectrus.github.io/meutreinoapp';
 let _latestAndroidReleaseUrl='';
 let _nativeChannel='web';
-const APP_CACHE_VERSION = 'treinoapp-v12.19.1-202611262';
+const APP_CACHE_VERSION = 'treinoapp-v12.20.0-202611261';
 
 const SET_TYPES={workset:'Work set',warmup:'Aquecimento',topset:'Top set',backoff:'Back-off',dropset:'Drop set',cluster:'Cluster set',fst7:'FST-7',restpause:'Rest-pause',myoreps:'Myo-reps',amrap:'AMRAP'};
 function normalizarSetType(v){return SET_TYPES[v]?v:'workset';}
@@ -6579,6 +6579,14 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&isNativeA
 window.addEventListener('focus',()=>{if(isNativeAndroid()&&getHealthAuto())setTimeout(()=>reconciliarHealthPendentes(false),600);});
 async function sincronizarPesoHealth(){if(!isNativeAndroid())return toast('Disponível no APK Android','info');try{const peso=getPeso(),entries=Object.entries(peso).sort((a,b)=>b[0].localeCompare(a[0]));const r=await window.TreinoNativeBridge.syncWeight({localWeights:entries.slice(0,50).map(([date,kg])=>({date,kg:Number(kg)}))});if(r?.latestKg&&r?.latestDate){const p=getPeso();p[r.latestDate]=Number(r.latestKg);localStorage.setItem('pesoCorporal',JSON.stringify(p));invalidarCache();}toast(`Peso sincronizado${r?.latestKg?' · '+r.latestKg+' kg':''}`,'success');}catch(e){toast('Falha ao sincronizar peso','warn');}}
 async function sincronizarBancoNativo(showToast=true){if(!isNativeAndroid())return;try{const hist=getHist(),chunk=250;if(!hist.length){await window.TreinoNativeBridge.syncNativeDatabase({records:[],replace:true});localStorage.setItem('_nativeDbSyncedSchema',String(DATA_SCHEMA_VERSION));return;}for(let i=0;i<hist.length;i+=chunk)await window.TreinoNativeBridge.syncNativeDatabase({records:hist.slice(i,i+chunk).map(r=>({...r,rir:numeroOpcionalAnalise(r.rir),rpe:numeroOpcionalAnalise(r.rpe)})),replace:i===0});const sessions=Object.entries(agruparSessoes(hist)).sort((a,b)=>getSessionTimestamp(b[1])-getSessionTimestamp(a[1])).slice(0,30);for(const [sid,regs] of sessions){const b=boundsSessao(regs),meta=regs.find(r=>numeroOpcionalAnalise(r.sessionRpe)!=null||r.sessionNote||r.sessionContext?.length)||regs[0];if(!b.startMs||!b.endMs||b.endMs<=b.startMs)continue;await window.TreinoNativeBridge.saveWorkoutMirror({sessionId:sid,templateId:regs.find(r=>r.templateId)?.templateId||null,name:regs.find(r=>r.templateNome)?.templateNome||'Treino',startMs:b.startMs,endMs:b.endMs,durationSec:b.durationSec,completedSets:regs.length,totalSets:regs.length,sessionRpe:numeroOpcionalAnalise(meta?.sessionRpe),contextTags:Array.isArray(meta?.sessionContext)?meta.sessionContext:[],sessionNote:meta?.sessionNote||'',sets:regs.map(r=>({id:r.id||gerarId('native'),exercise:r.exercicio||'',setNumber:Number(r.numSerie)||0,weight:Number(r.carga)||0,loadMode:tipoCargaRegistro(r),reps:Number(r.reps)||0,setType:r.setType||'workset',rir:numeroOpcionalAnalise(r.rir),rpe:numeroOpcionalAnalise(r.rpe),startedAt:Number(r.setStartedAt)||null,completedAt:Number(r.completedAt)||b.endMs,restBeforeSec:r.restBeforeSec??null,timingQuality:r.timingQuality||'legacy'}))});}localStorage.setItem('_nativeDbSyncedSchema',String(DATA_SCHEMA_VERSION));if(showToast)toast('Banco Android, contexto e horários das sessões sincronizados','success');}catch(e){if(showToast)toast('Não foi possível sincronizar o banco Android','warn');}}
+function estadosSeriesMonitor(card,atual){
+  if(!card)return '';
+  return [...card.querySelectorAll('.serie-row')].slice(0,40).map(row=>{
+    if(row.dataset.skipped==='1')return 's';
+    if(row.querySelector('.serie-check.checked'))return 'd';
+    return row===atual?'a':'p';
+  }).join('');
+}
 function resumoNativoAtual(){
   if(!treinoAtivoTemplate)return null;
   const rows=linhasValidasTreino(),done=rows.filter(row=>row.querySelector('.serie-check.checked'));
@@ -6586,7 +6594,7 @@ function resumoNativoAtual(){
   const target=running||serieEmFoco(card);
   return{sessionId:window._treinoSessionId,name:treinoAtivoTemplate.nome||'Treino',startedAt:window._treinoStartedAt,
     totalSets:rows.length,completedSets:done.length,currentExercise:card?.dataset.ex||'',currentSet:numeroSerieSessao(target),
-    currentExerciseSets:target?.closest('.exercicio-card')?.querySelectorAll('.serie-row').length||0,currentSetRunning:!!running,
+    currentExerciseSets:card?.querySelectorAll('.serie-row').length||0,currentExerciseSetStates:estadosSeriesMonitor(card,target),currentSetRunning:!!running,
     paused:!!window._treinoPaused,pausedAt:Number(window._treinoPauseStartedAt)||0,pausedTotalMs:Number(window._treinoTotalPausedMs)||0};
 }
 let _nativeUpdateTimer=null;function agendarUpdateNativo(){if(!isNativeAndroid())return;clearTimeout(_nativeUpdateTimer);_nativeUpdateTimer=setTimeout(()=>{const s=resumoNativoAtual();if(s)window.TreinoNativeBridge.updateWorkout(s).catch(()=>{});atualizarWidgetNativo();},120);}
@@ -6631,6 +6639,7 @@ const _v12OriginalTimer=iniciarTimer;iniciarTimer=function(seg,nativeContext=nul
     window.TreinoNativeBridge.startRest({seconds:Number(seg),sessionId:window._treinoSessionId||'',
       exercise:data.exercise||next?.exercise||'',setNumber:data.setNumber||0,nextExercise:next?.exercise||'',
       nextSetNumber:next?.setNumber||0,nextExerciseSets:next?.row?.closest('.exercicio-card')?.querySelectorAll('.serie-row').length||0,
+      nextExerciseSetStates:estadosSeriesMonitor(next?.row?.closest('.exercicio-card'),next?.row),
       nextOrdinal:Number.isInteger(next?.ordinal)?next.ordinal:-1}).catch(()=>{});
   }
   return result;

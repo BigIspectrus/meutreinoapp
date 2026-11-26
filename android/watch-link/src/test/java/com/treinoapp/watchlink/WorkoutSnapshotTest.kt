@@ -27,4 +27,16 @@ class WorkoutSnapshotTest {
         assertEquals(92_000L, session.elapsedAt(999_000L))
         assertEquals(42_000L, session.elapsedAt(99_000L))
     }
+
+    @Test fun countdownUsesTheAdjustedDurationAndKeepsTheNextSetReady() {
+        val resting = session.copy(restDurationMs = 30_000L)
+        assertEquals(0.5f, resting.restFractionAt(100_000L)!!, 0.001f)
+        assertFalse(resting.readyAfterRest(110_000L))
+        assertTrue(resting.readyAfterRest(115_000L))
+        val expired = resting.copy(restEndsAt = 0L, restFinished = true)
+        assertTrue(expired.readyAfterRest(116_000L))
+        assertFalse(expired.copy(setRunning = true).readyAfterRest(116_000L))
+        assertFalse(expired.copy(setNumber = 0).readyAfterRest(116_000L))
+        assertFalse(expired.copy(paused = true).readyAfterRest(116_000L))
+    }
 }

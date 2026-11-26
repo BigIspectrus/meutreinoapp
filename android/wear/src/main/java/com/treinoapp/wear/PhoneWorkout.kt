@@ -41,8 +41,12 @@ internal object PhoneWorkout {
         client = null
     }
 
-    private fun accept(update: WorkoutSnapshot) {
+    fun accept(update: WorkoutSnapshot) {
         if (update.sentAt > System.currentTimeMillis() + WorkoutSnapshot.STALE_MS) return
-        if (update.sentAt > (snapshot.value?.sentAt ?: 0L)) snapshot.value = update
+        while (true) {
+            val previous = snapshot.value
+            if (update.sentAt <= (previous?.sentAt ?: 0L)) return
+            if (snapshot.compareAndSet(previous, update)) return
+        }
     }
 }

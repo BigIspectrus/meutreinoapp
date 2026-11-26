@@ -38,6 +38,7 @@ internal class SpotHeart(context: Context, private val changed: () -> Unit) {
     fun forSession(id: String) {
         if (session == id) return
         stop()
+        current = null
         session = id
         lastSampleMs = -1L
         sampleCount = 0
@@ -77,7 +78,6 @@ internal class SpotHeart(context: Context, private val changed: () -> Unit) {
     fun stop() {
         callback?.let { runCatching { measure.unregisterMeasureCallbackAsync(DataType.HEART_RATE_BPM, it) } }
         callback = null
-        current = null
         unavailable = false
     }
 }

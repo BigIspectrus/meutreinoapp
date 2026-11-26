@@ -200,6 +200,7 @@ class TreinoNativePlugin : Plugin() {
 
     private fun Intent.putMonitorDetails(call: PluginCall) {
         call.getInt("currentExerciseSets")?.let { putExtra(WorkoutForegroundService.EXTRA_EXERCISE_SETS, it) }
+        call.getString("currentExerciseSetStates")?.let { putExtra(WorkoutForegroundService.EXTRA_EXERCISE_SET_STATES, it) }
         call.getBoolean("currentSetRunning")?.let { putExtra(WorkoutForegroundService.EXTRA_SET_RUNNING, it) }
         call.getBoolean("paused")?.let { putExtra(WorkoutForegroundService.EXTRA_PAUSED_BOOL, it) }
         if (call.data.has("pausedAt")) putExtra(WorkoutForegroundService.EXTRA_PAUSED_AT, longArg(call, "pausedAt", 0L))
@@ -220,6 +221,7 @@ class TreinoNativePlugin : Plugin() {
                 putExtra(WorkoutForegroundService.EXTRA_NEXT_EXERCISE, call.getString("nextExercise", ""))
                 putExtra(WorkoutForegroundService.EXTRA_NEXT_SET, call.getInt("nextSetNumber", 0) ?: 0)
                 putExtra(WorkoutForegroundService.EXTRA_NEXT_EXERCISE_SETS, call.getInt("nextExerciseSets", 0) ?: 0)
+                putExtra(WorkoutForegroundService.EXTRA_NEXT_SET_STATES, call.getString("nextExerciseSetStates", "").orEmpty())
                 putExtra(WorkoutForegroundService.EXTRA_NEXT_ORDINAL, call.getInt("nextOrdinal", -1) ?: -1)
                 putExtra(WorkoutForegroundService.EXTRA_SESSION, call.getString("sessionId", ""))
             }

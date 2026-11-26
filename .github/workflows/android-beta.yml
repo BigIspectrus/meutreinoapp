@@ -59,11 +59,14 @@ jobs:
           GITHUB_SHA: ${{ github.sha }}
           BUILD_TIME: ${{ github.event.head_commit.timestamp }}
           SKIP_REQUESTED_TESTS: ${{ inputs.skip_tests || contains(github.event.head_commit.message, '[skip-tests]') }}
+          WATCH_LINK_TESTS: ${{ contains(github.event.head_commit.message, '[watch-tests]') }}
         # Room exporta o mesmo schema para ambas as variantes. Etapas separadas
         # impedem leitura/escrita simultânea do JSON por processadores KAPT.
         run: |
           if [ "$SKIP_REQUESTED_TESTS" != "true" ]; then
             gradle :app:testBetaDebugUnitTest :watch-link:testDebugUnitTest --max-workers=1 --stacktrace
+          elif [ "$WATCH_LINK_TESTS" = "true" ]; then
+            gradle :watch-link:testDebugUnitTest --max-workers=1 --stacktrace
           fi
           gradle :app:assembleBetaRelease :app:bundleBetaRelease :wear:assembleBetaRelease --max-workers=1 --stacktrace
       - name: Publicar resultados dos testes Android

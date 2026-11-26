@@ -18,11 +18,18 @@ data class WorkoutSnapshot(
     val sentAt: Long,
     val elapsedMs: Long,
     val restEndsAt: Long,
+    val exerciseSetStates: String = "",
+    val restDurationMs: Long = 0L,
+    val restFinished: Boolean = false,
 ) {
     fun ageAt(now: Long): Long = (now - sentAt).coerceAtLeast(0L)
     fun isFresh(now: Long): Boolean = ageAt(now) <= STALE_MS
     fun elapsedAt(now: Long): Long = elapsedMs + if (active && !paused) ageAt(now).coerceAtMost(STALE_MS) else 0L
     fun restAt(now: Long): Long = if (active && !paused) (restEndsAt - now).coerceAtLeast(0L) else 0L
+    fun restFractionAt(now: Long): Float? = restDurationMs.takeIf { it > 0L }
+        ?.let { (restAt(now).toDouble() / it).coerceIn(0.0, 1.0).toFloat() }
+    fun readyAfterRest(now: Long): Boolean = active && !paused && !setRunning && setNumber > 0 &&
+        (restFinished || restEndsAt in 1L..now)
 
     fun toRequest() = PutDataMapRequest.create(PATH).apply {
         dataMap.putInt("schema", SCHEMA)
@@ -39,6 +46,9 @@ data class WorkoutSnapshot(
         dataMap.putLong("sent", sentAt)
         dataMap.putLong("elapsed", elapsedMs)
         dataMap.putLong("restEnd", restEndsAt)
+        dataMap.putString("setStates", exerciseSetStates)
+        dataMap.putLong("restDuration", restDurationMs)
+        dataMap.putBoolean("restFinished", restFinished)
     }.asPutDataRequest().setUrgent()
 
     companion object {
@@ -61,6 +71,8 @@ data class WorkoutSnapshot(
                     map.getInt("exerciseSets").coerceAtLeast(0), map.getInt("done").coerceAtLeast(0),
                     map.getInt("total").coerceAtLeast(0), map.getBoolean("setRunning"),
                     map.getBoolean("paused"), sent, map.getLong("elapsed").coerceAtLeast(0L), map.getLong("restEnd"),
+                    map.getString("setStates").orEmpty().takeIf { it.length <= 40 && it.all { state -> state in "dsap" } }.orEmpty(),
+                    map.getLong("restDuration").coerceAtLeast(0L), map.getBoolean("restFinished"),
                 )
             }.getOrNull()
         }
